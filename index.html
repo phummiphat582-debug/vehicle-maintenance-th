@@ -28,6 +28,16 @@ th,td{padding:18px;border-bottom:1px solid #e5e7eb;vertical-align:top}
 .DONE{background:#dcfce7;color:#166534}
 .confirm-box{background:#fff;border-radius:28px;padding:34px;max-width:420px;width:90%;text-align:center}
 .confirm-actions{display:flex;gap:26px;margin-top:28px}
+
+.detail-row{
+  display:grid;
+  grid-template-columns:220px 1fr;
+  gap:14px;
+  padding:10px 0;
+  border-bottom:1px dashed #e5e7eb;
+}
+.detail-row b{color:#1e3a8a}
+
 </style>
 </head>
 <body>
@@ -190,13 +200,13 @@ function loadRepairs(v){
       let r=doc.data();
       let cost=(+r.partsCost||0)+(+r.laborCost||0)+(+r.otherCost||0);
       if(searchInput.value && !JSON.stringify(r).toLowerCase().includes(searchInput.value.toLowerCase())) return;
-      tbody.innerHTML+=`<tr>
+      tbody.innerHTML+=`<tr onclick="openDetail(${JSON.stringify(r)})">
       <td>${r.date||""}</td><td>${v}</td><td>${r.system||""}</td>
       <td>${(r.symptoms||"").substring(0,60)}...</td>
       <td>${r.technician||""}</td>
       <td>${cost.toLocaleString()}</td>
       <td><span class="badge ${r.status||"NEW"}">${r.status||"NEW"}</span></td>
-      <td><button class="danger" onclick="confirmDeleteRecord('${v}','${doc.id}')">ลบ</button></td>
+      <td><button class="danger" onclick="event.stopPropagation();confirmDeleteRecord('${v}','${doc.id}')">ลบ</button></td>
       </tr>`;
     });
   });
@@ -238,12 +248,43 @@ function save(){
   closeModal();
 }
 
+
+function openDetail(data){
+  let html = "";
+  Object.keys(data).forEach(k=>{
+    if(!data[k]) return;
+    html += `
+      <div class="detail-row">
+        <b>${k}</b>
+        <div>${data[k]}</div>
+      </div>
+    `;
+  });
+  detailContent.innerHTML = html;
+  detailModal.style.display = "flex";
+}
+
+function closeDetail(){
+  detailModal.style.display = "none";
+}
+
 loadVehicles();
 </script>
 
 <script>
 if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js");}
 </script>
+
+
+<div class="modal" id="detailModal">
+  <div class="modal-box">
+    <h2>📄 รายละเอียดการซ่อมบำรุง</h2>
+    <div id="detailContent"></div>
+    <div class="confirm-actions">
+      <button class="danger" onclick="closeDetail()">ปิด</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
