@@ -1,84 +1,264 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>SC THE ADVENTURE | ระบบซ่อมบำรุงรถยนต์ (Realtime)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+
+<style>
+:root{--primary:#2563eb;--danger:#dc2626;--success:#16a34a;--bg:#f1f5f9}
+*{box-sizing:border-box}
+body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:var(--bg)}
+header{background:linear-gradient(90deg,#1e3a8a,#2563eb);color:#fff;padding:20px 30px;font-size:24px;font-weight:700}
+.container{padding:32px;max-width:1700px;margin:auto}
+button,input,select,textarea{width:100%;padding:14px;border-radius:16px;border:1px solid #c7d2fe;font-size:14px}
+button{background:var(--primary);color:#fff;border:none;cursor:pointer;font-weight:600;transition:.2s}
+button:hover{transform:translateY(-2px)}
+button.danger{background:var(--danger)}
+.card{background:#fff;border-radius:28px;padding:30px;margin-bottom:30px;box-shadow:0 25px 50px rgba(0,0,0,.15)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:28px}
+.table{width:100%;border-collapse:collapse;border-radius:26px;overflow:hidden}
+th,td{padding:18px;border-bottom:1px solid #e5e7eb;vertical-align:top}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;z-index:10}
+.modal-box{background:#fff;width:96%;max-width:1500px;border-radius:36px;padding:44px;max-height:92vh;overflow:auto}
+.section-title{font-size:18px;font-weight:700;margin-bottom:12px}
+.badge{padding:6px 16px;border-radius:999px;font-size:12px;font-weight:700}
+.NEW{background:#fee2e2;color:#991b1b}
+.INPROGRESS{background:#fef3c7;color:#92400e}
+.DONE{background:#dcfce7;color:#166534}
+
+/* toast */
+.toast{
+  position:fixed;top:24px;right:24px;
+  background:#fff;padding:16px 24px;border-radius:18px;
+  box-shadow:0 20px 40px rgba(0,0,0,.2);
+  display:none;z-index:999
+}
+.toast.success{border-left:8px solid var(--success)}
+.toast.error{border-left:8px solid var(--danger)}
+</style>
+</head>
+
+<body>
+<header>🚗 SC THE ADVENTURE | ระบบซ่อมบำรุงรถยนต์ (Realtime)</header>
+
+<div class="toast" id="toastBox"><span id="toastText"></span></div>
+
+<div class="container">
+<div class="card">
+<div class="grid">
+<select id="vehicleSelect"></select>
+<input id="searchInput" placeholder="🔍 ค้นหาประวัติการซ่อม (ทุกฟิลด์)">
+<button onclick="openModal()">➕ เพิ่มประวัติการซ่อม</button>
+<button class="danger" onclick="confirmDeleteVehicle()">🗑 ลบรถและประวัติทั้งหมด</button>
+</div>
+</div>
+
+<div class="card">
+<table class="table">
+<thead>
+<tr>
+<th>วันที่</th><th>รถ</th><th>ระบบ</th><th>อาการ</th>
+<th>ผู้ซ่อม</th><th>ค่าใช้จ่ายรวม</th><th>สถานะ</th><th>ลบ</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
+</table>
+</div>
+</div>
+
+<!-- ===== MODAL ===== -->
+<div class="modal" id="modal">
+<div class="modal-box">
+<h2>บันทึกรายละเอียดการซ่อมบำรุง (Ultra Detail)</h2>
+
+<div class="card">
+<div class="section-title">ข้อมูลรถ (Vehicle Identity)</div>
+<div class="grid">
+<input id="plate" placeholder="ทะเบียนรถ">
+<input id="brand" placeholder="ยี่ห้อ">
+<input id="model" placeholder="รุ่น">
+<input id="year" placeholder="ปีรถ">
+<input id="vin" placeholder="VIN / Chassis No.">
+<input id="engineNo" placeholder="Engine No.">
+<input id="mileage" placeholder="เลขไมล์ ณ วันที่ซ่อม">
+<input id="fuelType" placeholder="ประเภทเชื้อเพลิง">
+<input id="usageType" placeholder="ลักษณะการใช้งาน">
+</div>
+</div>
+
+<div class="card">
+<div class="section-title">รายละเอียดงานซ่อม</div>
+<div class="grid">
+<input type="date" id="date">
+<input id="system" placeholder="ระบบที่ซ่อม">
+<select id="jobType">
+<option>PM - Preventive</option>
+<option>CM - Corrective</option>
+<option>Emergency</option>
+<option>Accident</option>
+</select>
+<select id="priority">
+<option>ต่ำ</option><option>กลาง</option><option>สูง</option><option>วิกฤต</option>
+</select>
+<select id="status">
+<option class="NEW">NEW</option>
+<option class="INPROGRESS">INPROGRESS</option>
+<option class="DONE">DONE</option>
+</select>
+</div>
+<textarea id="symptoms" placeholder="อาการเสีย"></textarea>
+<textarea id="rootCause" placeholder="Root Cause"></textarea>
+<textarea id="diagnosis" placeholder="Diagnosis"></textarea>
+<textarea id="repairMethod" placeholder="Repair Method"></textarea>
+<textarea id="prevention" placeholder="Preventive Action"></textarea>
+<textarea id="testResult" placeholder="Test Result"></textarea>
+</div>
+
+<div class="card">
+<div class="section-title">ค่าใช้จ่าย / ผู้รับผิดชอบ</div>
+<div class="grid">
+<input id="technician" placeholder="ช่าง">
+<input id="supervisor" placeholder="ผู้ตรวจรับ">
+<input id="vendor" placeholder="อู่ / บริษัท">
+<input id="partsList" placeholder="รายการอะไหล่">
+<input id="partsCost" type="number" placeholder="ค่าอะไหล่">
+<input id="laborCost" type="number" placeholder="ค่าแรง">
+<input id="otherCost" type="number" placeholder="อื่นๆ">
+<input id="downtime" placeholder="Downtime">
+<input id="warranty" placeholder="การรับประกัน">
+</div>
+<textarea id="remark" placeholder="หมายเหตุ"></textarea>
+</div>
+
+<div class="grid">
+<button onclick="save()">💾 บันทึกข้อมูล</button>
+<button class="danger" onclick="closeModal()">ยกเลิก</button>
+</div>
+</div>
+</div>
+
+<!-- CONFIRM -->
+<div class="modal" id="confirmModal">
+<div class="modal-box" style="max-width:420px">
+<h3 id="confirmText"></h3>
+<div class="grid">
+<button id="confirmYes">ยืนยัน</button>
+<button class="danger" onclick="closeConfirm()">ยกเลิก</button>
+</div>
+</div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyCowDEvUQpBmq7AwUGiC6IuGOudPhi_0kM",
+  authDomain:"vehicle-maintenance-64890.firebaseapp.com",
+  projectId:"vehicle-maintenance-64890"
+});
+const db=firebase.firestore();
+
+let unsubscribe=null,pendingAction=null;
+
+const toastBox=document.getElementById("toastBox");
+const toastText=document.getElementById("toastText");
+function showToast(msg,type="success"){
+  toastText.innerText=msg;
+  toastBox.className="toast "+type;
+  toastBox.style.display="block";
+  setTimeout(()=>toastBox.style.display="none",3000);
+}
+
+function openModal(){modal.style.display="flex"}
+function closeModal(){modal.style.display="none"}
+function closeConfirm(){confirmModal.style.display="none"}
+
+function loadVehicles(){
+  db.collection("vehicles").onSnapshot(s=>{
+    vehicleSelect.innerHTML="";
+    s.forEach(d=>{
+      let o=document.createElement("option");
+      o.value=d.id;o.textContent=d.id;
+      vehicleSelect.appendChild(o);
+    });
+    if(vehicleSelect.value) loadRepairs(vehicleSelect.value);
+  });
+}
+vehicleSelect.onchange=()=>loadRepairs(vehicleSelect.value);
+
+function loadRepairs(v){
+  if(unsubscribe) unsubscribe();
+  unsubscribe=db.collection("vehicles").doc(v).collection("repairs")
+  .orderBy("createdAt","desc")
+  .onSnapshot(s=>{
+    tbody.innerHTML="";
+    s.forEach(d=>{
+      let r=d.data();
+      let cost=(+r.partsCost||0)+(+r.laborCost||0)+(+r.otherCost||0);
+      if(searchInput.value && !JSON.stringify(r).toLowerCase().includes(searchInput.value.toLowerCase())) return;
+      tbody.innerHTML+=`
+      <tr>
+        <td>${r.date||""}</td>
+        <td>${v}</td>
+        <td>${r.system||""}</td>
+        <td>${(r.symptoms||"").substring(0,60)}...</td>
+        <td>${r.technician||""}</td>
+        <td>${cost.toLocaleString()}</td>
+        <td><span class="badge ${r.status}">${r.status}</span></td>
+        <td><button class="danger" onclick="confirmDeleteRecord('${v}','${d.id}')">ลบ</button></td>
+      </tr>`;
+    });
+  });
+}
+
+function confirmDeleteVehicle(){
+  confirmText.innerText="ยืนยันการลบรถและประวัติทั้งหมด?";
+  pendingAction=()=>db.collection("vehicles").doc(vehicleSelect.value).delete();
+  confirmModal.style.display="flex";
+}
+function confirmDeleteRecord(v,id){
+  confirmText.innerText="ยืนยันการลบรายการนี้?";
+  pendingAction=()=>db.collection("vehicles").doc(v).collection("repairs").doc(id).delete();
+  confirmModal.style.display="flex";
+}
+confirmYes.onclick=()=>{pendingAction();closeConfirm()}
+
 async function save(){
-
-  // ✅ 1. กันพัง: ช่องบังคับ
-  if(
-    !plate.value.trim() ||
-    !brand.value.trim() ||
-    !model.value.trim()
-  ){
-    showToast("กรุณากรอก ทะเบียน / ยี่ห้อ / รุ่น ให้ครบ","error");
-    return;
-  }
-
   try{
-    // ✅ 2. ทำ key ให้ปลอดภัย
-    const key =
-      plate.value.trim() +
-      " | " +
-      brand.value.trim() +
-      " " +
-      model.value.trim();
-
-    const ref = db.collection("vehicles").doc(key);
-
-    // ✅ 3. สร้างรถ (merge กันซ้ำ)
-    await ref.set(
-      {
-        plate: plate.value.trim(),
-        brand: brand.value.trim(),
-        model: model.value.trim(),
-        created: new Date()
-      },
-      { merge:true }
-    );
-
-    // ✅ 4. เพิ่มประวัติการซ่อม
+    const key=plate.value+" | "+brand.value+" "+model.value;
+    const ref=db.collection("vehicles").doc(key);
+    await ref.set({created:new Date()},{merge:true});
     await ref.collection("repairs").add({
-      plate:plate.value,
-      brand:brand.value,
-      model:model.value,
-      year:year.value,
-      vin:vin.value,
-      engineNo:engineNo.value,
-      mileage:mileage.value,
-      fuelType:fuelType.value,
-      usageType:usageType.value,
-
-      date:date.value || "",
-      system:system.value || "",
-      jobType:jobType.value || "",
-      priority:priority.value || "",
-      status:status.value || "NEW",
-
-      symptoms:symptoms.value,
-      rootCause:rootCause.value,
-      diagnosis:diagnosis.value,
-      repairMethod:repairMethod.value,
-      prevention:prevention.value,
-      testResult:testResult.value,
-
-      technician:technician.value,
-      supervisor:supervisor.value,
-      vendor:vendor.value,
-      partsList:partsList.value,
-      partsCost:Number(partsCost.value||0),
-      laborCost:Number(laborCost.value||0),
-      otherCost:Number(otherCost.value||0),
-      downtime:downtime.value,
-      warranty:warranty.value,
-      remark:remark.value,
-
+      plate:plate.value,brand:brand.value,model:model.value,year:year.value,
+      vin:vin.value,engineNo:engineNo.value,mileage:mileage.value,
+      fuelType:fuelType.value,usageType:usageType.value,
+      date:date.value,system:system.value,jobType:jobType.value,
+      priority:priority.value,status:status.value,
+      symptoms:symptoms.value,rootCause:rootCause.value,
+      diagnosis:diagnosis.value,repairMethod:repairMethod.value,
+      prevention:prevention.value,testResult:testResult.value,
+      technician:technician.value,supervisor:supervisor.value,
+      vendor:vendor.value,partsList:partsList.value,
+      partsCost:partsCost.value,laborCost:laborCost.value,
+      otherCost:otherCost.value,downtime:downtime.value,
+      warranty:warranty.value,remark:remark.value,
       createdAt:new Date()
     });
-
-    // ✅ 5. refresh UI
-    vehicleSelect.value = key;
+    vehicleSelect.value=key;
     loadRepairs(key);
     closeModal();
     showToast("บันทึกข้อมูลสำเร็จ ✅","success");
-
   }catch(e){
-    console.error("SAVE ERROR:",e);
     showToast("บันทึกไม่สำเร็จ ❌","error");
   }
 }
+
+loadVehicles();
+if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js");}
+</script>
+</body>
+</html>
