@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>ระบบซ่อมบำรุงรถยนต์</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<style>
+:root{--primary:#2563eb;--danger:#dc2626;--bg:#f1f5f9}
+*{box-sizing:border-box}
+body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:var(--bg)}
+header{background:linear-gradient(90deg,#1e3a8a,#2563eb);color:#fff;padding:18px 28px;font-size:22px}
+.container{padding:32px;max-width:1600px;margin:auto}
+button,input,select,textarea{width:100%;padding:14px;border-radius:16px;border:1px solid #c7d2fe;font-size:14px;transition:.25s}
+button{background:var(--primary);color:#fff;border:none;cursor:pointer;font-weight:600}
+button:hover{transform:translateY(-2px)}
+button.danger{background:var(--danger)}
+.card{background:#fff;border-radius:26px;padding:28px;margin-bottom:28px;box-shadow:0 22px 45px rgba(0,0,0,.12)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:30px}
+.table{width:100%;border-collapse:collapse;background:#fff;border-radius:24px;overflow:hidden}
+th,td{padding:18px;border-bottom:1px solid #e5e7eb;vertical-align:top}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center}
+.modal-box{background:#fff;width:95%;max-width:1300px;border-radius:34px;padding:40px;max-height:90vh;overflow:auto}
+.badge{padding:6px 16px;border-radius:999px;font-size:12px;font-weight:700}
+.NEW{background:#fee2e2;color:#991b1b}
+.INPROGRESS{background:#fef3c7;color:#92400e}
+.DONE{background:#dcfce7;color:#166534}
+.confirm-box{background:#fff;border-radius:26px;padding:32px;max-width:420px;width:90%;text-align:center}
+.confirm-actions{display:flex;gap:24px;margin-top:24px}
+</style>
+</head>
+<body>
+
+<header>🚗 ระบบซ่อมบำรุงรถยนต์ (Realtime)</header>
+
+<div class="container">
+<div class="card">
+<div class="grid">
+<select id="vehicleSelect"></select>
+<input id="searchInput" placeholder="🔍 ค้นหาประวัติการซ่อม">
+<button onclick="openModal()">➕ เพิ่มประวัติการซ่อม</button>
+<button class="danger" onclick="confirmDeleteVehicle()">🗑 ลบรถและประวัติ</button>
+</div>
+</div>
+
+<div class="card">
+<table class="table">
+<thead>
+<tr>
+<th>วันที่</th><th>รถ</th><th>ระบบ</th><th>อาการ</th><th>ผู้ซ่อม</th><th>ค่าใช้จ่าย</th><th>สถานะ</th><th>ลบ</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
+</table>
+</div>
+</div>
+
+<!-- FORM MODAL -->
+<div class="modal" id="modal">
+<div class="modal-box">
+<h2>บันทึกรายละเอียดการซ่อมบำรุง</h2>
+
+<div class="card">
+<div class="grid">
+<input id="plate" placeholder="ทะเบียนรถ">
+<input id="brand" placeholder="ยี่ห้อ">
+<input id="model" placeholder="รุ่น">
+<input type="date" id="date">
+<input id="system" placeholder="ระบบที่ซ่อม">
+<input id="technician" placeholder="ผู้ซ่อม">
+<input id="symptoms" placeholder="อาการเสีย">
+<input id="cost" type="number" placeholder="ค่าใช้จ่าย">
+<select id="status"><option>NEW</option><option>INPROGRESS</option><option>DONE</option></select>
+</div>
+</div>
+
+<div class="confirm-actions">
+<button onclick="save()">บันทึก</button>
+<button class="danger" onclick="closeModal()">ยกเลิก</button>
+</div>
+</div>
+</div>
+
+<!-- CONFIRM -->
+<div class="modal" id="confirmModal">
+<div class="confirm-box">
+<h3 id="confirmText"></h3>
+<div class="confirm-actions">
+<button id="confirmYes">ยืนยัน</button>
+<button class="danger" onclick="closeConfirm()">ยกเลิก</button>
+</div>
+</div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCowDEvUQpBmq7AwUGiC6IuGOudPhi_0kM",
+  authDomain: "vehicle-maintenance-64890.firebaseapp.com",
+  projectId: "vehicle-maintenance-64890"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+let currentVehicle = "";
+let unsubscribe = null;
+
+function loadVehicles(){
+  db.collection("vehicles").onSnapshot(snap=>{
+    vehicleSelect.innerHTML="";
+    snap.forEach(doc=>{
+      let o=document.createElement("option");
+      o.value=doc.id;
+      o.textContent=doc.id;
+      vehicleSelect.appendChild(o);
+    });
+    if(vehicleSelect.value) loadRepairs(vehicleSelect.value);
+  });
+}
+
+vehicleSelect.onchange=()=>loadRepairs(vehicleSelect.value);
+
+function loadRepairs(vehicle){
+  if(unsubscribe) unsubscribe();
+  unsubscribe = db.collection("vehicles").doc(vehicle).collection("repairs")
+    .onSnapshot(snap=>{
+      tbody.innerHTML="";
+      snap.forEach(doc=>{
+        let r=doc.data();
+        if(searchInput.value && !JSON.stringify(r).toLowerCase().includes(searchInput.value.toLowerCase())) return;
+        tbody.innerHTML+=`
+        <tr>
+          <td>${r.date}</td>
+          <td>${vehicle}</td>
+          <td>${r.system}</td>
+          <td>${r.symptoms}</td>
+          <td>${r.technician}</td>
+          <td>${Number(r.cost).toLocaleString()}</td>
+          <td><span class="badge ${r.status}">${r.status}</span></td>
+          <td><button class="danger" onclick="confirmDeleteRecord('${vehicle}','${doc.id}')">ลบ</button></td>
+        </tr>`;
+      });
+    });
+}
+
+searchInput.oninput=()=>loadRepairs(vehicleSelect.value);
+
+function openModal(){modal.style.display='flex'}
+function closeModal(){modal.style.display='none'}
+
+let pendingAction=null;
+
+function confirmDeleteVehicle(){
+  let v=vehicleSelect.value;
+  confirmText.innerText="ยืนยันการลบรถและประวัติทั้งหมด?";
+  pendingAction=()=>db.collection("vehicles").doc(v).delete();
+  confirmModal.style.display='flex';
+}
+
+function confirmDeleteRecord(v,id){
+  confirmText.innerText="ยืนยันการลบประวัติการซ่อม?";
+  pendingAction=()=>db.collection("vehicles").doc(v).collection("repairs").doc(id).delete();
+  confirmModal.style.display='flex';
+}
+
+confirmYes.onclick=()=>{pendingAction();confirmModal.style.display='none'}
+function closeConfirm(){confirmModal.style.display='none'}
+
+function save(){
+  let key = plate.value+" | "+brand.value+" "+model.value;
+  let ref = db.collection("vehicles").doc(key);
+  ref.set({created:new Date()},{merge:true});
+  ref.collection("repairs").add({
+    date:date.value,system:system.value,symptoms:symptoms.value,
+    technician:technician.value,cost:cost.value,status:status.value
+  });
+  closeModal();
+}
+
+loadVehicles();
+
+if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js");}
+</script>
+
+</body>
+</html>
