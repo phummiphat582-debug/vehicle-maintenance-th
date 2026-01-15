@@ -1,7 +1,18 @@
+const CACHE_NAME = "sc-maintenance-v1";
+const urlsToCache = [
+  "./",
+  "./index.html",
+  "./manifest.json"
+];
+
 self.addEventListener("install", e => {
   e.waitUntil(
-    caches.open("sc-cache").then(cache =>
-      cache.addAll(["index.html"])
-    )
+    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
+  );
+});
+
+self.addEventListener("fetch", e => {
+  e.respondWith(
+    caches.match(e.request).then(res => res || fetch(e.request))
   );
 });
