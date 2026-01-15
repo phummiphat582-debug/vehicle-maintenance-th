@@ -1,7 +1,7 @@
-self.addEventListener("install", e => {
-  e.waitUntil(
-    caches.open("sc-cache").then(cache =>
-      cache.addAll(["index.html"])
-    )
-  );
+self.addEventListener("install", event => {
+  self.skipWaiting();
+});
+
+self.addEventListener("activate", event => {
+  event.waitUntil(self.clients.claim());
 });
