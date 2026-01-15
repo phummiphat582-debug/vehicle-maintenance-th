@@ -5,6 +5,7 @@
 <title>SC THE ADVENTURE | ระบบซ่อมบำรุงรถยนต์ (Realtime)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
 
 <style>
 :root{--primary:#2563eb;--danger:#dc2626;--success:#16a34a;--bg:#f1f5f9}
@@ -28,12 +29,12 @@ th,td{padding:18px;border-bottom:1px solid #e5e7eb;vertical-align:top}
 .INPROGRESS{background:#fef3c7;color:#92400e}
 .DONE{background:#dcfce7;color:#166534}
 
-/* popup */
+/* toast */
 .toast{
-  position:fixed;top:30px;right:30px;
-  background:#fff;padding:18px 26px;
-  border-radius:20px;box-shadow:0 20px 40px rgba(0,0,0,.2);
-  display:none;align-items:center;gap:14px;z-index:99
+  position:fixed;top:24px;right:24px;
+  background:#fff;padding:16px 24px;border-radius:18px;
+  box-shadow:0 20px 40px rgba(0,0,0,.2);
+  display:none;z-index:999
 }
 .toast.success{border-left:8px solid var(--success)}
 .toast.error{border-left:8px solid var(--danger)}
@@ -43,60 +44,109 @@ th,td{padding:18px;border-bottom:1px solid #e5e7eb;vertical-align:top}
 <body>
 <header>🚗 SC THE ADVENTURE | ระบบซ่อมบำรุงรถยนต์ (Realtime)</header>
 
-<div class="toast" id="toast"><span id="toastText"></span></div>
+<div class="toast" id="toastBox"><span id="toastText"></span></div>
 
 <div class="container">
-  <div class="card">
-    <div class="grid">
-      <select id="vehicleSelect"></select>
-      <input id="searchInput" placeholder="🔍 ค้นหาประวัติการซ่อม">
-      <button onclick="openModal()">➕ เพิ่มประวัติการซ่อม</button>
-      <button class="danger" onclick="deleteVehicle()">🗑 ลบรถทั้งหมด</button>
-    </div>
-  </div>
-
-  <div class="card">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>วันที่</th><th>รถ</th><th>ระบบ</th><th>อาการ</th>
-          <th>ผู้ซ่อม</th><th>ค่าใช้จ่าย</th><th>สถานะ</th>
-        </tr>
-      </thead>
-      <tbody id="tbody"></tbody>
-    </table>
-  </div>
+<div class="card">
+<div class="grid">
+<select id="vehicleSelect"></select>
+<input id="searchInput" placeholder="🔍 ค้นหาประวัติการซ่อม (ทุกฟิลด์)">
+<button onclick="openModal()">➕ เพิ่มประวัติการซ่อม</button>
+<button class="danger" onclick="confirmDeleteVehicle()">🗑 ลบรถและประวัติทั้งหมด</button>
+</div>
 </div>
 
+<div class="card">
+<table class="table">
+<thead>
+<tr>
+<th>วันที่</th><th>รถ</th><th>ระบบ</th><th>อาการ</th>
+<th>ผู้ซ่อม</th><th>ค่าใช้จ่ายรวม</th><th>สถานะ</th><th>ลบ</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
+</table>
+</div>
+</div>
+
+<!-- ===== MODAL ===== -->
 <div class="modal" id="modal">
 <div class="modal-box">
-<h2>บันทึกงานซ่อม</h2>
+<h2>บันทึกรายละเอียดการซ่อมบำรุง (Ultra Detail)</h2>
 
+<div class="card">
+<div class="section-title">ข้อมูลรถ (Vehicle Identity)</div>
 <div class="grid">
 <input id="plate" placeholder="ทะเบียนรถ">
 <input id="brand" placeholder="ยี่ห้อ">
 <input id="model" placeholder="รุ่น">
+<input id="year" placeholder="ปีรถ">
+<input id="vin" placeholder="VIN / Chassis No.">
+<input id="engineNo" placeholder="Engine No.">
+<input id="mileage" placeholder="เลขไมล์ ณ วันที่ซ่อม">
+<input id="fuelType" placeholder="ประเภทเชื้อเพลิง">
+<input id="usageType" placeholder="ลักษณะการใช้งาน">
+</div>
+</div>
+
+<div class="card">
+<div class="section-title">รายละเอียดงานซ่อม</div>
+<div class="grid">
 <input type="date" id="date">
 <input id="system" placeholder="ระบบที่ซ่อม">
-<input id="technician" placeholder="ช่าง">
+<select id="jobType">
+<option>PM - Preventive</option>
+<option>CM - Corrective</option>
+<option>Emergency</option>
+<option>Accident</option>
+</select>
+<select id="priority">
+<option>ต่ำ</option><option>กลาง</option><option>สูง</option><option>วิกฤต</option>
+</select>
 <select id="status">
-<option>NEW</option>
-<option>INPROGRESS</option>
-<option>DONE</option>
+<option class="NEW">NEW</option>
+<option class="INPROGRESS">INPROGRESS</option>
+<option class="DONE">DONE</option>
 </select>
 </div>
+<textarea id="symptoms" placeholder="อาการเสีย"></textarea>
+<textarea id="rootCause" placeholder="Root Cause"></textarea>
+<textarea id="diagnosis" placeholder="Diagnosis"></textarea>
+<textarea id="repairMethod" placeholder="Repair Method"></textarea>
+<textarea id="prevention" placeholder="Preventive Action"></textarea>
+<textarea id="testResult" placeholder="Test Result"></textarea>
+</div>
 
-<textarea id="symptoms" placeholder="อาการ"></textarea>
-
+<div class="card">
+<div class="section-title">ค่าใช้จ่าย / ผู้รับผิดชอบ</div>
 <div class="grid">
-<input type="number" id="partsCost" placeholder="ค่าอะไหล่">
-<input type="number" id="laborCost" placeholder="ค่าแรง">
-<input type="number" id="otherCost" placeholder="อื่นๆ">
+<input id="technician" placeholder="ช่าง">
+<input id="supervisor" placeholder="ผู้ตรวจรับ">
+<input id="vendor" placeholder="อู่ / บริษัท">
+<input id="partsList" placeholder="รายการอะไหล่">
+<input id="partsCost" type="number" placeholder="ค่าอะไหล่">
+<input id="laborCost" type="number" placeholder="ค่าแรง">
+<input id="otherCost" type="number" placeholder="อื่นๆ">
+<input id="downtime" placeholder="Downtime">
+<input id="warranty" placeholder="การรับประกัน">
+</div>
+<textarea id="remark" placeholder="หมายเหตุ"></textarea>
 </div>
 
 <div class="grid">
-<button onclick="save()">💾 บันทึก</button>
+<button onclick="save()">💾 บันทึกข้อมูล</button>
 <button class="danger" onclick="closeModal()">ยกเลิก</button>
+</div>
+</div>
+</div>
+
+<!-- CONFIRM -->
+<div class="modal" id="confirmModal">
+<div class="modal-box" style="max-width:420px">
+<h3 id="confirmText"></h3>
+<div class="grid">
+<button id="confirmYes">ยืนยัน</button>
+<button class="danger" onclick="closeConfirm()">ยกเลิก</button>
 </div>
 </div>
 </div>
@@ -112,15 +162,20 @@ firebase.initializeApp({
 });
 const db=firebase.firestore();
 
-const toast=(msg,type="success")=>{
+let unsubscribe=null,pendingAction=null;
+
+const toastBox=document.getElementById("toastBox");
+const toastText=document.getElementById("toastText");
+function showToast(msg,type="success"){
   toastText.innerText=msg;
-  toast.className="toast "+type;
-  toast.style.display="flex";
-  setTimeout(()=>toast.style.display="none",3000);
-};
+  toastBox.className="toast "+type;
+  toastBox.style.display="block";
+  setTimeout(()=>toastBox.style.display="none",3000);
+}
 
 function openModal(){modal.style.display="flex"}
 function closeModal(){modal.style.display="none"}
+function closeConfirm(){confirmModal.style.display="none"}
 
 function loadVehicles(){
   db.collection("vehicles").onSnapshot(s=>{
@@ -133,53 +188,77 @@ function loadVehicles(){
     if(vehicleSelect.value) loadRepairs(vehicleSelect.value);
   });
 }
-
 vehicleSelect.onchange=()=>loadRepairs(vehicleSelect.value);
 
 function loadRepairs(v){
-  db.collection("vehicles").doc(v).collection("repairs")
+  if(unsubscribe) unsubscribe();
+  unsubscribe=db.collection("vehicles").doc(v).collection("repairs")
   .orderBy("createdAt","desc")
   .onSnapshot(s=>{
     tbody.innerHTML="";
     s.forEach(d=>{
       let r=d.data();
       let cost=(+r.partsCost||0)+(+r.laborCost||0)+(+r.otherCost||0);
+      if(searchInput.value && !JSON.stringify(r).toLowerCase().includes(searchInput.value.toLowerCase())) return;
       tbody.innerHTML+=`
       <tr>
         <td>${r.date||""}</td>
         <td>${v}</td>
         <td>${r.system||""}</td>
-        <td>${r.symptoms||""}</td>
+        <td>${(r.symptoms||"").substring(0,60)}...</td>
         <td>${r.technician||""}</td>
         <td>${cost.toLocaleString()}</td>
         <td><span class="badge ${r.status}">${r.status}</span></td>
+        <td><button class="danger" onclick="confirmDeleteRecord('${v}','${d.id}')">ลบ</button></td>
       </tr>`;
     });
   });
 }
 
+function confirmDeleteVehicle(){
+  confirmText.innerText="ยืนยันการลบรถและประวัติทั้งหมด?";
+  pendingAction=()=>db.collection("vehicles").doc(vehicleSelect.value).delete();
+  confirmModal.style.display="flex";
+}
+function confirmDeleteRecord(v,id){
+  confirmText.innerText="ยืนยันการลบรายการนี้?";
+  pendingAction=()=>db.collection("vehicles").doc(v).collection("repairs").doc(id).delete();
+  confirmModal.style.display="flex";
+}
+confirmYes.onclick=()=>{pendingAction();closeConfirm()}
+
 async function save(){
   try{
-    let key=plate.value+" | "+brand.value+" "+model.value;
-    let ref=db.collection("vehicles").doc(key);
+    const key=plate.value+" | "+brand.value+" "+model.value;
+    const ref=db.collection("vehicles").doc(key);
     await ref.set({created:new Date()},{merge:true});
     await ref.collection("repairs").add({
-      plate:plate.value,brand:brand.value,model:model.value,
-      date:date.value,system:system.value,technician:technician.value,
-      status:status.value,symptoms:symptoms.value,
+      plate:plate.value,brand:brand.value,model:model.value,year:year.value,
+      vin:vin.value,engineNo:engineNo.value,mileage:mileage.value,
+      fuelType:fuelType.value,usageType:usageType.value,
+      date:date.value,system:system.value,jobType:jobType.value,
+      priority:priority.value,status:status.value,
+      symptoms:symptoms.value,rootCause:rootCause.value,
+      diagnosis:diagnosis.value,repairMethod:repairMethod.value,
+      prevention:prevention.value,testResult:testResult.value,
+      technician:technician.value,supervisor:supervisor.value,
+      vendor:vendor.value,partsList:partsList.value,
       partsCost:partsCost.value,laborCost:laborCost.value,
-      otherCost:otherCost.value,createdAt:new Date()
+      otherCost:otherCost.value,downtime:downtime.value,
+      warranty:warranty.value,remark:remark.value,
+      createdAt:new Date()
     });
     vehicleSelect.value=key;
     loadRepairs(key);
     closeModal();
-    toast("บันทึกข้อมูลสำเร็จ ✅","success");
+    showToast("บันทึกข้อมูลสำเร็จ ✅","success");
   }catch(e){
-    toast("บันทึกไม่สำเร็จ ❌","error");
+    showToast("บันทึกไม่สำเร็จ ❌","error");
   }
 }
 
 loadVehicles();
+if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js");}
 </script>
 </body>
 </html>
