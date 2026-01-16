@@ -1,8 +1,9 @@
 {
   "name": "SC THE ADVENTURE | ระบบซ่อมบำรุงรถยนต์",
   "short_name": "SC Adventure",
-  "start_url": "index.html",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "theme_color": "#2563eb",
-  "background_color": "#ffffff"
+  "background_color": "#f1f5f9"
 }
