@@ -136,7 +136,8 @@ const db=firebase.firestore();
 <div class="card grid">
   <select id="vehicleSelect"></select>
   <button onclick="openModal()">➕ เพิ่มประวัติการซ่อม</button>
-  <button class="danger" onclick="confirmDeleteAll()">🗑️ ลบรายการทั้งหมด</button>
+  <button class="danger" onclick="confirmDeleteAll()">🗑️ ลบประวัติซ่อมทั้งหมด</button>
+  <button class="danger" onclick="confirmDeleteVehicle()">🚫 ลบรถคันนี้ออกจากระบบ</button>
 </div>
 
 <div class="card">
@@ -166,23 +167,23 @@ const db=firebase.firestore();
 
 <div class="form-grid">
 <input id="plate" placeholder="ทะเบียนรถ (เช่น กข-1234)">
-<input id="brand" placeholder="ยี่ห้อรถ (Toyota / Isuzu)">
+<input id="brand" placeholder="ยี่ห้อรถ">
 <input id="model" placeholder="รุ่นรถ">
 
 <input type="date" id="date">
 <input id="mileage" placeholder="เลขไมล์ / ระยะทาง (กม.)">
 <input id="jobNo" placeholder="เลขที่ใบงานซ่อม">
 
-<input id="system" placeholder="ระบบที่ซ่อม (เครื่องยนต์ / เบรก / ช่วงล่าง)">
+<input id="system" placeholder="ระบบที่ซ่อม">
 <input id="technician" placeholder="ชื่อช่างผู้รับผิดชอบ">
-<input id="approver" placeholder="ผู้อนุมัติงานซ่อม">
+<input id="approver" placeholder="ผู้อนุมัติงาน">
 
-<textarea id="symptoms" placeholder="อาการเสีย / ปัญหาที่พบ (อธิบายละเอียด)"></textarea>
+<textarea id="symptoms" placeholder="อาการเสีย / ปัญหาที่พบ"></textarea>
 <textarea id="parts" placeholder="อะไหล่ที่เปลี่ยน / งานที่ดำเนินการ"></textarea>
 <textarea id="note" placeholder="หมายเหตุเพิ่มเติม"></textarea>
 
-<input type="number" id="partsCost" placeholder="ค่าอะไหล่ (บาท)">
-<input type="number" id="laborCost" placeholder="ค่าแรง (บาท)">
+<input type="number" id="partsCost" placeholder="ค่าอะไหล่">
+<input type="number" id="laborCost" placeholder="ค่าแรง">
 </div>
 
 <div class="grid">
@@ -308,7 +309,7 @@ async function confirmDeleteAll(){
   if(!vehicleSelect.value) return;
 
   openConfirm(
-    "ลบประวัติทั้งหมด",
+    "ลบประวัติซ่อมทั้งหมด",
     "ข้อมูลการซ่อมทั้งหมดของรถคันนี้จะถูกลบถาวร",
     async ()=>{
       const snap = await db
@@ -320,6 +321,27 @@ async function confirmDeleteAll(){
       const batch = db.batch();
       snap.forEach(d=>batch.delete(d.ref));
       await batch.commit();
+      tbody.innerHTML="";
+    }
+  );
+}
+
+async function confirmDeleteVehicle(){
+  if(!vehicleSelect.value) return;
+  const name = vehicleSelect.value;
+
+  openConfirm(
+    "ลบรถออกจากระบบ",
+    `คุณแน่ใจหรือไม่ว่าต้องการลบรถ "${name}" ทั้งคัน?
+ข้อมูลทั้งหมดจะถูกลบถาวร`,
+    async ()=>{
+      const ref=db.collection("vehicles").doc(name);
+      const snap=await ref.collection("repairs").get();
+      const batch=db.batch();
+      snap.forEach(d=>batch.delete(d.ref));
+      await batch.commit();
+      await ref.delete();
+      vehicleSelect.value="";
       tbody.innerHTML="";
     }
   );
