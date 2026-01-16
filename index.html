@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <title>SC THE ADVENTURE | ระบบซ่อมบำรุงรถยนต์</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="manifest" href="manifest.json">
 
 <style>
 :root{
@@ -65,8 +64,8 @@ button.danger{
 .table{
   width:100%;
   border-collapse:collapse;
-  overflow:hidden;
-  border-radius:26px
+  border-radius:26px;
+  overflow:hidden
 }
 th,td{
   padding:18px;
@@ -106,16 +105,9 @@ th,td{
   margin:26px 0
 }
 textarea{min-height:120px}
-.badge{
-  padding:6px 16px;
-  border-radius:999px;
-  font-size:12px;
-  font-weight:700
-}
-.NEW{background:#fee2e2;color:#991b1b}
 .detail-row{
   display:grid;
-  grid-template-columns:220px 1fr;
+  grid-template-columns:240px 1fr;
   gap:14px;
   padding:10px 0;
   border-bottom:1px dashed #e5e7eb
@@ -151,9 +143,14 @@ const db=firebase.firestore();
 <table class="table">
 <thead>
 <tr>
-<th>วันที่</th><th>รถ</th><th>ระบบ</th><th>อาการ</th>
-<th>ช่าง</th><th>ค่าใช้จ่าย</th><th>สถานะ</th>
-<th>รายละเอียด</th><th>ลบ</th>
+<th>วันที่</th>
+<th>รถ</th>
+<th>ระบบที่ซ่อม</th>
+<th>อาการเสีย</th>
+<th>ช่าง</th>
+<th>ค่าใช้จ่าย</th>
+<th>รายละเอียด</th>
+<th>ลบ</th>
 </tr>
 </thead>
 <tbody id="tbody"></tbody>
@@ -168,15 +165,24 @@ const db=firebase.firestore();
 <h2>บันทึกการซ่อม</h2>
 
 <div class="form-grid">
-<input id="plate" placeholder="ทะเบียนรถ">
-<input id="brand" placeholder="ยี่ห้อรถ">
+<input id="plate" placeholder="ทะเบียนรถ (เช่น กข-1234)">
+<input id="brand" placeholder="ยี่ห้อรถ (Toyota / Isuzu)">
 <input id="model" placeholder="รุ่นรถ">
+
 <input type="date" id="date">
-<input id="system" placeholder="ระบบที่ซ่อม">
-<input id="technician" placeholder="ชื่อช่าง">
-<textarea id="symptoms" placeholder="อาการเสีย / รายละเอียด"></textarea>
-<input type="number" id="partsCost" placeholder="ค่าอะไหล่">
-<input type="number" id="laborCost" placeholder="ค่าแรง">
+<input id="mileage" placeholder="เลขไมล์ / ระยะทาง (กม.)">
+<input id="jobNo" placeholder="เลขที่ใบงานซ่อม">
+
+<input id="system" placeholder="ระบบที่ซ่อม (เครื่องยนต์ / เบรก / ช่วงล่าง)">
+<input id="technician" placeholder="ชื่อช่างผู้รับผิดชอบ">
+<input id="approver" placeholder="ผู้อนุมัติงานซ่อม">
+
+<textarea id="symptoms" placeholder="อาการเสีย / ปัญหาที่พบ (อธิบายละเอียด)"></textarea>
+<textarea id="parts" placeholder="อะไหล่ที่เปลี่ยน / งานที่ดำเนินการ"></textarea>
+<textarea id="note" placeholder="หมายเหตุเพิ่มเติม"></textarea>
+
+<input type="number" id="partsCost" placeholder="ค่าอะไหล่ (บาท)">
+<input type="number" id="laborCost" placeholder="ค่าแรง (บาท)">
 </div>
 
 <div class="grid">
@@ -201,7 +207,7 @@ const db=firebase.firestore();
 <!-- detail -->
 <div class="modal" id="detailModal">
 <div class="modal-box">
-<h2>รายละเอียด</h2>
+<h2>รายละเอียดการซ่อม</h2>
 <div id="detailContent"></div>
 <button class="danger" onclick="detailModal.style.display='none'">ปิด</button>
 </div>
@@ -237,7 +243,8 @@ function loadVehicles(){
     vehicleSelect.innerHTML="";
     s.forEach(d=>{
       let o=document.createElement("option");
-      o.value=d.id;o.textContent=d.id;
+      o.value=d.id;
+      o.textContent=d.id;
       vehicleSelect.appendChild(o);
     });
     if(vehicleSelect.value) loadRepairs(vehicleSelect.value);
@@ -251,16 +258,15 @@ function loadRepairs(v){
     tbody.innerHTML="";
     s.forEach(doc=>{
       let r=doc.data();
-      let cost=(+r.partsCost||0)+(+r.laborCost||0);
+      let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
       tbody.innerHTML+=`
 <tr>
-<td>${r.date||""}</td>
+<td>${r["วันที่"]||""}</td>
 <td>${v}</td>
-<td>${r.system||""}</td>
-<td>${r.symptoms||""}</td>
-<td>${r.technician||""}</td>
+<td>${r["ระบบที่ซ่อม"]||""}</td>
+<td>${r["อาการเสีย"]||""}</td>
+<td>${r["ช่างผู้รับผิดชอบ"]||""}</td>
 <td>${cost}</td>
-<td><span class="badge NEW">NEW</span></td>
 <td><button onclick='openDetail(${JSON.stringify(r)})'>ดู</button></td>
 <td><button class="danger" onclick="deleteRec('${v}','${doc.id}')">ลบ</button></td>
 </tr>`;
@@ -271,40 +277,64 @@ function loadRepairs(v){
 function save(){
   let key=plate.value+" "+brand.value+" "+model.value;
   let ref=db.collection("vehicles").doc(key);
+
   ref.set({updated:new Date()},{merge:true});
+
   ref.collection("repairs").add({
-    date:date.value,system:system.value,symptoms:symptoms.value,
-    technician:technician.value,
-    partsCost:partsCost.value,laborCost:laborCost.value,
-    createdAt:new Date()
+    "วันที่":date.value,
+    "เลขไมล์":mileage.value,
+    "เลขที่ใบงาน":jobNo.value,
+    "ระบบที่ซ่อม":system.value,
+    "อาการเสีย":symptoms.value,
+    "อะไหล่ที่เปลี่ยน":parts.value,
+    "ช่างผู้รับผิดชอบ":technician.value,
+    "ผู้อนุมัติ":approver.value,
+    "หมายเหตุ":note.value,
+    "ค่าอะไหล่":partsCost.value,
+    "ค่าแรง":laborCost.value,
+    "เวลาบันทึก":new Date()
   }).then(closeModal);
 }
 
 function deleteRec(v,id){
-  openConfirm("ลบรายการ","ยืนยันลบรายการนี้?",
+  openConfirm(
+    "ลบรายการ",
+    "คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?",
     ()=>db.collection("vehicles").doc(v).collection("repairs").doc(id).delete()
   );
 }
 
-function confirmDeleteAll(){
-  openConfirm("ลบทั้งหมด","ลบประวัติซ่อมทั้งหมดของรถคันนี้?",
-    ()=>{
-      db.collection("vehicles").doc(vehicleSelect.value)
-      .collection("repairs").get().then(s=>{
-        let b=db.batch();
-        s.forEach(d=>b.delete(d.ref));
-        b.commit();
-      });
+async function confirmDeleteAll(){
+  if(!vehicleSelect.value) return;
+
+  openConfirm(
+    "ลบประวัติทั้งหมด",
+    "ข้อมูลการซ่อมทั้งหมดของรถคันนี้จะถูกลบถาวร",
+    async ()=>{
+      const snap = await db
+        .collection("vehicles")
+        .doc(vehicleSelect.value)
+        .collection("repairs")
+        .get();
+
+      const batch = db.batch();
+      snap.forEach(d=>batch.delete(d.ref));
+      await batch.commit();
+      tbody.innerHTML="";
     }
   );
 }
 
 function openDetail(d){
-  let h="";
+  let html="";
   Object.keys(d).forEach(k=>{
-    h+=`<div class="detail-row"><b>${k}</b><div>${d[k]}</div></div>`;
+    html+=`
+      <div class="detail-row">
+        <b>${k}</b>
+        <div>${d[k] || "-"}</div>
+      </div>`;
   });
-  detailContent.innerHTML=h;
+  detailContent.innerHTML=html;
   detailModal.style.display="flex";
 }
 
