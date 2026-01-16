@@ -1,12 +1,8 @@
 {
-  "name": "SC THE ADVENTURE - ระบบซ่อมบำรุง",
-  "short_name": "SC Maintenance",
-  "start_url": "./vehicle-maintenance.html",
+  "name": "SC THE ADVENTURE | ระบบซ่อมบำรุงรถยนต์",
+  "short_name": "SC Adventure",
+  "start_url": "index.html",
   "display": "standalone",
-  "background_color": "#2563eb",
   "theme_color": "#2563eb",
-  "icons": [
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
-  ]
+  "background_color": "#ffffff"
 }
