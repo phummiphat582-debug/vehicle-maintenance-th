@@ -4,29 +4,364 @@
 <meta charset="UTF-8">
 <title>SC THE ADVENTURE | ระบบซ่อมบำรุงรถยนต์</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="manifest" href="manifest.json">
-</head>
-<body>
-<h1>SC THE ADVENTURE | ระบบซ่อมบำรุงรถยนต์</h1>
 
-<button id="installBtn" style="display:none">⬇️ ติดตั้งแอปลงเครื่อง</button>
+<style>
+:root{
+  --primary:#2563eb;
+  --danger:#dc2626;
+  --bg:#f1f5f9;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Segoe UI,Arial,sans-serif;
+  background:var(--bg)
+}
+header{
+  background:linear-gradient(90deg,#1e3a8a,#2563eb);
+  color:#fff;
+  padding:22px 32px;
+  font-size:24px;
+  font-weight:700
+}
+.container{
+  padding:32px;
+  max-width:1700px;
+  margin:auto
+}
+button,input,textarea,select{
+  width:100%;
+  padding:14px;
+  border-radius:16px;
+  border:1px solid #c7d2fe;
+  font-size:14px
+}
+button{
+  background:var(--primary);
+  color:#fff;
+  border:none;
+  cursor:pointer;
+  font-weight:600;
+  transition:.2s
+}
+button:active{transform:scale(.95)}
+button.danger{
+  background:linear-gradient(135deg,#dc2626,#991b1b);
+  box-shadow:0 10px 25px rgba(220,38,38,.35)
+}
+.card{
+  background:#fff;
+  border-radius:28px;
+  padding:32px;
+  margin-bottom:30px;
+  box-shadow:0 25px 50px rgba(0,0,0,.12)
+}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+  gap:22px
+}
+.table{
+  width:100%;
+  border-collapse:collapse;
+  border-radius:26px;
+  overflow:hidden
+}
+th,td{
+  padding:18px;
+  border-bottom:1px solid #e5e7eb;
+  vertical-align:top
+}
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.65);
+  display:none;
+  align-items:center;
+  justify-content:center
+}
+.modal-box{
+  background:#fff;
+  width:96%;
+  max-width:1500px;
+  border-radius:36px;
+  padding:44px;
+  max-height:92vh;
+  overflow:auto;
+  animation:pop .25s ease
+}
+@keyframes pop{
+  from{opacity:0;transform:scale(.9)}
+  to{opacity:1;transform:scale(1)}
+}
+.confirm-box{
+  max-width:520px;
+  text-align:center
+}
+.form-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(340px,1fr));
+  gap:26px;
+  margin:26px 0
+}
+textarea{min-height:120px}
+.detail-row{
+  display:grid;
+  grid-template-columns:240px 1fr;
+  gap:14px;
+  padding:10px 0;
+  border-bottom:1px dashed #e5e7eb
+}
+.detail-row b{color:#1e3a8a}
+</style>
+</head>
+
+<body>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyCowDEvUQpBmq7AwUGiC6IuGOudPhi_0kM",
+  authDomain: "vehicle-maintenance-64890.firebaseapp.com",
+  projectId: "vehicle-maintenance-64890",
+});
+const db=firebase.firestore();
+</script>
+
+<header>🚗 SC THE ADVENTURE | ระบบซ่อมบำรุงรถยนต์</header>
+
+<div class="container">
+
+<div class="card grid">
+  <select id="vehicleSelect"></select>
+  <button onclick="openModal()">➕ เพิ่มประวัติการซ่อม</button>
+  <button class="danger" onclick="confirmDeleteAll()">🗑️ ลบประวัติซ่อมทั้งหมด</button>
+  <button class="danger" onclick="confirmDeleteVehicle()">🚫 ลบรถคันนี้ออกจากระบบ</button>
+</div>
+
+<div class="card">
+<table class="table">
+<thead>
+<tr>
+<th>วันที่</th>
+<th>รถ</th>
+<th>ระบบที่ซ่อม</th>
+<th>อาการเสีย</th>
+<th>ช่าง</th>
+<th>ค่าใช้จ่าย</th>
+<th>รายละเอียด</th>
+<th>ลบ</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
+</table>
+</div>
+
+</div>
+
+<!-- เพิ่มข้อมูล -->
+<div class="modal" id="modal">
+<div class="modal-box">
+<h2>บันทึกการซ่อม</h2>
+
+<div class="form-grid">
+<input id="plate" placeholder="ทะเบียนรถ (เช่น กข-1234)">
+<input id="brand" placeholder="ยี่ห้อรถ">
+<input id="model" placeholder="รุ่นรถ">
+
+<input type="date" id="date">
+<input id="mileage" placeholder="เลขไมล์ / ระยะทาง (กม.)">
+<input id="jobNo" placeholder="เลขที่ใบงานซ่อม">
+
+<input id="system" placeholder="ระบบที่ซ่อม">
+<input id="technician" placeholder="ชื่อช่างผู้รับผิดชอบ">
+<input id="approver" placeholder="ผู้อนุมัติงาน">
+
+<textarea id="symptoms" placeholder="อาการเสีย / ปัญหาที่พบ"></textarea>
+<textarea id="parts" placeholder="อะไหล่ที่เปลี่ยน / งานที่ดำเนินการ"></textarea>
+<textarea id="note" placeholder="หมายเหตุเพิ่มเติม"></textarea>
+
+<input type="number" id="partsCost" placeholder="ค่าอะไหล่">
+<input type="number" id="laborCost" placeholder="ค่าแรง">
+</div>
+
+<div class="grid">
+<button onclick="confirmSave()">บันทึก</button>
+<button class="danger" onclick="closeModal()">ยกเลิก</button>
+</div>
+</div>
+</div>
+
+<!-- confirm -->
+<div class="modal" id="confirmModal">
+<div class="modal-box confirm-box">
+<h2 id="confirmTitle"></h2>
+<p id="confirmText" style="margin:20px 0;color:#374151"></p>
+<div class="grid">
+<button onclick="confirmYes()">ยืนยัน</button>
+<button class="danger" onclick="closeConfirm()">ยกเลิก</button>
+</div>
+</div>
+</div>
+
+<!-- detail -->
+<div class="modal" id="detailModal">
+<div class="modal-box">
+<h2>รายละเอียดการซ่อม</h2>
+<div id="detailContent"></div>
+<button class="danger" onclick="detailModal.style.display='none'">ปิด</button>
+</div>
+</div>
 
 <script>
-let deferredPrompt;
-window.addEventListener("beforeinstallprompt", e => {
-  e.preventDefault();
-  deferredPrompt = e;
-  installBtn.style.display = "block";
-});
-installBtn.addEventListener("click", async () => {
-  deferredPrompt.prompt();
-  await deferredPrompt.userChoice;
-  deferredPrompt = null;
-  installBtn.style.display = "none";
-});
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("./service-worker.js");
+let confirmAction=null;
+
+function openModal(){modal.style.display='flex'}
+function closeModal(){modal.style.display='none'}
+
+function openConfirm(t,txt,fn){
+  confirmTitle.textContent=t;
+  confirmText.textContent=txt;
+  confirmAction=fn;
+  confirmModal.style.display='flex';
 }
+function closeConfirm(){
+  confirmModal.style.display='none';
+  confirmAction=null;
+}
+function confirmYes(){
+  if(confirmAction) confirmAction();
+  closeConfirm();
+}
+
+function confirmSave(){
+  openConfirm("บันทึกข้อมูล","ยืนยันการบันทึกประวัติการซ่อม?",save);
+}
+
+function loadVehicles(){
+  db.collection("vehicles").onSnapshot(s=>{
+    vehicleSelect.innerHTML="";
+    s.forEach(d=>{
+      let o=document.createElement("option");
+      o.value=d.id;
+      o.textContent=d.id;
+      vehicleSelect.appendChild(o);
+    });
+    if(vehicleSelect.value) loadRepairs(vehicleSelect.value);
+  });
+}
+vehicleSelect.onchange=()=>loadRepairs(vehicleSelect.value);
+
+function loadRepairs(v){
+  db.collection("vehicles").doc(v).collection("repairs")
+  .onSnapshot(s=>{
+    tbody.innerHTML="";
+    s.forEach(doc=>{
+      let r=doc.data();
+      let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
+      tbody.innerHTML+=`
+<tr>
+<td>${r["วันที่"]||""}</td>
+<td>${v}</td>
+<td>${r["ระบบที่ซ่อม"]||""}</td>
+<td>${r["อาการเสีย"]||""}</td>
+<td>${r["ช่างผู้รับผิดชอบ"]||""}</td>
+<td>${cost}</td>
+<td><button onclick='openDetail(${JSON.stringify(r)})'>ดู</button></td>
+<td><button class="danger" onclick="deleteRec('${v}','${doc.id}')">ลบ</button></td>
+</tr>`;
+    });
+  });
+}
+
+function save(){
+  let key=plate.value+" "+brand.value+" "+model.value;
+  let ref=db.collection("vehicles").doc(key);
+
+  ref.set({updated:new Date()},{merge:true});
+
+  ref.collection("repairs").add({
+    "วันที่":date.value,
+    "เลขไมล์":mileage.value,
+    "เลขที่ใบงาน":jobNo.value,
+    "ระบบที่ซ่อม":system.value,
+    "อาการเสีย":symptoms.value,
+    "อะไหล่ที่เปลี่ยน":parts.value,
+    "ช่างผู้รับผิดชอบ":technician.value,
+    "ผู้อนุมัติ":approver.value,
+    "หมายเหตุ":note.value,
+    "ค่าอะไหล่":partsCost.value,
+    "ค่าแรง":laborCost.value,
+    "เวลาบันทึก":new Date()
+  }).then(closeModal);
+}
+
+function deleteRec(v,id){
+  openConfirm(
+    "ลบรายการ",
+    "คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?",
+    ()=>db.collection("vehicles").doc(v).collection("repairs").doc(id).delete()
+  );
+}
+
+async function confirmDeleteAll(){
+  if(!vehicleSelect.value) return;
+
+  openConfirm(
+    "ลบประวัติซ่อมทั้งหมด",
+    "ข้อมูลการซ่อมทั้งหมดของรถคันนี้จะถูกลบถาวร",
+    async ()=>{
+      const snap = await db
+        .collection("vehicles")
+        .doc(vehicleSelect.value)
+        .collection("repairs")
+        .get();
+
+      const batch = db.batch();
+      snap.forEach(d=>batch.delete(d.ref));
+      await batch.commit();
+      tbody.innerHTML="";
+    }
+  );
+}
+
+async function confirmDeleteVehicle(){
+  if(!vehicleSelect.value) return;
+  const name = vehicleSelect.value;
+
+  openConfirm(
+    "ลบรถออกจากระบบ",
+    `คุณแน่ใจหรือไม่ว่าต้องการลบรถ "${name}" ทั้งคัน?
+ข้อมูลทั้งหมดจะถูกลบถาวร`,
+    async ()=>{
+      const ref=db.collection("vehicles").doc(name);
+      const snap=await ref.collection("repairs").get();
+      const batch=db.batch();
+      snap.forEach(d=>batch.delete(d.ref));
+      await batch.commit();
+      await ref.delete();
+      vehicleSelect.value="";
+      tbody.innerHTML="";
+    }
+  );
+}
+
+function openDetail(d){
+  let html="";
+  Object.keys(d).forEach(k=>{
+    html+=`
+      <div class="detail-row">
+        <b>${k}</b>
+        <div>${d[k] || "-"}</div>
+      </div>`;
+  });
+  detailContent.innerHTML=html;
+  detailModal.style.display="flex";
+}
+
+loadVehicles();
 </script>
+
 </body>
 </html>
