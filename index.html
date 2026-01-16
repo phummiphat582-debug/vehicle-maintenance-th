@@ -13,37 +13,19 @@
   --bg:#f1f5f9;
 }
 *{box-sizing:border-box}
-body{
-  margin:0;
-  font-family:Segoe UI,Arial,sans-serif;
-  background:var(--bg)
-}
+body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:var(--bg)}
 header{
   background:linear-gradient(90deg,#1e3a8a,#2563eb);
-  color:#fff;
-  padding:22px 32px;
-  font-size:24px;
-  font-weight:700
+  color:#fff;padding:22px 32px;font-size:24px;font-weight:700
 }
-.container{
-  padding:32px;
-  max-width:1700px;
-  margin:auto
-}
+.container{padding:32px;max-width:1700px;margin:auto}
 button,input,textarea,select{
-  width:100%;
-  padding:14px;
-  border-radius:16px;
-  border:1px solid #c7d2fe;
-  font-size:14px
+  width:100%;padding:14px;border-radius:16px;
+  border:1px solid #c7d2fe;font-size:14px
 }
 button{
-  background:var(--primary);
-  color:#fff;
-  border:none;
-  cursor:pointer;
-  font-weight:600;
-  transition:.2s
+  background:var(--primary);color:#fff;border:none;
+  cursor:pointer;font-weight:600;transition:.2s
 }
 button:active{transform:scale(.95)}
 button.danger{
@@ -51,67 +33,31 @@ button.danger{
   box-shadow:0 10px 25px rgba(220,38,38,.35)
 }
 .card{
-  background:#fff;
-  border-radius:28px;
-  padding:32px;
-  margin-bottom:30px;
-  box-shadow:0 25px 50px rgba(0,0,0,.12)
+  background:#fff;border-radius:28px;padding:32px;
+  margin-bottom:30px;box-shadow:0 25px 50px rgba(0,0,0,.12)
 }
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
-  gap:22px
-}
-.table{
-  width:100%;
-  border-collapse:collapse;
-  border-radius:26px;
-  overflow:hidden
-}
-th,td{
-  padding:18px;
-  border-bottom:1px solid #e5e7eb;
-  vertical-align:top
-}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:22px}
+.table{width:100%;border-collapse:collapse;border-radius:26px;overflow:hidden}
+th,td{padding:18px;border-bottom:1px solid #e5e7eb;vertical-align:top}
 .modal{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.65);
-  display:none;
-  align-items:center;
-  justify-content:center
+  position:fixed;inset:0;background:rgba(0,0,0,.65);
+  display:none;align-items:center;justify-content:center
 }
 .modal-box{
-  background:#fff;
-  width:96%;
-  max-width:1500px;
-  border-radius:36px;
-  padding:44px;
-  max-height:92vh;
-  overflow:auto;
-  animation:pop .25s ease
+  background:#fff;width:96%;max-width:1500px;
+  border-radius:36px;padding:44px;
+  max-height:92vh;overflow:auto;animation:pop .25s ease
 }
-@keyframes pop{
-  from{opacity:0;transform:scale(.9)}
-  to{opacity:1;transform:scale(1)}
-}
-.confirm-box{
-  max-width:520px;
-  text-align:center
-}
+@keyframes pop{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+.confirm-box{max-width:520px;text-align:center}
 .form-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(340px,1fr));
-  gap:26px;
-  margin:26px 0
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));
+  gap:26px;margin:26px 0
 }
 textarea{min-height:120px}
 .detail-row{
-  display:grid;
-  grid-template-columns:240px 1fr;
-  gap:14px;
-  padding:10px 0;
-  border-bottom:1px dashed #e5e7eb
+  display:grid;grid-template-columns:240px 1fr;
+  gap:14px;padding:10px 0;border-bottom:1px dashed #e5e7eb
 }
 .detail-row b{color:#1e3a8a}
 </style>
@@ -137,8 +83,7 @@ const db = firebase.firestore();
 <div class="card grid">
   <select id="vehicleSelect"></select>
   <button onclick="openModal()">➕ เพิ่มประวัติการซ่อม</button>
-  <button class="danger" onclick="confirmDeleteAll()">🗑️ ลบประวัติซ่อมทั้งหมด</button>
-  <button class="danger" onclick="confirmDeleteVehicle()">🚫 ลบรถคันนี้ออกจากระบบ</button>
+  <button class="danger" onclick="confirmDeleteAll()">🗑️ ลบรถและข้อมูลทั้งหมด</button>
 </div>
 
 <div class="card">
@@ -207,20 +152,20 @@ const db = firebase.firestore();
 <div class="modal-box">
 <h2>รายละเอียดการซ่อม</h2>
 <div id="detailContent"></div>
-<button class="danger" onclick="closeDetail()">ปิด</button>
+<button class="danger" onclick="detailModal.style.display='none'">ปิด</button>
 </div>
 </div>
 
 <script>
-const modal = document.getElementById("modal");
-const confirmModal = document.getElementById("confirmModal");
-const detailModal = document.getElementById("detailModal");
-const vehicleSelect = document.getElementById("vehicleSelect");
-const tbody = document.getElementById("tbody");
-let confirmAction = null;
+const modal=document.getElementById("modal");
+const confirmModal=document.getElementById("confirmModal");
+const detailModal=document.getElementById("detailModal");
+const vehicleSelect=document.getElementById("vehicleSelect");
+const tbody=document.getElementById("tbody");
+let confirmAction=null;
 
-function openModal(){ modal.style.display="flex"; }
-function closeModal(){ modal.style.display="none"; }
+function openModal(){modal.style.display="flex"}
+function closeModal(){modal.style.display="none"}
 
 function openConfirm(t,txt,fn){
   confirmTitle.textContent=t;
@@ -253,7 +198,6 @@ function loadVehicles(){
     if(vehicleSelect.value) loadRepairs(vehicleSelect.value);
   });
 }
-
 vehicleSelect.onchange=()=>loadRepairs(vehicleSelect.value);
 
 function loadRepairs(v){
@@ -279,8 +223,8 @@ function loadRepairs(v){
 }
 
 function save(){
-  const key = plate.value+" "+brand.value+" "+model.value;
-  const ref = db.collection("vehicles").doc(key);
+  const key=plate.value+" "+brand.value+" "+model.value;
+  const ref=db.collection("vehicles").doc(key);
 
   ref.set({updated:new Date()},{merge:true});
   ref.collection("repairs").add({
@@ -307,21 +251,12 @@ function deleteRec(v,id){
 
 async function confirmDeleteAll(){
   if(!vehicleSelect.value) return;
-  openConfirm("ลบทั้งหมด","ลบประวัติซ่อมทั้งหมด?",
-    async ()=>{
-      const snap = await db.collection("vehicles")
-        .doc(vehicleSelect.value).collection("repairs").get();
-      const batch=db.batch();
-      snap.forEach(d=>batch.delete(d.ref));
-      await batch.commit();
-    }
-  );
-}
-
-async function confirmDeleteVehicle(){
-  if(!vehicleSelect.value) return;
   const name=vehicleSelect.value;
-  openConfirm("ลบรถ","ลบรถทั้งคัน?",
+
+  openConfirm(
+    "ลบรถและข้อมูลทั้งหมด",
+    `คุณแน่ใจหรือไม่ว่าต้องการลบรถ "${name}" พร้อมประวัติซ่อมทั้งหมด?
+การลบนี้ไม่สามารถกู้คืนได้`,
     async ()=>{
       const ref=db.collection("vehicles").doc(name);
       const snap=await ref.collection("repairs").get();
@@ -329,6 +264,8 @@ async function confirmDeleteVehicle(){
       snap.forEach(d=>batch.delete(d.ref));
       await batch.commit();
       await ref.delete();
+      vehicleSelect.value="";
+      tbody.innerHTML="";
     }
   );
 }
@@ -341,7 +278,6 @@ function openDetail(d){
   detailContent.innerHTML=html;
   detailModal.style.display="flex";
 }
-function closeDetail(){ detailModal.style.display="none"; }
 
 loadVehicles();
 </script>
