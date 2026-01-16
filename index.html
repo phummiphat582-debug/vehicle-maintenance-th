@@ -106,11 +106,10 @@ const db = firebase.firestore();
 
 </div>
 
-<!-- เพิ่มข้อมูล -->
+<!-- modal เพิ่ม -->
 <div class="modal" id="modal">
 <div class="modal-box">
 <h2>บันทึกการซ่อม</h2>
-
 <div class="form-grid">
 <input id="plate" placeholder="ทะเบียนรถ">
 <input id="brand" placeholder="ยี่ห้อรถ">
@@ -127,7 +126,6 @@ const db = firebase.firestore();
 <input type="number" id="partsCost" placeholder="ค่าอะไหล่">
 <input type="number" id="laborCost" placeholder="ค่าแรง">
 </div>
-
 <div class="grid">
 <button onclick="confirmSave()">บันทึก</button>
 <button class="danger" onclick="closeModal()">ยกเลิก</button>
@@ -157,12 +155,12 @@ const db = firebase.firestore();
 </div>
 
 <script>
-const modal=document.getElementById("modal");
-const confirmModal=document.getElementById("confirmModal");
-const detailModal=document.getElementById("detailModal");
-const vehicleSelect=document.getElementById("vehicleSelect");
-const tbody=document.getElementById("tbody");
-let confirmAction=null;
+const modal = document.getElementById("modal");
+const confirmModal = document.getElementById("confirmModal");
+const detailModal = document.getElementById("detailModal");
+const vehicleSelect = document.getElementById("vehicleSelect");
+const tbody = document.getElementById("tbody");
+let confirmAction = null;
 
 function openModal(){modal.style.display="flex"}
 function closeModal(){modal.style.display="none"}
@@ -173,14 +171,8 @@ function openConfirm(t,txt,fn){
   confirmAction=fn;
   confirmModal.style.display="flex";
 }
-function closeConfirm(){
-  confirmModal.style.display="none";
-  confirmAction=null;
-}
-function confirmYes(){
-  if(confirmAction) confirmAction();
-  closeConfirm();
-}
+function closeConfirm(){confirmModal.style.display="none";confirmAction=null}
+function confirmYes(){if(confirmAction) confirmAction();closeConfirm()}
 
 function confirmSave(){
   openConfirm("บันทึกข้อมูล","ยืนยันการบันทึก?",save);
@@ -190,9 +182,8 @@ function loadVehicles(){
   db.collection("vehicles").onSnapshot(s=>{
     vehicleSelect.innerHTML="";
     s.forEach(d=>{
-      let o=document.createElement("option");
-      o.value=d.id;
-      o.textContent=d.id;
+      const o=document.createElement("option");
+      o.value=d.id;o.textContent=d.id;
       vehicleSelect.appendChild(o);
     });
     if(vehicleSelect.value) loadRepairs(vehicleSelect.value);
@@ -216,7 +207,14 @@ function loadRepairs(v){
 <td>${r["ช่างผู้รับผิดชอบ"]||""}</td>
 <td>${cost}</td>
 <td><button onclick='openDetail(${JSON.stringify(r).replace(/'/g,"&#39;")})'>ดู</button></td>
-<td><button class="danger" onclick="deleteRec('${v}','${doc.id}')">ลบ</button></td>
+<td>
+  <button class="danger"
+    data-vehicle="${v}"
+    data-id="${doc.id}"
+    onclick="deleteFromBtn(this)">
+    ลบ
+  </button>
+</td>
 </tr>`;
     });
   });
@@ -225,7 +223,6 @@ function loadRepairs(v){
 function save(){
   const key=plate.value+" "+brand.value+" "+model.value;
   const ref=db.collection("vehicles").doc(key);
-
   ref.set({updated:new Date()},{merge:true});
   ref.collection("repairs").add({
     "วันที่":date.value,
@@ -243,8 +240,12 @@ function save(){
   }).then(closeModal);
 }
 
-function deleteRec(v,id){
-  openConfirm("ลบรายการ","ยืนยันการลบ?",
+function deleteFromBtn(btn){
+  const v=btn.dataset.vehicle;
+  const id=btn.dataset.id;
+  openConfirm(
+    "ลบรายการซ่อม",
+    "คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?",
     ()=>db.collection("vehicles").doc(v).collection("repairs").doc(id).delete()
   );
 }
@@ -252,11 +253,9 @@ function deleteRec(v,id){
 async function confirmDeleteAll(){
   if(!vehicleSelect.value) return;
   const name=vehicleSelect.value;
-
   openConfirm(
     "ลบรถและข้อมูลทั้งหมด",
-    `คุณแน่ใจหรือไม่ว่าต้องการลบรถ "${name}" พร้อมประวัติซ่อมทั้งหมด?
-การลบนี้ไม่สามารถกู้คืนได้`,
+    `ลบรถ "${name}" พร้อมประวัติทั้งหมดหรือไม่?`,
     async ()=>{
       const ref=db.collection("vehicles").doc(name);
       const snap=await ref.collection("repairs").get();
