@@ -2,31 +2,124 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>SC THE ADVENTURE | ระบบซ่อมบำรุงรถยนต์ (Realtime)</title>
+<title>SC THE ADVENTURE | ระบบซ่อมบำรุงรถยนต์</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="manifest.json">
 
 <style>
-:root{--primary:#2563eb;--danger:#dc2626;--bg:#f1f5f9}
+:root{
+  --primary:#2563eb;
+  --danger:#dc2626;
+  --bg:#f1f5f9;
+}
 *{box-sizing:border-box}
-body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:var(--bg)}
-header{background:linear-gradient(90deg,#1e3a8a,#2563eb);color:#fff;padding:20px 30px;font-size:24px;font-weight:700}
-.container{padding:32px;max-width:1700px;margin:auto}
-button,input,select,textarea{width:100%;padding:14px;border-radius:16px;border:1px solid #c7d2fe;font-size:14px}
-button{background:var(--primary);color:#fff;border:none;cursor:pointer;font-weight:600}
-button.danger{background:var(--danger)}
-.card{background:#fff;border-radius:28px;padding:30px;margin-bottom:30px;box-shadow:0 25px 50px rgba(0,0,0,.15)}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:28px}
-.table{width:100%;border-collapse:collapse;border-radius:26px;overflow:hidden}
-th,td{padding:18px;border-bottom:1px solid #e5e7eb;vertical-align:top}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center}
-.modal-box{background:#fff;width:96%;max-width:1500px;border-radius:36px;padding:44px;max-height:92vh;overflow:auto}
-.section-title{font-size:18px;font-weight:700;margin-bottom:12px}
-.badge{padding:6px 16px;border-radius:999px;font-size:12px;font-weight:700}
+body{
+  margin:0;
+  font-family:Segoe UI,Arial,sans-serif;
+  background:var(--bg)
+}
+header{
+  background:linear-gradient(90deg,#1e3a8a,#2563eb);
+  color:#fff;
+  padding:22px 32px;
+  font-size:24px;
+  font-weight:700
+}
+.container{
+  padding:32px;
+  max-width:1700px;
+  margin:auto
+}
+button,input,textarea,select{
+  width:100%;
+  padding:14px;
+  border-radius:16px;
+  border:1px solid #c7d2fe;
+  font-size:14px
+}
+button{
+  background:var(--primary);
+  color:#fff;
+  border:none;
+  cursor:pointer;
+  font-weight:600;
+  transition:.2s
+}
+button:active{transform:scale(.95)}
+button.danger{
+  background:linear-gradient(135deg,#dc2626,#991b1b);
+  box-shadow:0 10px 25px rgba(220,38,38,.35)
+}
+.card{
+  background:#fff;
+  border-radius:28px;
+  padding:32px;
+  margin-bottom:30px;
+  box-shadow:0 25px 50px rgba(0,0,0,.12)
+}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+  gap:22px
+}
+.table{
+  width:100%;
+  border-collapse:collapse;
+  overflow:hidden;
+  border-radius:26px
+}
+th,td{
+  padding:18px;
+  border-bottom:1px solid #e5e7eb;
+  vertical-align:top
+}
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.65);
+  display:none;
+  align-items:center;
+  justify-content:center
+}
+.modal-box{
+  background:#fff;
+  width:96%;
+  max-width:1500px;
+  border-radius:36px;
+  padding:44px;
+  max-height:92vh;
+  overflow:auto;
+  animation:pop .25s ease
+}
+@keyframes pop{
+  from{opacity:0;transform:scale(.9)}
+  to{opacity:1;transform:scale(1)}
+}
+.confirm-box{
+  max-width:520px;
+  text-align:center
+}
+.form-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(340px,1fr));
+  gap:26px;
+  margin:26px 0
+}
+textarea{min-height:120px}
+.badge{
+  padding:6px 16px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:700
+}
 .NEW{background:#fee2e2;color:#991b1b}
-.INPROGRESS{background:#fef3c7;color:#92400e}
-.DONE{background:#dcfce7;color:#166534}
-.detail-row{display:grid;grid-template-columns:220px 1fr;gap:14px;padding:10px 0;border-bottom:1px dashed #e5e7eb}
+.detail-row{
+  display:grid;
+  grid-template-columns:220px 1fr;
+  gap:14px;
+  padding:10px 0;
+  border-bottom:1px dashed #e5e7eb
+}
 .detail-row b{color:#1e3a8a}
 </style>
 </head>
@@ -37,19 +130,21 @@ th,td{padding:18px;border-bottom:1px solid #e5e7eb;vertical-align:top}
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script>
 firebase.initializeApp({
- apiKey: "AIzaSyCowDEvUQpBmq7AwUGiC6IuGOudPhi_0kM",
- authDomain: "vehicle-maintenance-64890.firebaseapp.com",
- projectId: "vehicle-maintenance-64890"
+  apiKey: "AIzaSyCowDEvUQpBmq7AwUGiC6IuGOudPhi_0kM",
+  authDomain: "vehicle-maintenance-64890.firebaseapp.com",
+  projectId: "vehicle-maintenance-64890",
 });
-const db = firebase.firestore();
+const db=firebase.firestore();
 </script>
 
-<header>🚗 SC THE ADVENTURE | ระบบซ่อมบำรุงรถยนต์ (Realtime)</header>
+<header>🚗 SC THE ADVENTURE | ระบบซ่อมบำรุงรถยนต์</header>
 
 <div class="container">
+
 <div class="card grid">
-<select id="vehicleSelect"></select>
-<button onclick="openModal()">➕ เพิ่มประวัติการซ่อม</button>
+  <select id="vehicleSelect"></select>
+  <button onclick="openModal()">➕ เพิ่มประวัติการซ่อม</button>
+  <button class="danger" onclick="confirmDeleteAll()">🗑️ ลบรายการทั้งหมด</button>
 </div>
 
 <div class="card">
@@ -57,141 +152,160 @@ const db = firebase.firestore();
 <thead>
 <tr>
 <th>วันที่</th><th>รถ</th><th>ระบบ</th><th>อาการ</th>
-<th>ผู้ซ่อม</th><th>ค่าใช้จ่ายรวม</th>
-<th>สถานะ</th><th>รายละเอียด</th><th>ลบ</th>
+<th>ช่าง</th><th>ค่าใช้จ่าย</th><th>สถานะ</th>
+<th>รายละเอียด</th><th>ลบ</th>
 </tr>
 </thead>
 <tbody id="tbody"></tbody>
 </table>
 </div>
+
 </div>
 
-<!-- FORM MODAL -->
+<!-- เพิ่มข้อมูล -->
 <div class="modal" id="modal">
 <div class="modal-box">
-<h2>บันทึกรายละเอียดการซ่อมบำรุง (Ultra Detail)</h2>
+<h2>บันทึกการซ่อม</h2>
 
-<div class="grid">
+<div class="form-grid">
 <input id="plate" placeholder="ทะเบียนรถ">
-<input id="brand" placeholder="ยี่ห้อ">
-<input id="model" placeholder="รุ่น">
-<input id="year" placeholder="ปีรถ">
-<input id="vin" placeholder="VIN">
-<input id="engineNo" placeholder="Engine No">
-<input id="mileage" placeholder="เลขไมล์">
-<input id="fuelType" placeholder="ประเภทเชื้อเพลิง">
-<input id="usageType" placeholder="ลักษณะการใช้งาน">
+<input id="brand" placeholder="ยี่ห้อรถ">
+<input id="model" placeholder="รุ่นรถ">
 <input type="date" id="date">
 <input id="system" placeholder="ระบบที่ซ่อม">
-<select id="status">
-<option>NEW</option>
-<option>INPROGRESS</option>
-<option>DONE</option>
-</select>
 <input id="technician" placeholder="ชื่อช่าง">
-<input id="partsCost" type="number" placeholder="ค่าอะไหล่">
-<input id="laborCost" type="number" placeholder="ค่าแรง">
-<input id="otherCost" type="number" placeholder="ค่าใช้จ่ายอื่น">
+<textarea id="symptoms" placeholder="อาการเสีย / รายละเอียด"></textarea>
+<input type="number" id="partsCost" placeholder="ค่าอะไหล่">
+<input type="number" id="laborCost" placeholder="ค่าแรง">
 </div>
 
-<textarea id="symptoms" placeholder="อาการเสีย"></textarea>
-<textarea id="repairMethod" placeholder="วิธีการซ่อม"></textarea>
-<textarea id="remark" placeholder="หมายเหตุ"></textarea>
-
 <div class="grid">
-<button onclick="save()">บันทึกข้อมูล</button>
+<button onclick="confirmSave()">บันทึก</button>
 <button class="danger" onclick="closeModal()">ยกเลิก</button>
 </div>
 </div>
 </div>
 
-<!-- DETAIL MODAL -->
+<!-- confirm -->
+<div class="modal" id="confirmModal">
+<div class="modal-box confirm-box">
+<h2 id="confirmTitle"></h2>
+<p id="confirmText" style="margin:20px 0;color:#374151"></p>
+<div class="grid">
+<button onclick="confirmYes()">ยืนยัน</button>
+<button class="danger" onclick="closeConfirm()">ยกเลิก</button>
+</div>
+</div>
+</div>
+
+<!-- detail -->
 <div class="modal" id="detailModal">
 <div class="modal-box">
-<h2>📄 รายละเอียดการซ่อมบำรุง</h2>
+<h2>รายละเอียด</h2>
 <div id="detailContent"></div>
-<button class="danger" onclick="closeDetail()">ปิด</button>
+<button class="danger" onclick="detailModal.style.display='none'">ปิด</button>
 </div>
 </div>
 
 <script>
-let unsubscribe=null;
+let confirmAction=null;
 
 function openModal(){modal.style.display='flex'}
 function closeModal(){modal.style.display='none'}
-function closeDetail(){detailModal.style.display='none'}
+
+function openConfirm(t,txt,fn){
+  confirmTitle.textContent=t;
+  confirmText.textContent=txt;
+  confirmAction=fn;
+  confirmModal.style.display='flex';
+}
+function closeConfirm(){
+  confirmModal.style.display='none';
+  confirmAction=null;
+}
+function confirmYes(){
+  if(confirmAction) confirmAction();
+  closeConfirm();
+}
+
+function confirmSave(){
+  openConfirm("บันทึกข้อมูล","ยืนยันการบันทึกประวัติการซ่อม?",save);
+}
 
 function loadVehicles(){
- db.collection("vehicles").onSnapshot(s=>{
-  vehicleSelect.innerHTML="";
-  s.forEach(d=>{
-    let o=document.createElement("option");
-    o.value=d.id;o.textContent=d.id;
-    vehicleSelect.appendChild(o);
+  db.collection("vehicles").onSnapshot(s=>{
+    vehicleSelect.innerHTML="";
+    s.forEach(d=>{
+      let o=document.createElement("option");
+      o.value=d.id;o.textContent=d.id;
+      vehicleSelect.appendChild(o);
+    });
+    if(vehicleSelect.value) loadRepairs(vehicleSelect.value);
   });
-  if(vehicleSelect.value) loadRepairs(vehicleSelect.value);
- });
 }
 vehicleSelect.onchange=()=>loadRepairs(vehicleSelect.value);
 
 function loadRepairs(v){
- if(unsubscribe) unsubscribe();
- unsubscribe=db.collection("vehicles").doc(v).collection("repairs").orderBy("createdAt","desc")
- .onSnapshot(s=>{
-  tbody.innerHTML="";
-  s.forEach(doc=>{
-    let r=doc.data();
-    let cost=(+r.partsCost||0)+(+r.laborCost||0)+(+r.otherCost||0);
-    tbody.innerHTML+=`
-    <tr>
-      <td>${r.date||""}</td>
-      <td>${v}</td>
-      <td>${r.system||""}</td>
-      <td>${(r.symptoms||"").slice(0,50)}...</td>
-      <td>${r.technician||""}</td>
-      <td>${cost.toLocaleString()}</td>
-      <td><span class="badge ${r.status||"NEW"}">${r.status||"NEW"}</span></td>
-      <td><button onclick='openDetail(${JSON.stringify(r)})'>ดูรายละเอียด</button></td>
-      <td><button class="danger" onclick="deleteRec('${v}','${doc.id}')">ลบ</button></td>
-    </tr>`;
+  db.collection("vehicles").doc(v).collection("repairs")
+  .onSnapshot(s=>{
+    tbody.innerHTML="";
+    s.forEach(doc=>{
+      let r=doc.data();
+      let cost=(+r.partsCost||0)+(+r.laborCost||0);
+      tbody.innerHTML+=`
+<tr>
+<td>${r.date||""}</td>
+<td>${v}</td>
+<td>${r.system||""}</td>
+<td>${r.symptoms||""}</td>
+<td>${r.technician||""}</td>
+<td>${cost}</td>
+<td><span class="badge NEW">NEW</span></td>
+<td><button onclick='openDetail(${JSON.stringify(r)})'>ดู</button></td>
+<td><button class="danger" onclick="deleteRec('${v}','${doc.id}')">ลบ</button></td>
+</tr>`;
+    });
   });
- });
 }
 
 function save(){
- if(!plate.value) return alert("กรุณากรอกทะเบียนรถ");
- let key = plate.value+" | "+brand.value+" "+model.value;
- let ref = db.collection("vehicles").doc(key);
- ref.set({updated:new Date()},{merge:true});
- ref.collection("repairs").add({
-  plate:plate.value,brand:brand.value,model:model.value,year:year.value,
-  vin:vin.value,engineNo:engineNo.value,mileage:mileage.value,
-  fuelType:fuelType.value,usageType:usageType.value,
-  date:date.value,system:system.value,status:status.value,
-  technician:technician.value,partsCost:partsCost.value,
-  laborCost:laborCost.value,otherCost:otherCost.value,
-  symptoms:symptoms.value,repairMethod:repairMethod.value,
-  remark:remark.value,createdAt:new Date()
- }).then(()=>{
-  closeModal();
-  loadRepairs(key);
- });
+  let key=plate.value+" "+brand.value+" "+model.value;
+  let ref=db.collection("vehicles").doc(key);
+  ref.set({updated:new Date()},{merge:true});
+  ref.collection("repairs").add({
+    date:date.value,system:system.value,symptoms:symptoms.value,
+    technician:technician.value,
+    partsCost:partsCost.value,laborCost:laborCost.value,
+    createdAt:new Date()
+  }).then(closeModal);
 }
 
 function deleteRec(v,id){
- if(confirm("ยืนยันลบรายการนี้?")){
-  db.collection("vehicles").doc(v).collection("repairs").doc(id).delete();
- }
+  openConfirm("ลบรายการ","ยืนยันลบรายการนี้?",
+    ()=>db.collection("vehicles").doc(v).collection("repairs").doc(id).delete()
+  );
+}
+
+function confirmDeleteAll(){
+  openConfirm("ลบทั้งหมด","ลบประวัติซ่อมทั้งหมดของรถคันนี้?",
+    ()=>{
+      db.collection("vehicles").doc(vehicleSelect.value)
+      .collection("repairs").get().then(s=>{
+        let b=db.batch();
+        s.forEach(d=>b.delete(d.ref));
+        b.commit();
+      });
+    }
+  );
 }
 
 function openDetail(d){
- let html="";
- Object.keys(d).forEach(k=>{
-  if(!d[k]) return;
-  html+=`<div class="detail-row"><b>${k}</b><div>${d[k]}</div></div>`;
- });
- detailContent.innerHTML=html;
- detailModal.style.display="flex";
+  let h="";
+  Object.keys(d).forEach(k=>{
+    h+=`<div class="detail-row"><b>${k}</b><div>${d[k]}</div></div>`;
+  });
+  detailContent.innerHTML=h;
+  detailModal.style.display="flex";
 }
 
 loadVehicles();
