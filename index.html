@@ -36,7 +36,7 @@ button.danger{
   background:#fff;border-radius:28px;padding:32px;
   margin-bottom:30px;box-shadow:0 25px 50px rgba(0,0,0,.12)
 }
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:22px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:22px}
 .table{width:100%;border-collapse:collapse;border-radius:26px;overflow:hidden}
 th,td{padding:18px;border-bottom:1px solid #e5e7eb;vertical-align:top}
 .modal{
@@ -84,6 +84,13 @@ const db = firebase.firestore();
   <select id="vehicleSelect"></select>
   <button onclick="openModal()">➕ เพิ่มประวัติการซ่อม</button>
   <button class="danger" onclick="confirmDeleteAll()">🗑️ ลบรถและข้อมูลทั้งหมด</button>
+</div>
+
+<!-- 🔍 ค้นหา -->
+<div class="card grid">
+  <input id="searchInput" placeholder="🔍 ค้นหาประวัติการซ่อม (ระบบ / อาการ / ช่าง / ใบงาน)">
+  <button onclick="searchRepairs()">ค้นหา</button>
+  <button class="danger" onclick="resetSearch()">ล้างการค้นหา</button>
 </div>
 
 <div class="card">
@@ -160,7 +167,10 @@ const confirmModal = document.getElementById("confirmModal");
 const detailModal = document.getElementById("detailModal");
 const vehicleSelect = document.getElementById("vehicleSelect");
 const tbody = document.getElementById("tbody");
+const searchInput = document.getElementById("searchInput");
+
 let confirmAction = null;
+let allRepairs = [];
 
 function openModal(){modal.style.display="flex"}
 function closeModal(){modal.style.display="none"}
@@ -194,11 +204,21 @@ vehicleSelect.onchange=()=>loadRepairs(vehicleSelect.value);
 function loadRepairs(v){
   db.collection("vehicles").doc(v).collection("repairs")
   .onSnapshot(s=>{
-    tbody.innerHTML="";
+    allRepairs=[];
     s.forEach(doc=>{
       const r=doc.data();
-      const cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
-      tbody.innerHTML+=`
+      r._id=doc.id;
+      allRepairs.push(r);
+    });
+    renderTable(allRepairs,v);
+  });
+}
+
+function renderTable(list,v){
+  tbody.innerHTML="";
+  list.forEach(r=>{
+    const cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
+    tbody.innerHTML+=`
 <tr>
 <td>${r["วันที่"]||""}</td>
 <td>${v}</td>
@@ -208,16 +228,27 @@ function loadRepairs(v){
 <td>${cost}</td>
 <td><button onclick='openDetail(${JSON.stringify(r).replace(/'/g,"&#39;")})'>ดู</button></td>
 <td>
-  <button class="danger"
-    data-vehicle="${v}"
-    data-id="${doc.id}"
-    onclick="deleteFromBtn(this)">
-    ลบ
-  </button>
+<button class="danger" data-vehicle="${v}" data-id="${r._id}" onclick="deleteFromBtn(this)">ลบ</button>
 </td>
 </tr>`;
-    });
   });
+}
+
+function searchRepairs(){
+  const q=searchInput.value.toLowerCase().trim();
+  if(!q) return renderTable(allRepairs,vehicleSelect.value);
+  const res=allRepairs.filter(r=>
+    (r["ระบบที่ซ่อม"]||"").toLowerCase().includes(q) ||
+    (r["อาการเสีย"]||"").toLowerCase().includes(q) ||
+    (r["ช่างผู้รับผิดชอบ"]||"").toLowerCase().includes(q) ||
+    (r["เลขที่ใบงาน"]||"").toLowerCase().includes(q)
+  );
+  renderTable(res,vehicleSelect.value);
+}
+
+function resetSearch(){
+  searchInput.value="";
+  renderTable(allRepairs,vehicleSelect.value);
 }
 
 function save(){
@@ -243,35 +274,27 @@ function save(){
 function deleteFromBtn(btn){
   const v=btn.dataset.vehicle;
   const id=btn.dataset.id;
-  openConfirm(
-    "ลบรายการซ่อม",
-    "คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?",
-    ()=>db.collection("vehicles").doc(v).collection("repairs").doc(id).delete()
-  );
+  openConfirm("ลบรายการซ่อม","ยืนยันการลบ?",()=>db.collection("vehicles").doc(v).collection("repairs").doc(id).delete());
 }
 
 async function confirmDeleteAll(){
   if(!vehicleSelect.value) return;
   const name=vehicleSelect.value;
-  openConfirm(
-    "ลบรถและข้อมูลทั้งหมด",
-    `ลบรถ "${name}" พร้อมประวัติทั้งหมดหรือไม่?`,
-    async ()=>{
-      const ref=db.collection("vehicles").doc(name);
-      const snap=await ref.collection("repairs").get();
-      const batch=db.batch();
-      snap.forEach(d=>batch.delete(d.ref));
-      await batch.commit();
-      await ref.delete();
-      vehicleSelect.value="";
-      tbody.innerHTML="";
-    }
-  );
+  openConfirm("ลบรถ","ลบรถและประวัติทั้งหมด?",async()=>{
+    const ref=db.collection("vehicles").doc(name);
+    const snap=await ref.collection("repairs").get();
+    const batch=db.batch();
+    snap.forEach(d=>batch.delete(d.ref));
+    await batch.commit();
+    await ref.delete();
+    tbody.innerHTML="";
+  });
 }
 
 function openDetail(d){
   let html="";
   for(const k in d){
+    if(k==="_id") continue;
     html+=`<div class="detail-row"><b>${k}</b><div>${d[k]||"-"}</div></div>`;
   }
   detailContent.innerHTML=html;
