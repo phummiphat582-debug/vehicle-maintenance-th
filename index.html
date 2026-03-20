@@ -2,175 +2,202 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>SC THE ADVENTURE | GitHub Maintenance</title>
+<title>SC THE ADVENTURE | Fitness Maintenance</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <style>
 :root{
-  --bg:#0d1117;
-  --panel:#161b22;
-  --border:#30363d;
-  --text:#c9d1d9;
-  --sub:#8b949e;
-  --green:#238636;
-  --red:#da3633;
+  --bg:#0f172a;
+  --card:#1e293b;
+  --accent:#22c55e;
+  --danger:#ef4444;
+  --text:#f1f5f9;
+  --sub:#94a3b8;
 }
 
 body{
   margin:0;
-  display:flex;
   font-family:Segoe UI;
   background:var(--bg);
   color:var(--text);
 }
 
-/* sidebar */
-.sidebar{
-  width:260px;
-  background:#010409;
-  border-right:1px solid var(--border);
+/* header */
+.header{
+  padding:20px;
+  font-size:22px;
+  font-weight:bold;
+}
+
+/* vehicle bar */
+.vehicle-bar{
+  display:flex;
+  overflow:auto;
+  gap:10px;
+  padding:10px 20px;
+}
+
+.vehicle{
+  padding:10px 16px;
+  background:#1e293b;
+  border-radius:20px;
+  cursor:pointer;
+  white-space:nowrap;
+}
+
+.vehicle.active{
+  background:var(--accent);
+  color:#000;
+}
+
+/* main */
+.container{
   padding:20px;
 }
 
-.repo{
-  padding:10px;
-  cursor:pointer;
-  border-radius:6px;
-  margin-bottom:6px;
+/* card */
+.card{
+  background:var(--card);
+  border-radius:20px;
+  padding:20px;
+  margin-bottom:15px;
 }
-.repo:hover{background:#161b22;}
-.repo.active{background:#238636;color:#fff;}
 
-/* main */
-.main{flex:1;padding:20px;}
-
+/* top */
 .top{
   display:flex;
   justify-content:space-between;
-  margin-bottom:20px;
+  align-items:center;
 }
 
-input,textarea{
-  background:#0d1117;
-  border:1px solid var(--border);
-  color:#fff;
-  padding:8px;
-  border-radius:6px;
-  width:100%;
+/* cost */
+.cost{
+  font-size:20px;
+  font-weight:bold;
+  color:var(--accent);
 }
 
-textarea{min-height:80px;}
-
-/* commit */
-.commit{
-  border-left:2px solid var(--border);
-  padding:15px 20px;
-  margin-bottom:20px;
-  position:relative;
-  background:#161b22;
-  border-radius:6px;
+/* label */
+.label{
+  font-size:13px;
+  color:var(--sub);
 }
 
-.commit::before{
-  content:"";
-  width:10px;height:10px;
-  background:#238636;
-  border-radius:50%;
-  position:absolute;
-  left:-6px;top:10px;
+/* row */
+.row{
+  display:flex;
+  justify-content:space-between;
+  margin-top:8px;
 }
 
-.commit.red::before{background:#da3633;}
-
-hr{
-  border:none;
-  border-top:1px solid var(--border);
-  margin:10px 0;
+/* chips */
+.chip{
+  display:inline-block;
+  padding:4px 10px;
+  background:#334155;
+  border-radius:10px;
+  margin-top:6px;
+  font-size:12px;
 }
 
 /* button */
 .btn{
-  background:#238636;
+  background:var(--accent);
   border:none;
-  color:#fff;
-  padding:8px 12px;
-  border-radius:6px;
-  cursor:pointer;
+  padding:10px;
+  border-radius:12px;
+  color:#000;
+  width:100%;
 }
-.btn-danger{background:#da3633;}
+
+.btn-danger{
+  background:var(--danger);
+  color:#fff;
+}
+
+/* search */
+.search{
+  margin:10px 20px;
+}
+
+.search input{
+  width:100%;
+  padding:10px;
+  border-radius:12px;
+  border:none;
+}
 
 /* modal */
 .modal{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.8);
+  background:rgba(0,0,0,.7);
   display:none;
   align-items:center;
   justify-content:center;
 }
 
 .modal-box{
-  background:#161b22;
+  background:#1e293b;
   padding:20px;
-  border-radius:10px;
-  width:500px;
+  border-radius:20px;
+  width:90%;
   max-height:90vh;
   overflow:auto;
+}
+
+input,textarea{
+  width:100%;
+  margin-bottom:10px;
+  padding:10px;
+  border-radius:10px;
+  border:none;
 }
 </style>
 </head>
 
 <body>
 
-<div class="sidebar">
-  <h3>🚗 Vehicles</h3>
-  <div id="vehicleList"></div>
+<div class="header">🚗 Maintenance Tracker</div>
+
+<div class="vehicle-bar" id="vehicleList"></div>
+
+<div class="search">
+  <input id="search" placeholder="ค้นหา...">
 </div>
 
-<div class="main">
-  <div class="top">
-    <h2 id="title">เลือกคัน</h2>
-    <div style="display:flex; gap:10px;">
-      <input id="search" placeholder="ค้นหา...">
-      <button class="btn" onclick="openModal()">+ เพิ่ม</button>
-    </div>
-  </div>
+<div class="container" id="log"></div>
 
-  <div id="log"></div>
+<div style="padding:20px;">
+  <button class="btn" onclick="openModal()">➕ เพิ่มรายการ</button>
 </div>
 
 <!-- modal -->
 <div class="modal" id="modal">
 <div class="modal-box">
 
-<h3>📝 เพิ่มรายการซ่อม</h3>
+<h3>เพิ่มรายการซ่อม</h3>
 
-<h4>📅 ข้อมูลพื้นฐาน</h4>
 <input type="date" id="date">
 <input id="mileage" placeholder="เลขไมล์">
 <input id="jobNo" placeholder="เลขที่ใบงาน">
 
-<h4>🔧 รายละเอียดงาน</h4>
-<input id="system" placeholder="ระบบที่ซ่อม">
-<textarea id="symptoms" placeholder="อาการเสีย"></textarea>
-<textarea id="parts" placeholder="อะไหล่ที่เปลี่ยน"></textarea>
+<input id="system" placeholder="ระบบ">
+<textarea id="symptoms" placeholder="อาการ"></textarea>
+<textarea id="parts" placeholder="อะไหล่"></textarea>
 
-<h4>👨‍🔧 ผู้เกี่ยวข้อง</h4>
 <input id="technician" placeholder="ช่าง">
 <input id="approver" placeholder="ผู้อนุมัติ">
 
-<h4>💰 ค่าใช้จ่าย</h4>
 <input type="number" id="partsCost" placeholder="ค่าอะไหล่">
 <input type="number" id="laborCost" placeholder="ค่าแรง">
 
-<h4>📌 หมายเหตุ</h4>
-<textarea id="note"></textarea>
+<textarea id="note" placeholder="หมายเหตุ"></textarea>
 
-<br>
-<button class="btn" onclick="save()">💾 บันทึก</button>
-<button class="btn-danger" onclick="closeModal()">❌ ยกเลิก</button>
+<button class="btn" onclick="save()">บันทึก</button>
+<button class="btn-danger" onclick="closeModal()">ยกเลิก</button>
 
 </div>
 </div>
@@ -195,18 +222,16 @@ db.collection("vehicles").onSnapshot(s=>{
   s.forEach(d=>{
     if(!first) first=d.id;
 
-    const div=document.createElement("div");
-    div.className="repo";
+    let div=document.createElement("div");
+    div.className="vehicle";
     div.innerText=d.id;
 
     div.onclick=()=>{
-      document.querySelectorAll(".repo")
-        .forEach(x=>x.classList.remove("active"));
+      document.querySelectorAll(".vehicle")
+        .forEach(v=>v.classList.remove("active"));
 
       div.classList.add("active");
       selectedVehicle=d.id;
-      title.innerText=d.id;
-
       load(d.id);
     };
 
@@ -218,7 +243,7 @@ db.collection("vehicles").onSnapshot(s=>{
   }
 });
 
-/* โหลดรายการ */
+/* โหลด */
 function load(v){
   db.collection("vehicles").doc(v).collection("repairs")
   .onSnapshot(s=>{
@@ -240,42 +265,33 @@ function render(list){
 
   list.forEach(r=>{
     let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
-    let danger = cost > 5000 ? "red" : "";
 
     log.innerHTML+=`
-    <div class="commit ${danger}">
-      
-      <b>🔧 ${r["ระบบที่ซ่อม"]||"-"}</b>
-      <small> (${r["วันที่"]||"-"})</small>
-      <hr>
+    <div class="card">
 
-      🧠 <b>อาการ:</b> ${r["อาการเสีย"]||"-"}<br>
-      🧩 <b>อะไหล่:</b> ${r["อะไหล่ที่เปลี่ยน"]||"-"}<br>
+      <div class="top">
+        <div>
+          <div>${r["ระบบที่ซ่อม"]||"-"}</div>
+          <div class="label">${r["วันที่"]||"-"}</div>
+        </div>
+        <div class="cost">${cost.toLocaleString()}฿</div>
+      </div>
 
-      <hr>
+      <div class="chip">🧠 ${r["อาการเสีย"]||"-"}</div>
+      <div class="chip">👨‍🔧 ${r["ช่างผู้รับผิดชอบ"]||"-"}</div>
+      <div class="chip">📏 ${r["เลขไมล์"]||"-"}</div>
 
-      👨‍🔧 <b>ช่าง:</b> ${r["ช่างผู้รับผิดชอบ"]||"-"}<br>
-      🧾 <b>ใบงาน:</b> ${r["เลขที่ใบงาน"]||"-"}<br>
-      📏 <b>เลขไมล์:</b> ${r["เลขไมล์"]||"-"}<br>
+      <div class="row">
+        <small>${r["เลขที่ใบงาน"]||"-"}</small>
+        <button class="btn-danger" onclick="del('${r._id}')">ลบ</button>
+      </div>
 
-      <hr>
-
-      💰 <b>ค่าใช้จ่าย:</b> ${cost.toLocaleString()} บาท
-
-      <hr>
-
-      📌 ${r["หมายเหตุ"]||"-"}
-
-      <br><br>
-      <button class="btn-danger" onclick="del('${r._id}')">ลบ</button>
     </div>`;
   });
 }
 
 /* save */
 function save(){
-  if(!selectedVehicle) return alert("เลือกคันก่อน");
-
   db.collection("vehicles").doc(selectedVehicle)
   .collection("repairs")
   .add({
@@ -294,7 +310,6 @@ function save(){
   });
 
   closeModal();
-  clearForm();
 }
 
 /* delete */
@@ -306,28 +321,14 @@ function del(id){
 /* search */
 search.oninput=()=>{
   let q=search.value.toLowerCase();
-
-  let res=all.filter(r=>
+  render(all.filter(r=>
     (r["ระบบที่ซ่อม"]||"").toLowerCase().includes(q) ||
-    (r["อาการเสีย"]||"").toLowerCase().includes(q) ||
-    (r["ช่างผู้รับผิดชอบ"]||"").toLowerCase().includes(q) ||
-    (r["เลขที่ใบงาน"]||"").toLowerCase().includes(q) ||
-    (r["อะไหล่ที่เปลี่ยน"]||"").toLowerCase().includes(q) ||
-    (r["หมายเหตุ"]||"").toLowerCase().includes(q)
-  );
-
-  render(res);
+    (r["อาการเสีย"]||"").toLowerCase().includes(q)
+  ));
 };
 
-/* modal */
 function openModal(){modal.style.display="flex";}
 function closeModal(){modal.style.display="none";}
-
-/* clear */
-function clearForm(){
-  document.querySelectorAll("#modal input, #modal textarea")
-    .forEach(e=>e.value="");
-}
 </script>
 
 </body>
