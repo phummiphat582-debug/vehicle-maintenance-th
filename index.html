@@ -2,312 +2,320 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>SC THE ADVENTURE | ระบบซ่อมบำรุงรถยนต์</title>
+<title>SC THE ADVENTURE | LR Maintenance</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="manifest" href="manifest.json">
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <style>
 :root{
-  --primary:#2563eb;
-  --danger:#dc2626;
-  --bg:#f1f5f9;
+  --bg:#0f172a;
+  --panel:#1e293b;
+  --card:#334155;
+  --text:#e2e8f0;
+  --sub:#94a3b8;
+  --accent:#3b82f6;
+  --danger:#ef4444;
 }
-*{box-sizing:border-box}
-body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:var(--bg)}
-header{
-  background:linear-gradient(90deg,#1e3a8a,#2563eb);
-  color:#fff;padding:22px 32px;font-size:24px;font-weight:700
+
+body{
+  margin:0;
+  font-family:Segoe UI;
+  background:var(--bg);
+  color:var(--text);
+  display:flex;
+  height:100vh;
 }
-.container{padding:32px;max-width:1700px;margin:auto}
-button,input,textarea,select{
-  width:100%;padding:14px;border-radius:16px;
-  border:1px solid #c7d2fe;font-size:14px
+
+/* sidebar */
+.sidebar{
+  width:260px;
+  background:#020617;
+  padding:20px;
+  border-right:1px solid #1e293b;
 }
-button{
-  background:var(--primary);color:#fff;border:none;
-  cursor:pointer;font-weight:600;transition:.2s
+
+.sidebar h2{
+  margin-bottom:16px;
 }
-button:active{transform:scale(.95)}
-button.danger{
-  background:linear-gradient(135deg,#dc2626,#991b1b);
-  box-shadow:0 10px 25px rgba(220,38,38,.35)
+
+.vehicle{
+  padding:12px;
+  border-radius:10px;
+  cursor:pointer;
+  margin-bottom:8px;
+  color:var(--sub);
 }
-.card{
-  background:#fff;border-radius:28px;padding:32px;
-  margin-bottom:30px;box-shadow:0 25px 50px rgba(0,0,0,.12)
+
+.vehicle.active{
+  background:var(--accent);
+  color:#fff;
 }
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:22px}
-.table{width:100%;border-collapse:collapse;border-radius:26px;overflow:hidden}
-th,td{padding:18px;border-bottom:1px solid #e5e7eb;vertical-align:top}
+
+/* main */
+.main{
+  flex:1;
+  padding:24px;
+  overflow:auto;
+}
+
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+}
+
+.search{
+  width:300px;
+  padding:10px;
+  border-radius:10px;
+  border:none;
+}
+
+/* card */
+.repair-card{
+  background:var(--panel);
+  padding:18px;
+  border-radius:16px;
+  margin-bottom:14px;
+}
+
+.repair-card:hover{
+  background:var(--card);
+}
+
+.cost{
+  color:#22c55e;
+}
+
+/* FAB */
+.fab{
+  position:fixed;
+  bottom:30px;
+  right:30px;
+  width:60px;
+  height:60px;
+  border-radius:50%;
+  background:var(--accent);
+  color:#fff;
+  font-size:30px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+}
+
+/* modal */
 .modal{
-  position:fixed;inset:0;background:rgba(0,0,0,.65);
-  display:none;align-items:center;justify-content:center
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.6);
+  display:none;
+  align-items:center;
+  justify-content:center;
 }
+
 .modal-box{
-  background:#fff;width:96%;max-width:1500px;
-  border-radius:36px;padding:44px;
-  max-height:92vh;overflow:auto;animation:pop .25s ease
+  background:#1e293b;
+  padding:30px;
+  border-radius:20px;
+  width:500px;
 }
-@keyframes pop{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
-.confirm-box{max-width:520px;text-align:center}
-.form-grid{
-  display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));
-  gap:26px;margin:26px 0
+
+input,textarea{
+  width:100%;
+  margin-bottom:10px;
+  padding:10px;
+  border-radius:10px;
+  border:none;
 }
-textarea{min-height:120px}
-.detail-row{
-  display:grid;grid-template-columns:240px 1fr;
-  gap:14px;padding:10px 0;border-bottom:1px dashed #e5e7eb
+
+button{
+  padding:10px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
 }
-.detail-row b{color:#1e3a8a}
+
+.btn{
+  background:var(--accent);
+  color:#fff;
+}
+
+.btn-danger{
+  background:var(--danger);
+  color:#fff;
+}
 </style>
 </head>
 
 <body>
 
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-<script>
-firebase.initializeApp({
-  apiKey: "AIzaSyCowDEvUQpBmq7AwUGiC6IuGOudPhi_0kM",
-  authDomain: "vehicle-maintenance-64890.firebaseapp.com",
-  projectId: "vehicle-maintenance-64890",
-});
-const db = firebase.firestore();
-</script>
-
-<header>🚗 SC THE ADVENTURE | ระบบซ่อมบำรุงรถยนต์</header>
-
-<div class="container">
-
-<div class="card grid">
-  <select id="vehicleSelect"></select>
-  <button onclick="openModal()">➕ เพิ่มประวัติการซ่อม</button>
-  <button class="danger" onclick="confirmDeleteAll()">🗑️ ลบรถและข้อมูลทั้งหมด</button>
+<div class="sidebar">
+  <h2>🚗 รถทั้งหมด</h2>
+  <div id="vehicleList"></div>
 </div>
 
-<!-- 🔍 ค้นหา -->
-<div class="card grid">
-  <input id="searchInput" placeholder="🔍 ค้นหาประวัติการซ่อม (ระบบ / อาการ / ช่าง / ใบงาน)">
-  <button onclick="searchRepairs()">ค้นหา</button>
-  <button class="danger" onclick="resetSearch()">ล้างการค้นหา</button>
+<div class="main">
+  <div class="header">
+    <h2 id="title">เลือกรถ</h2>
+    <input id="search" class="search" placeholder="ค้นหา...">
+  </div>
+
+  <div id="repairList"></div>
 </div>
 
-<div class="card">
-<table class="table">
-<thead>
-<tr>
-<th>วันที่</th>
-<th>รถ</th>
-<th>ระบบที่ซ่อม</th>
-<th>อาการเสีย</th>
-<th>ช่าง</th>
-<th>ค่าใช้จ่าย</th>
-<th>รายละเอียด</th>
-<th>ลบ</th>
-</tr>
-</thead>
-<tbody id="tbody"></tbody>
-</table>
-</div>
+<div class="fab" onclick="openModal()">+</div>
 
-</div>
-
-<!-- modal เพิ่ม -->
+<!-- modal -->
 <div class="modal" id="modal">
 <div class="modal-box">
-<h2>บันทึกการซ่อม</h2>
-<div class="form-grid">
-<input id="plate" placeholder="ทะเบียนรถ">
-<input id="brand" placeholder="ยี่ห้อรถ">
-<input id="model" placeholder="รุ่นรถ">
+<h3>เพิ่มรายการซ่อม</h3>
+
 <input type="date" id="date">
-<input id="mileage" placeholder="เลขไมล์">
-<input id="jobNo" placeholder="เลขที่ใบงาน">
-<input id="system" placeholder="ระบบที่ซ่อม">
-<input id="technician" placeholder="ช่าง">
-<input id="approver" placeholder="ผู้อนุมัติ">
-<textarea id="symptoms" placeholder="อาการเสีย"></textarea>
-<textarea id="parts" placeholder="อะไหล่ที่เปลี่ยน"></textarea>
-<textarea id="note" placeholder="หมายเหตุ"></textarea>
-<input type="number" id="partsCost" placeholder="ค่าอะไหล่">
-<input type="number" id="laborCost" placeholder="ค่าแรง">
-</div>
-<div class="grid">
-<button onclick="confirmSave()">บันทึก</button>
-<button class="danger" onclick="closeModal()">ยกเลิก</button>
-</div>
-</div>
-</div>
+<input placeholder="ระบบที่ซ่อม" id="system">
+<textarea placeholder="อาการเสีย" id="symptoms"></textarea>
+<input type="number" placeholder="ค่าอะไหล่" id="partsCost">
+<input type="number" placeholder="ค่าแรง" id="laborCost">
 
-<!-- confirm -->
-<div class="modal" id="confirmModal">
-<div class="modal-box confirm-box">
-<h2 id="confirmTitle"></h2>
-<p id="confirmText"></p>
-<div class="grid">
-<button onclick="confirmYes()">ยืนยัน</button>
-<button class="danger" onclick="closeConfirm()">ยกเลิก</button>
-</div>
-</div>
-</div>
+<button class="btn" onclick="save()">บันทึก</button>
+<button class="btn-danger" onclick="closeModal()">ยกเลิก</button>
 
-<!-- detail -->
-<div class="modal" id="detailModal">
-<div class="modal-box">
-<h2>รายละเอียดการซ่อม</h2>
-<div id="detailContent"></div>
-<button class="danger" onclick="detailModal.style.display='none'">ปิด</button>
 </div>
 </div>
 
 <script>
-const modal = document.getElementById("modal");
-const confirmModal = document.getElementById("confirmModal");
-const detailModal = document.getElementById("detailModal");
-const vehicleSelect = document.getElementById("vehicleSelect");
-const tbody = document.getElementById("tbody");
-const searchInput = document.getElementById("searchInput");
+firebase.initializeApp({
+  apiKey: "YOUR_KEY",
+  authDomain: "YOUR_DOMAIN",
+  projectId: "YOUR_PROJECT"
+});
 
-let confirmAction = null;
-let allRepairs = [];
+const db = firebase.firestore();
 
-function openModal(){modal.style.display="flex"}
-function closeModal(){modal.style.display="none"}
+const vehicleList = document.getElementById("vehicleList");
+const repairList = document.getElementById("repairList");
+const title = document.getElementById("title");
 
-function openConfirm(t,txt,fn){
-  confirmTitle.textContent=t;
-  confirmText.textContent=txt;
-  confirmAction=fn;
-  confirmModal.style.display="flex";
-}
-function closeConfirm(){confirmModal.style.display="none";confirmAction=null}
-function confirmYes(){if(confirmAction) confirmAction();closeConfirm()}
+let selectedVehicle = null;
+let allData = [];
 
-function confirmSave(){
-  openConfirm("บันทึกข้อมูล","ยืนยันการบันทึก?",save);
-}
-
+/* โหลดรถ */
 function loadVehicles(){
   db.collection("vehicles").onSnapshot(s=>{
-    vehicleSelect.innerHTML="";
+    vehicleList.innerHTML="";
     s.forEach(d=>{
-      const o=document.createElement("option");
-      o.value=d.id;o.textContent=d.id;
-      vehicleSelect.appendChild(o);
+      const div=document.createElement("div");
+      div.className="vehicle";
+      div.textContent=d.id;
+
+      div.onclick=()=>{
+        document.querySelectorAll(".vehicle")
+          .forEach(v=>v.classList.remove("active"));
+
+        div.classList.add("active");
+        selectedVehicle=d.id;
+        title.textContent=d.id;
+
+        loadRepairs(d.id);
+      };
+
+      vehicleList.appendChild(div);
     });
-    if(vehicleSelect.value) loadRepairs(vehicleSelect.value);
   });
 }
-vehicleSelect.onchange=()=>loadRepairs(vehicleSelect.value);
 
+/* โหลดรายการ */
 function loadRepairs(v){
   db.collection("vehicles").doc(v).collection("repairs")
   .onSnapshot(s=>{
-    allRepairs=[];
+    allData=[];
     s.forEach(doc=>{
       const r=doc.data();
       r._id=doc.id;
-      allRepairs.push(r);
+      allData.push(r);
     });
-    renderTable(allRepairs,v);
+
+    allData.sort((a,b)=>
+      new Date(b["วันที่"]) - new Date(a["วันที่"])
+    );
+
+    render(allData);
   });
 }
 
-function renderTable(list,v){
-  tbody.innerHTML="";
+/* render */
+function render(list){
+  repairList.innerHTML="";
+
   list.forEach(r=>{
     const cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
-    tbody.innerHTML+=`
-<tr>
-<td>${r["วันที่"]||""}</td>
-<td>${v}</td>
-<td>${r["ระบบที่ซ่อม"]||""}</td>
-<td>${r["อาการเสีย"]||""}</td>
-<td>${r["ช่างผู้รับผิดชอบ"]||""}</td>
-<td>${cost}</td>
-<td><button onclick='openDetail(${JSON.stringify(r).replace(/'/g,"&#39;")})'>ดู</button></td>
-<td>
-<button class="danger" data-vehicle="${v}" data-id="${r._id}" onclick="deleteFromBtn(this)">ลบ</button>
-</td>
-</tr>`;
+
+    repairList.innerHTML+=`
+    <div class="repair-card">
+      <b>${r["วันที่"]||"-"}</b><br>
+      ${r["ระบบที่ซ่อม"]||"-"}<br>
+      <small>${r["อาการเสีย"]||"-"}</small><br>
+      <div class="cost">💰 ${cost.toLocaleString()} บาท</div>
+      <button class="btn-danger" onclick="del('${r._id}')">ลบ</button>
+    </div>`;
   });
 }
 
-function searchRepairs(){
-  const q=searchInput.value.toLowerCase().trim();
-  if(!q) return renderTable(allRepairs,vehicleSelect.value);
-  const res=allRepairs.filter(r=>
-    (r["ระบบที่ซ่อม"]||"").toLowerCase().includes(q) ||
-    (r["อาการเสีย"]||"").toLowerCase().includes(q) ||
-    (r["ช่างผู้รับผิดชอบ"]||"").toLowerCase().includes(q) ||
-    (r["เลขที่ใบงาน"]||"").toLowerCase().includes(q)
-  );
-  renderTable(res,vehicleSelect.value);
-}
-
-function resetSearch(){
-  searchInput.value="";
-  renderTable(allRepairs,vehicleSelect.value);
-}
-
+/* save */
 function save(){
-  const key=plate.value+" "+brand.value+" "+model.value;
-  const ref=db.collection("vehicles").doc(key);
-  ref.set({updated:new Date()},{merge:true});
-  ref.collection("repairs").add({
-    "วันที่":date.value,
-    "เลขไมล์":mileage.value,
-    "เลขที่ใบงาน":jobNo.value,
-    "ระบบที่ซ่อม":system.value,
-    "อาการเสีย":symptoms.value,
-    "อะไหล่ที่เปลี่ยน":parts.value,
-    "ช่างผู้รับผิดชอบ":technician.value,
-    "ผู้อนุมัติ":approver.value,
-    "หมายเหตุ":note.value,
-    "ค่าอะไหล่":partsCost.value,
-    "ค่าแรง":laborCost.value,
-    "เวลาบันทึก":new Date()
-  }).then(closeModal);
+  if(!selectedVehicle) return alert("เลือกคันก่อน");
+
+  db.collection("vehicles")
+    .doc(selectedVehicle)
+    .collection("repairs")
+    .add({
+      "วันที่":date.value,
+      "ระบบที่ซ่อม":system.value,
+      "อาการเสีย":symptoms.value,
+      "ค่าอะไหล่":partsCost.value,
+      "ค่าแรง":laborCost.value,
+      "เวลาบันทึก":new Date()
+    })
+    .then(()=>{
+      closeModal();
+      clearForm();
+    });
 }
 
-function deleteFromBtn(btn){
-  const v=btn.dataset.vehicle;
-  const id=btn.dataset.id;
-  openConfirm("ลบรายการซ่อม","ยืนยันการลบ?",()=>db.collection("vehicles").doc(v).collection("repairs").doc(id).delete());
+/* delete */
+function del(id){
+  db.collection("vehicles")
+    .doc(selectedVehicle)
+    .collection("repairs")
+    .doc(id)
+    .delete();
 }
 
-async function confirmDeleteAll(){
-  if(!vehicleSelect.value) return;
-  const name=vehicleSelect.value;
-  openConfirm("ลบรถ","ลบรถและประวัติทั้งหมด?",async()=>{
-    const ref=db.collection("vehicles").doc(name);
-    const snap=await ref.collection("repairs").get();
-    const batch=db.batch();
-    snap.forEach(d=>batch.delete(d.ref));
-    await batch.commit();
-    await ref.delete();
-    tbody.innerHTML="";
-  });
-}
+/* search */
+search.oninput=()=>{
+  const q=search.value.toLowerCase();
 
-function openDetail(d){
-  let html="";
-  for(const k in d){
-    if(k==="_id") continue;
-    html+=`<div class="detail-row"><b>${k}</b><div>${d[k]||"-"}</div></div>`;
-  }
-  detailContent.innerHTML=html;
-  detailModal.style.display="flex";
+  const res=allData.filter(r=>
+    (r["ระบบที่ซ่อม"]||"").toLowerCase().includes(q) ||
+    (r["อาการเสีย"]||"").toLowerCase().includes(q)
+  );
+
+  render(res);
+};
+
+/* modal */
+function openModal(){modal.style.display="flex"}
+function closeModal(){modal.style.display="none"}
+
+function clearForm(){
+  document.querySelectorAll("#modal input, #modal textarea")
+  .forEach(e=>e.value="");
 }
 
 loadVehicles();
-</script>
-
-<script>
-if("serviceWorker" in navigator){
-  navigator.serviceWorker.register("./sw.js");
-}
 </script>
 
 </body>
