@@ -188,9 +188,9 @@ button{
 
 <script>
 firebase.initializeApp({
-  apiKey: "YOUR_KEY",
+  apiKey: "YOUR_API_KEY",
   authDomain: "YOUR_DOMAIN",
-  projectId: "YOUR_PROJECT"
+  projectId: "YOUR_PROJECT_ID",
 });
 
 const db = firebase.firestore();
@@ -206,44 +206,62 @@ let allData = [];
 function loadVehicles(){
   db.collection("vehicles").onSnapshot(s=>{
     vehicleList.innerHTML="";
+    let first=null;
+
     s.forEach(d=>{
+      if(!first) first=d.id;
+
       const div=document.createElement("div");
       div.className="vehicle";
       div.textContent=d.id;
 
-      div.onclick=()=>{
-        document.querySelectorAll(".vehicle")
-          .forEach(v=>v.classList.remove("active"));
-
-        div.classList.add("active");
-        selectedVehicle=d.id;
-        title.textContent=d.id;
-
-        loadRepairs(d.id);
-      };
+      div.onclick=()=>selectVehicle(div,d.id);
 
       vehicleList.appendChild(div);
     });
+
+    if(first){
+      selectVehicle(vehicleList.children[0], first);
+    }
   });
 }
 
+/* เลือกรถ */
+function selectVehicle(el,id){
+  document.querySelectorAll(".vehicle")
+    .forEach(v=>v.classList.remove("active"));
+
+  el.classList.add("active");
+  selectedVehicle=id;
+  title.textContent=id;
+
+  loadRepairs(id);
+}
+
 /* โหลดรายการ */
+let unsubscribe=null;
+
 function loadRepairs(v){
-  db.collection("vehicles").doc(v).collection("repairs")
-  .onSnapshot(s=>{
-    allData=[];
-    s.forEach(doc=>{
-      const r=doc.data();
-      r._id=doc.id;
-      allData.push(r);
+  if(unsubscribe) unsubscribe();
+
+  unsubscribe = db.collection("vehicles")
+    .doc(v)
+    .collection("repairs")
+    .onSnapshot(s=>{
+      allData=[];
+
+      s.forEach(doc=>{
+        const r=doc.data();
+        r._id=doc.id;
+        allData.push(r);
+      });
+
+      allData.sort((a,b)=>
+        new Date(b["วันที่"]) - new Date(a["วันที่"])
+      );
+
+      render(allData);
     });
-
-    allData.sort((a,b)=>
-      new Date(b["วันที่"]) - new Date(a["วันที่"])
-    );
-
-    render(allData);
-  });
 }
 
 /* render */
@@ -255,10 +273,20 @@ function render(list){
 
     repairList.innerHTML+=`
     <div class="repair-card">
-      <b>${r["วันที่"]||"-"}</b><br>
-      ${r["ระบบที่ซ่อม"]||"-"}<br>
-      <small>${r["อาการเสีย"]||"-"}</small><br>
+      <b>📅 ${r["วันที่"]||"-"}</b><br>
+
+      🔧 ${r["ระบบที่ซ่อม"]||"-"}<br>
+      🧠 ${r["อาการเสีย"]||"-"}<br>
+
+      👨‍🔧 ${r["ช่างผู้รับผิดชอบ"]||"-"}<br>
+      📝 ใบงาน: ${r["เลขที่ใบงาน"]||"-"}<br>
+
+      🧩 ${r["อะไหล่ที่เปลี่ยน"]||"-"}<br>
+
+      <small>📌 ${r["หมายเหตุ"]||"-"}</small><br>
+
       <div class="cost">💰 ${cost.toLocaleString()} บาท</div>
+
       <button class="btn-danger" onclick="del('${r._id}')">ลบ</button>
     </div>`;
   });
@@ -300,7 +328,11 @@ search.oninput=()=>{
 
   const res=allData.filter(r=>
     (r["ระบบที่ซ่อม"]||"").toLowerCase().includes(q) ||
-    (r["อาการเสีย"]||"").toLowerCase().includes(q)
+    (r["อาการเสีย"]||"").toLowerCase().includes(q) ||
+    (r["ช่างผู้รับผิดชอบ"]||"").toLowerCase().includes(q) ||
+    (r["เลขที่ใบงาน"]||"").toLowerCase().includes(q) ||
+    (r["อะไหล่ที่เปลี่ยน"]||"").toLowerCase().includes(q) ||
+    (r["หมายเหตุ"]||"").toLowerCase().includes(q)
   );
 
   render(res);
