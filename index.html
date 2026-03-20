@@ -18,7 +18,6 @@
   --red:#da3633;
 }
 
-/* layout */
 body{
   margin:0;
   display:flex;
@@ -41,62 +40,54 @@ body{
   border-radius:6px;
   margin-bottom:6px;
 }
-
-.repo:hover{
-  background:#161b22;
-}
-
-.repo.active{
-  background:#238636;
-  color:#fff;
-}
+.repo:hover{background:#161b22;}
+.repo.active{background:#238636;color:#fff;}
 
 /* main */
-.main{
-  flex:1;
-  padding:20px;
-}
+.main{flex:1;padding:20px;}
 
-/* header */
 .top{
   display:flex;
   justify-content:space-between;
   margin-bottom:20px;
 }
 
-input{
+input,textarea{
   background:#0d1117;
   border:1px solid var(--border);
   color:#fff;
   padding:8px;
   border-radius:6px;
+  width:100%;
 }
+
+textarea{min-height:80px;}
 
 /* commit */
 .commit{
   border-left:2px solid var(--border);
-  padding-left:20px;
+  padding:15px 20px;
   margin-bottom:20px;
   position:relative;
+  background:#161b22;
+  border-radius:6px;
 }
 
 .commit::before{
   content:"";
-  width:10px;
-  height:10px;
+  width:10px;height:10px;
   background:#238636;
   border-radius:50%;
   position:absolute;
-  left:-6px;
-  top:5px;
+  left:-6px;top:10px;
 }
 
-.commit.red::before{
-  background:#da3633;
-}
+.commit.red::before{background:#da3633;}
 
-.commit small{
-  color:var(--sub);
+hr{
+  border:none;
+  border-top:1px solid var(--border);
+  margin:10px 0;
 }
 
 /* button */
@@ -108,10 +99,7 @@ input{
   border-radius:6px;
   cursor:pointer;
 }
-
-.btn-danger{
-  background:#da3633;
-}
+.btn-danger{background:#da3633;}
 
 /* modal */
 .modal{
@@ -127,12 +115,9 @@ input{
   background:#161b22;
   padding:20px;
   border-radius:10px;
-  width:400px;
-}
-
-textarea{
-  width:100%;
-  margin-top:10px;
+  width:500px;
+  max-height:90vh;
+  overflow:auto;
 }
 </style>
 </head>
@@ -147,9 +132,9 @@ textarea{
 <div class="main">
   <div class="top">
     <h2 id="title">เลือกคัน</h2>
-    <div>
-      <input id="search" placeholder="search...">
-      <button class="btn" onclick="openModal()">+ Add</button>
+    <div style="display:flex; gap:10px;">
+      <input id="search" placeholder="ค้นหา...">
+      <button class="btn" onclick="openModal()">+ เพิ่ม</button>
     </div>
   </div>
 
@@ -159,13 +144,34 @@ textarea{
 <!-- modal -->
 <div class="modal" id="modal">
 <div class="modal-box">
-  <h3>New Repair</h3>
-  <input type="date" id="date"><br><br>
-  <input id="system" placeholder="ระบบ"><br><br>
-  <textarea id="symptoms" placeholder="อาการ"></textarea><br><br>
-  <input id="partsCost" placeholder="ค่าอะไหล่"><br><br>
-  <input id="laborCost" placeholder="ค่าแรง"><br><br>
-  <button class="btn" onclick="save()">Save</button>
+
+<h3>📝 เพิ่มรายการซ่อม</h3>
+
+<h4>📅 ข้อมูลพื้นฐาน</h4>
+<input type="date" id="date">
+<input id="mileage" placeholder="เลขไมล์">
+<input id="jobNo" placeholder="เลขที่ใบงาน">
+
+<h4>🔧 รายละเอียดงาน</h4>
+<input id="system" placeholder="ระบบที่ซ่อม">
+<textarea id="symptoms" placeholder="อาการเสีย"></textarea>
+<textarea id="parts" placeholder="อะไหล่ที่เปลี่ยน"></textarea>
+
+<h4>👨‍🔧 ผู้เกี่ยวข้อง</h4>
+<input id="technician" placeholder="ช่าง">
+<input id="approver" placeholder="ผู้อนุมัติ">
+
+<h4>💰 ค่าใช้จ่าย</h4>
+<input type="number" id="partsCost" placeholder="ค่าอะไหล่">
+<input type="number" id="laborCost" placeholder="ค่าแรง">
+
+<h4>📌 หมายเหตุ</h4>
+<textarea id="note"></textarea>
+
+<br>
+<button class="btn" onclick="save()">💾 บันทึก</button>
+<button class="btn-danger" onclick="closeModal()">❌ ยกเลิก</button>
+
 </div>
 </div>
 
@@ -195,7 +201,7 @@ db.collection("vehicles").onSnapshot(s=>{
 
     div.onclick=()=>{
       document.querySelectorAll(".repo")
-      .forEach(x=>x.classList.remove("active"));
+        .forEach(x=>x.classList.remove("active"));
 
       div.classList.add("active");
       selectedVehicle=d.id;
@@ -212,7 +218,7 @@ db.collection("vehicles").onSnapshot(s=>{
   }
 });
 
-/* โหลด repair */
+/* โหลดรายการ */
 function load(v){
   db.collection("vehicles").doc(v).collection("repairs")
   .onSnapshot(s=>{
@@ -234,15 +240,33 @@ function render(list){
 
   list.forEach(r=>{
     let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
-
     let danger = cost > 5000 ? "red" : "";
 
     log.innerHTML+=`
     <div class="commit ${danger}">
-      <b>${r["ระบบที่ซ่อม"]||"-"}</b><br>
-      ${r["อาการเสีย"]||"-"}<br>
-      💰 ${cost.toLocaleString()} บาท<br>
-      <small>${r["วันที่"]||"-"}</small><br>
+      
+      <b>🔧 ${r["ระบบที่ซ่อม"]||"-"}</b>
+      <small> (${r["วันที่"]||"-"})</small>
+      <hr>
+
+      🧠 <b>อาการ:</b> ${r["อาการเสีย"]||"-"}<br>
+      🧩 <b>อะไหล่:</b> ${r["อะไหล่ที่เปลี่ยน"]||"-"}<br>
+
+      <hr>
+
+      👨‍🔧 <b>ช่าง:</b> ${r["ช่างผู้รับผิดชอบ"]||"-"}<br>
+      🧾 <b>ใบงาน:</b> ${r["เลขที่ใบงาน"]||"-"}<br>
+      📏 <b>เลขไมล์:</b> ${r["เลขไมล์"]||"-"}<br>
+
+      <hr>
+
+      💰 <b>ค่าใช้จ่าย:</b> ${cost.toLocaleString()} บาท
+
+      <hr>
+
+      📌 ${r["หมายเหตุ"]||"-"}
+
+      <br><br>
       <button class="btn-danger" onclick="del('${r._id}')">ลบ</button>
     </div>`;
   });
@@ -256,14 +280,21 @@ function save(){
   .collection("repairs")
   .add({
     "วันที่":date.value,
+    "เลขไมล์":mileage.value,
+    "เลขที่ใบงาน":jobNo.value,
     "ระบบที่ซ่อม":system.value,
     "อาการเสีย":symptoms.value,
+    "อะไหล่ที่เปลี่ยน":parts.value,
+    "ช่างผู้รับผิดชอบ":technician.value,
+    "ผู้อนุมัติ":approver.value,
+    "หมายเหตุ":note.value,
     "ค่าอะไหล่":partsCost.value,
     "ค่าแรง":laborCost.value,
     "เวลาบันทึก":new Date()
   });
 
-  modal.style.display="none";
+  closeModal();
+  clearForm();
 }
 
 /* delete */
@@ -275,14 +306,28 @@ function del(id){
 /* search */
 search.oninput=()=>{
   let q=search.value.toLowerCase();
+
   let res=all.filter(r=>
     (r["ระบบที่ซ่อม"]||"").toLowerCase().includes(q) ||
-    (r["อาการเสีย"]||"").toLowerCase().includes(q)
+    (r["อาการเสีย"]||"").toLowerCase().includes(q) ||
+    (r["ช่างผู้รับผิดชอบ"]||"").toLowerCase().includes(q) ||
+    (r["เลขที่ใบงาน"]||"").toLowerCase().includes(q) ||
+    (r["อะไหล่ที่เปลี่ยน"]||"").toLowerCase().includes(q) ||
+    (r["หมายเหตุ"]||"").toLowerCase().includes(q)
   );
+
   render(res);
 };
 
+/* modal */
 function openModal(){modal.style.display="flex";}
+function closeModal(){modal.style.display="none";}
+
+/* clear */
+function clearForm(){
+  document.querySelectorAll("#modal input, #modal textarea")
+    .forEach(e=>e.value="");
+}
 </script>
 
 </body>
