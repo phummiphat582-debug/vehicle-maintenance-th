@@ -2,131 +2,221 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>Apple Maintenance</title>
+<title>KBank Maintenance</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <style>
+:root{
+  --green:#00a950;
+  --bg:#f5f5f5;
+  --card:#ffffff;
+  --text:#111;
+  --sub:#666;
+}
+
 body{
   margin:0;
-  font-family:-apple-system, BlinkMacSystemFont;
-  background:#000;
-  color:#fff;
+  font-family:Segoe UI;
+  background:var(--bg);
 }
 
 /* header */
 .header{
+  background:var(--green);
+  color:#fff;
   padding:20px;
-  font-size:30px;
-  font-weight:700;
-}
-
-/* rings */
-.rings{
-  display:flex;
-  justify-content:center;
-  margin:20px;
-}
-
-.ring{
-  position:absolute;
-  border-radius:50%;
-}
-
-.r1{width:180px;height:180px;}
-.r2{width:140px;height:140px;}
-.r3{width:100px;height:100px;}
-
-.inner{
-  position:absolute;
-  width:60px;
-  height:60px;
-  background:#000;
-  border-radius:50%;
-  top:60px;
-  left:60px;
-}
-
-/* stats */
-.stats{
-  display:flex;
-  justify-content:space-around;
-  margin:20px;
-}
-
-.stat{
-  text-align:center;
-}
-
-.stat div{
   font-size:22px;
+  font-weight:bold;
+}
+
+/* balance card */
+.balance{
+  background:var(--green);
+  color:#fff;
+  margin:20px;
+  padding:20px;
+  border-radius:20px;
+}
+
+.balance .big{
+  font-size:28px;
+  font-weight:bold;
 }
 
 /* vehicle */
 .vehicle-bar{
   display:flex;
-  overflow:auto;
   gap:10px;
-  padding:10px;
+  padding:0 20px;
+  overflow:auto;
 }
 
 .vehicle{
-  padding:10px 16px;
-  background:#222;
+  background:#fff;
+  padding:10px 14px;
   border-radius:20px;
   cursor:pointer;
 }
 
 .vehicle.active{
-  background:#0f0;
-  color:#000;
+  background:var(--green);
+  color:#fff;
 }
 
-/* cards */
+/* search */
+.search{
+  padding:20px;
+}
+
+.search input{
+  width:100%;
+  padding:10px;
+  border-radius:10px;
+  border:none;
+}
+
+/* list */
 .list{
-  padding:15px;
+  padding:10px 20px;
 }
 
-.card{
-  background:#111;
+.item{
+  background:#fff;
+  border-radius:15px;
   padding:15px;
-  border-radius:20px;
   margin-bottom:10px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.item .left{
+  display:flex;
+  flex-direction:column;
+}
+
+.item .title{
+  font-weight:bold;
+}
+
+.item .sub{
+  color:var(--sub);
+  font-size:13px;
+}
+
+.amount{
+  color:var(--green);
+  font-weight:bold;
+}
+
+/* button */
+.add{
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  background:var(--green);
+  color:#fff;
+  padding:15px;
+  border-radius:50%;
+  font-size:20px;
+  cursor:pointer;
+}
+
+/* modal */
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.5);
+  display:none;
+  align-items:center;
+  justify-content:center;
+}
+
+.modal-box{
+  background:#fff;
+  padding:20px;
+  border-radius:20px;
+  width:90%;
+  max-height:90vh;
+  overflow:auto;
+}
+
+input,textarea{
+  width:100%;
+  margin-bottom:10px;
+  padding:10px;
+  border-radius:10px;
+  border:1px solid #ddd;
+}
+
+.btn{
+  background:var(--green);
+  color:#fff;
+  border:none;
+  padding:12px;
+  border-radius:10px;
+  width:100%;
+}
+
+.btn-danger{
+  background:#e53935;
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">Summary</div>
+<div class="header">SC Maintenance</div>
 
-<!-- RINGS -->
-<div class="rings">
-  <canvas id="ringsCanvas" width="200" height="200"></canvas>
-</div>
-
-<!-- stats -->
-<div class="stats">
-  <div class="stat">
-    Move
-    <div id="moveVal">0</div>
-  </div>
-  <div class="stat">
-    Repair
-    <div id="repairVal">0</div>
-  </div>
-  <div class="stat">
-    Cost
-    <div id="costVal">0</div>
-  </div>
+<!-- summary -->
+<div class="balance">
+  <div>ยอดค่าใช้จ่ายรวม</div>
+  <div class="big" id="totalCost">0 บาท</div>
 </div>
 
 <!-- vehicles -->
 <div class="vehicle-bar" id="vehicleList"></div>
 
+<!-- search -->
+<div class="search">
+  <input id="search" placeholder="ค้นหา...">
+</div>
+
 <!-- list -->
 <div class="list" id="log"></div>
+
+<!-- add -->
+<div class="add" onclick="openModal()">+</div>
+
+<!-- modal -->
+<div class="modal" id="modal">
+<div class="modal-box">
+
+<h3>เพิ่มรายการซ่อม</h3>
+
+<input type="date" id="date">
+<input id="mileage" placeholder="เลขไมล์">
+<input id="jobNo" placeholder="ใบงาน">
+
+<input id="system" placeholder="ระบบ">
+<textarea id="symptoms" placeholder="อาการ"></textarea>
+<textarea id="parts" placeholder="อะไหล่"></textarea>
+
+<input id="technician" placeholder="ช่าง">
+<input id="approver" placeholder="ผู้อนุมัติ">
+
+<input id="partsCost" placeholder="ค่าอะไหล่">
+<input id="laborCost" placeholder="ค่าแรง">
+
+<textarea id="note" placeholder="หมายเหตุ"></textarea>
+
+<button class="btn" onclick="save()">บันทึก</button>
+<button class="btn btn-danger" onclick="closeModal()">ยกเลิก</button>
+
+</div>
+</div>
 
 <script>
 firebase.initializeApp({
@@ -172,78 +262,76 @@ function load(v){
   db.collection("vehicles").doc(v).collection("repairs")
   .onSnapshot(s=>{
     all=[];
+    let total=0;
+
     s.forEach(doc=>{
-      all.push(doc.data());
+      let r=doc.data();
+      r._id=doc.id;
+
+      let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
+      total+=cost;
+
+      all.push(r);
     });
 
-    calculate();
-    render();
+    totalCost.innerText=total.toLocaleString()+" บาท";
+
+    all.sort((a,b)=>new Date(b["วันที่"])-new Date(a["วันที่"]));
+    render(all);
   });
-}
-
-/* คำนวณ */
-function calculate(){
-  let totalCost=0;
-  let totalJobs=all.length;
-  let todayJobs=0;
-
-  let today=new Date().toISOString().split("T")[0];
-
-  all.forEach(r=>{
-    let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
-    totalCost+=cost;
-
-    if(r["วันที่"]===today) todayJobs++;
-  });
-
-  moveVal.innerText = totalJobs;
-  repairVal.innerText = todayJobs;
-  costVal.innerText = totalCost.toLocaleString();
-
-  drawRings(totalJobs, todayJobs, totalCost);
-}
-
-/* วาดวง */
-function drawRings(move, repair, cost){
-  let canvas=document.getElementById("ringsCanvas");
-  let ctx=canvas.getContext("2d");
-
-  ctx.clearRect(0,0,200,200);
-
-  drawRing(ctx, move/20, 80, "#ff375f"); // move
-  drawRing(ctx, repair/10, 60, "#30d158"); // repair
-  drawRing(ctx, cost/50000, 40, "#0a84ff"); // cost
-}
-
-function drawRing(ctx, percent, radius, color){
-  ctx.beginPath();
-  ctx.strokeStyle="#222";
-  ctx.lineWidth=15;
-  ctx.arc(100,100,radius,0,Math.PI*2);
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.strokeStyle=color;
-  ctx.lineWidth=15;
-  ctx.arc(100,100,radius,-Math.PI/2,(Math.PI*2*percent)-Math.PI/2);
-  ctx.stroke();
 }
 
 /* render */
-function render(){
+function render(list){
   log.innerHTML="";
 
-  all.forEach(r=>{
+  list.forEach(r=>{
     let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
 
     log.innerHTML+=`
-    <div class="card">
-      🔧 ${r["ระบบที่ซ่อม"]||"-"}<br>
-      💰 ${cost.toLocaleString()} บาท<br>
-      📅 ${r["วันที่"]||"-"}
+    <div class="item">
+      <div class="left">
+        <div class="title">🔧 ${r["ระบบที่ซ่อม"]||"-"}</div>
+        <div class="sub">${r["วันที่"]||"-"}</div>
+      </div>
+      <div class="amount">${cost.toLocaleString()} ฿</div>
     </div>`;
   });
 }
+
+/* save */
+function save(){
+  db.collection("vehicles").doc(selectedVehicle)
+  .collection("repairs")
+  .add({
+    "วันที่":date.value,
+    "เลขไมล์":mileage.value,
+    "เลขที่ใบงาน":jobNo.value,
+    "ระบบที่ซ่อม":system.value,
+    "อาการเสีย":symptoms.value,
+    "อะไหล่ที่เปลี่ยน":parts.value,
+    "ช่างผู้รับผิดชอบ":technician.value,
+    "ผู้อนุมัติ":approver.value,
+    "หมายเหตุ":note.value,
+    "ค่าอะไหล่":partsCost.value,
+    "ค่าแรง":laborCost.value,
+    "เวลาบันทึก":new Date()
+  });
+
+  closeModal();
+}
+
+/* search */
+search.oninput=()=>{
+  let q=search.value.toLowerCase();
+  render(all.filter(r=>
+    (r["ระบบที่ซ่อม"]||"").toLowerCase().includes(q) ||
+    (r["อาการเสีย"]||"").toLowerCase().includes(q)
+  ));
+};
+
+function openModal(){modal.style.display="flex";}
+function closeModal(){modal.style.display="none";}
 </script>
 
 </body>
