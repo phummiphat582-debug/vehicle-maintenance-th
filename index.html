@@ -2,105 +2,113 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>SC Maintenance System</title>
+<title>SC Fleet System</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <style>
-/* ===== BASE ===== */
+:root{
+  --bg:#0f172a;
+  --card:#111827;
+  --border:#1f2937;
+  --text:#e5e7eb;
+  --sub:#9ca3af;
+  --primary:#6366f1;
+}
+
 body{
   margin:0;
-  font-family:Segoe UI;
-  background:#0f172a;
-  color:#fff;
+  font-family:Inter,Segoe UI;
+  background:var(--bg);
+  color:var(--text);
 }
 
-/* ===== LAYOUT ===== */
-.app{
+/* layout */
+.container{
+  max-width:1200px;
+  margin:auto;
+  padding:30px;
+}
+
+/* header */
+.header{
   display:flex;
-  height:100vh;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:30px;
 }
 
-.sidebar{
-  width:220px;
-  background:#020617;
-  padding:20px;
+.title{
+  font-size:24px;
+  font-weight:600;
 }
 
-.sidebar h2{
-  margin-bottom:20px;
-}
-
-.sidebar a{
-  display:block;
-  padding:10px;
-  border-radius:10px;
-  cursor:pointer;
-}
-.sidebar a:hover{
-  background:#1e293b;
-}
-
-/* ===== MAIN ===== */
-.main{
-  flex:1;
-  padding:20px;
-  overflow:auto;
-}
-
+/* grid */
 .grid{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
   gap:20px;
 }
 
-/* ===== CARD ===== */
-.card{
-  background:#1e293b;
-  padding:20px;
-  border-radius:15px;
-}
-
-/* ===== VEHICLE ===== */
+/* vehicle */
 .vehicle{
-  padding:15px;
-  background:#1e293b;
-  border-radius:12px;
+  background:var(--card);
+  border:1px solid var(--border);
+  padding:18px;
+  border-radius:16px;
   cursor:pointer;
   transition:.2s;
 }
 .vehicle:hover{
-  background:#334155;
+  border-color:var(--primary);
 }
 .vehicle.active{
-  background:#4f46e5;
+  background:var(--primary);
 }
 
-/* ===== LIST ===== */
+/* panel */
+.panel{
+  margin-top:15px;
+  display:none;
+}
+.panel.open{
+  display:block;
+}
+
+/* item */
 .item{
-  background:#1e293b;
-  padding:15px;
-  border-radius:10px;
+  background:var(--card);
+  border:1px solid var(--border);
+  padding:14px;
+  border-radius:12px;
   margin-top:10px;
-  animation:fade .3s;
+  transition:.2s;
 }
-@keyframes fade{
-  from{opacity:0;transform:translateY(10px)}
-  to{opacity:1}
+.item:hover{
+  transform:translateY(-2px);
 }
 
-/* ===== BUTTON ===== */
-button{
-  padding:10px;
+/* text */
+.sub{
+  color:var(--sub);
+  font-size:13px;
+}
+
+/* button */
+.btn{
+  background:var(--primary);
   border:none;
+  color:#fff;
+  padding:10px 14px;
   border-radius:10px;
   cursor:pointer;
 }
-.btn{background:#4f46e5;color:#fff}
-.btn-danger{background:#dc2626;color:#fff}
+.btn:active{
+  transform:scale(.96);
+}
 
-/* ===== MODAL ===== */
+/* modal */
 .modal{
   position:fixed;
   inset:0;
@@ -110,50 +118,35 @@ button{
   justify-content:center;
 }
 .modal-box{
-  background:#111827;
+  background:var(--card);
   padding:20px;
-  border-radius:15px;
+  border-radius:16px;
   width:400px;
-  max-height:90vh;
-  overflow:auto;
 }
 
-/* ===== INPUT ===== */
+/* input */
 input,textarea{
   width:100%;
-  padding:10px;
   margin-bottom:10px;
+  padding:10px;
   border-radius:10px;
-  border:none;
+  border:1px solid var(--border);
+  background:#020617;
+  color:#fff;
 }
 </style>
 </head>
 
 <body>
 
-<div class="app">
+<div class="container">
 
-<!-- sidebar -->
-<div class="sidebar">
-  <h2>🚗 SC</h2>
-  <a>Dashboard</a>
-  <a>Maintenance</a>
+<div class="header">
+  <div class="title">🚗 Fleet Maintenance</div>
+  <button class="btn" onclick="openModal()">+ เพิ่ม</button>
 </div>
 
-<!-- main -->
-<div class="main">
-
-<h2>🚗 รถทั้งหมด</h2>
-<div class="grid" id="vehicleList"></div>
-
-<br>
-
-<button class="btn" onclick="openModal()">➕ เพิ่มรายการ</button>
-
-<h2>🔧 ประวัติการซ่อม</h2>
-<div id="log"></div>
-
-</div>
+<div id="vehicleGrid" class="grid"></div>
 
 </div>
 
@@ -164,120 +157,104 @@ input,textarea{
 <h3>เพิ่มรายการซ่อม</h3>
 
 <input type="date" id="date">
-<input id="mileage" placeholder="เลขไมล์">
-<input id="jobNo" placeholder="ใบงาน">
 <input id="system" placeholder="ระบบ">
-<textarea id="symptoms" placeholder="อาการ"></textarea>
-<textarea id="parts" placeholder="อะไหล่"></textarea>
 <input id="technician" placeholder="ช่าง">
-<input id="approver" placeholder="ผู้อนุมัติ">
 <input id="partsCost" placeholder="ค่าอะไหล่">
 <input id="laborCost" placeholder="ค่าแรง">
-<textarea id="note" placeholder="หมายเหตุ"></textarea>
 
 <button class="btn" onclick="save()">บันทึก</button>
-<button class="btn-danger" onclick="closeModal()">ยกเลิก</button>
 
 </div>
 </div>
 
 <script>
 firebase.initializeApp({
-  apiKey: "AIzaSyCowDEvUQpBmq7AwUGiC6IuGOudPhi_0kM",
-  authDomain: "vehicle-maintenance-64890.firebaseapp.com",
-  projectId: "vehicle-maintenance-64890",
+  apiKey:"AIzaSyCowDEvUQpBmq7AwUGiC6IuGOudPhi_0kM",
+  authDomain:"vehicle-maintenance-64890.firebaseapp.com",
+  projectId:"vehicle-maintenance-64890"
 });
 
-const db = firebase.firestore();
+const db=firebase.firestore();
+let selected=null;
 
-let selectedVehicle=null;
-
-/* โหลดรถ */
+/* load vehicles */
 db.collection("vehicles").onSnapshot(s=>{
-  vehicleList.innerHTML="";
+  vehicleGrid.innerHTML="";
 
   s.forEach(d=>{
-    let name=d.id;
+    let v=d.id;
 
-    let div=document.createElement("div");
-    div.className="vehicle";
-    div.innerText=name;
+    vehicleGrid.innerHTML+=`
+    <div>
+      <div class="vehicle" onclick="toggle('${v}', this)">
+        🚗 ${v}
+      </div>
 
-    div.onclick=()=>{
-      document.querySelectorAll(".vehicle")
-        .forEach(v=>v.classList.remove("active"));
-
-      div.classList.add("active");
-      selectedVehicle=name;
-      load(name);
-    };
-
-    vehicleList.appendChild(div);
+      <div class="panel" id="p-${v}"></div>
+    </div>`;
   });
 });
 
-/* โหลดข้อมูล */
+/* toggle */
+function toggle(v,el){
+  selected=v;
+
+  let panel=document.getElementById("p-"+v);
+
+  if(panel.classList.contains("open")){
+    panel.classList.remove("open");
+    return;
+  }
+
+  document.querySelectorAll(".panel")
+    .forEach(p=>p.classList.remove("open"));
+
+  panel.classList.add("open");
+
+  load(v);
+}
+
+/* load repairs */
 function load(v){
-  db.collection("vehicles")
-    .doc(v)
-    .collection("repairs")
-    .onSnapshot(s=>{
-      log.innerHTML="";
+  db.collection("vehicles").doc(v).collection("repairs")
+  .onSnapshot(s=>{
+    let html="";
 
-      s.forEach(doc=>{
-        let r=doc.data();
-        let id=doc.id;
-        let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
+    s.forEach(doc=>{
+      let r=doc.data();
+      let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
 
-        log.innerHTML+=`
-        <div class="item">
-          📅 ${r["วันที่"]||"-"}<br>
-          🔧 ${r["ระบบที่ซ่อม"]||"-"}<br>
-          🧠 ${r["อาการเสีย"]||"-"}<br>
-          💰 ${cost.toLocaleString()} บาท<br>
-          👨‍🔧 ${r["ช่างผู้รับผิดชอบ"]||"-"}<br><br>
-          <button class="btn-danger" onclick="del('${id}')">ลบ</button>
-        </div>`;
-      });
+      html+=`
+      <div class="item">
+        <b>${r["ระบบที่ซ่อม"]||"-"}</b><br>
+        <div class="sub">${r["วันที่"]||"-"} • ${r["ช่างผู้รับผิดชอบ"]||"-"}</div>
+        <div>💰 ${cost.toLocaleString()} บาท</div>
+      </div>`;
     });
+
+    document.getElementById("p-"+v).innerHTML=html;
+  });
 }
 
 /* save */
 function save(){
-  if(!selectedVehicle) return alert("เลือกคันก่อน");
+  if(!selected) return alert("เลือกคันก่อน");
 
-  db.collection("vehicles").doc(selectedVehicle)
+  db.collection("vehicles").doc(selected)
     .collection("repairs")
     .add({
       "วันที่":date.value,
-      "เลขไมล์":mileage.value,
-      "เลขที่ใบงาน":jobNo.value,
       "ระบบที่ซ่อม":system.value,
-      "อาการเสีย":symptoms.value,
-      "อะไหล่ที่เปลี่ยน":parts.value,
       "ช่างผู้รับผิดชอบ":technician.value,
-      "ผู้อนุมัติ":approver.value,
-      "หมายเหตุ":note.value,
       "ค่าอะไหล่":partsCost.value,
-      "ค่าแรง":laborCost.value,
-      "เวลาบันทึก":new Date()
+      "ค่าแรง":laborCost.value
     });
 
-  closeModal();
-}
-
-/* delete */
-function del(id){
-  db.collection("vehicles")
-    .doc(selectedVehicle)
-    .collection("repairs")
-    .doc(id)
-    .delete();
+  modal.style.display="none";
 }
 
 /* modal */
 function openModal(){modal.style.display="flex";}
-function closeModal(){modal.style.display="none";}
 </script>
 
 </body>
