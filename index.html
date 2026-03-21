@@ -2,24 +2,35 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>SC Maintenance</title>
+<title>SC Maintenance Premium</title>
+
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <style>
-body{
-  margin:0;
-  font-family:Segoe UI;
+:root{
+  --bg:#eef2f7;
+  --card:#f8fafc;
+  --shadow1:#ffffff;
+  --shadow2:#c9d1d9;
+  --primary:#4db6c6;
 }
 
-/* HEADER */
+body{
+  margin:0;
+  font-family:'JetBrains Mono', monospace;
+  background:var(--bg);
+}
+
+/* header */
 .header{
-  background:#4db6c6;
+  background:linear-gradient(135deg,#4db6c6,#3aa4b4);
   color:#fff;
-  padding:15px;
-  display:flex;
-  justify-content:space-between;
+  padding:18px;
+  font-size:18px;
+  box-shadow:0 10px 25px rgba(0,0,0,.15);
 }
 
 /* layout */
@@ -28,104 +39,150 @@ body{
   height:calc(100vh - 60px);
 }
 
-/* LEFT */
+/* sidebar */
 .sidebar{
-  width:220px;
-  background:#3a3f44;
+  width:240px;
   padding:20px;
-}
-.sidebar button{
-  width:100%;
-  padding:10px;
-  margin-bottom:10px;
-  background:#4db6c6;
-  border:none;
-  color:#fff;
-  cursor:pointer;
 }
 
-/* CENTER */
+/* button */
+.btn{
+  width:100%;
+  padding:12px;
+  margin-bottom:12px;
+  border-radius:14px;
+  border:none;
+  cursor:pointer;
+  background:var(--card);
+  box-shadow:
+    6px 6px 12px var(--shadow2),
+    -6px -6px 12px var(--shadow1);
+  transition:.2s;
+}
+.btn:active{
+  transform:scale(.95);
+  box-shadow:inset 4px 4px 10px var(--shadow2),
+             inset -4px -4px 10px var(--shadow1);
+}
+
+/* center */
 .center{
   flex:1;
-  padding:20px;
-  background:#f3f3f3;
+  padding:25px;
   overflow:auto;
 }
 
+/* title */
 .title{
   font-size:20px;
-  margin-bottom:15px;
+  margin-bottom:20px;
 }
 
-/* repair item */
+/* card item */
 .item{
-  background:#fff;
-  padding:15px;
-  border-radius:8px;
-  margin-bottom:10px;
-  border-left:5px solid #4db6c6;
+  background:var(--card);
+  padding:18px;
+  border-radius:16px;
+  margin-bottom:15px;
+
+  box-shadow:
+    8px 8px 18px var(--shadow2),
+    -8px -8px 18px var(--shadow1);
+
+  transition:.2s;
+}
+.item:hover{
+  transform:translateY(-3px);
 }
 
 /* popup */
 .popup{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.5);
+  background:rgba(0,0,0,.3);
+  backdrop-filter:blur(6px);
   display:none;
   align-items:center;
   justify-content:center;
 }
+
 .popup-box{
-  background:#fff;
-  padding:20px;
+  background:var(--card);
+  padding:25px;
+  border-radius:20px;
   width:300px;
+
+  box-shadow:
+    10px 10px 30px rgba(0,0,0,.2),
+    -10px -10px 20px rgba(255,255,255,.6);
+
+  animation:pop .25s ease;
 }
+
+@keyframes pop{
+  from{transform:scale(.85);opacity:0}
+  to{transform:scale(1);opacity:1}
+}
+
+/* vehicle */
 .vehicle{
-  padding:10px;
-  border-bottom:1px solid #ddd;
+  padding:12px;
+  border-radius:10px;
   cursor:pointer;
+  margin-bottom:8px;
+  transition:.2s;
 }
 .vehicle:hover{
-  background:#eee;
+  background:#e0f2f1;
 }
 
 /* modal */
 .modal{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.5);
+  background:rgba(0,0,0,.3);
+  backdrop-filter:blur(6px);
   display:none;
   align-items:center;
   justify-content:center;
 }
+
 .modal-box{
-  background:#fff;
-  padding:20px;
-  width:400px;
+  background:var(--card);
+  padding:25px;
+  border-radius:20px;
+  width:350px;
+
+  box-shadow:
+    10px 10px 30px rgba(0,0,0,.2),
+    -10px -10px 20px rgba(255,255,255,.6);
+
+  animation:pop .25s;
 }
+
 input,textarea{
   width:100%;
   margin-bottom:10px;
-  padding:8px;
+  padding:10px;
+  border-radius:10px;
+  border:none;
+  box-shadow:inset 3px 3px 6px var(--shadow2),
+             inset -3px -3px 6px var(--shadow1);
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">
-  <div>SC Maintenance</div>
-</div>
+<div class="header">🚗 SC Maintenance Premium</div>
 
 <div class="app">
 
-<!-- LEFT -->
 <div class="sidebar">
-  <button onclick="openVehiclePopup()">🚗 เลือกรถ</button>
-  <button onclick="openModal()">➕ เพิ่มรายการ</button>
+  <button class="btn" onclick="openVehiclePopup()">🚗 เลือกรถ</button>
+  <button class="btn" onclick="openModal()">➕ เพิ่มรายการ</button>
 </div>
 
-<!-- CENTER -->
 <div class="center">
   <div class="title" id="currentVehicle">ยังไม่ได้เลือกรถ</div>
   <div id="repairList"></div>
@@ -133,16 +190,16 @@ input,textarea{
 
 </div>
 
-<!-- POPUP เลือกรถ -->
+<!-- popup -->
 <div class="popup" id="vehiclePopup">
   <div class="popup-box" id="vehicleList"></div>
 </div>
 
-<!-- MODAL เพิ่ม -->
+<!-- modal -->
 <div class="modal" id="modal">
 <div class="modal-box">
 
-<h3>เพิ่มรายการซ่อม</h3>
+<h3>เพิ่มรายการ</h3>
 
 <input type="date" id="date">
 <input id="system" placeholder="ระบบ">
@@ -151,8 +208,7 @@ input,textarea{
 <input id="partsCost" placeholder="ค่าอะไหล่">
 <input id="laborCost" placeholder="ค่าแรง">
 
-<button onclick="save()">บันทึก</button>
-<button onclick="modal.style.display='none'">ยกเลิก</button>
+<button class="btn" onclick="save()">บันทึก</button>
 
 </div>
 </div>
@@ -165,69 +221,50 @@ firebase.initializeApp({
 });
 
 const db=firebase.firestore();
-
 let selectedVehicle=null;
 
-/* โหลดรถ */
+/* load vehicles */
 db.collection("vehicles").onSnapshot(s=>{
   vehicleList.innerHTML="";
-
   s.forEach(d=>{
-    let v=d.id;
-
     vehicleList.innerHTML+=`
-    <div class="vehicle" onclick="selectVehicle('${v}')">
-      🚗 ${v}
+    <div class="vehicle" onclick="selectVehicle('${d.id}')">
+      🚗 ${d.id}
     </div>`;
   });
 });
 
-/* เปิด popup */
 function openVehiclePopup(){
   vehiclePopup.style.display="flex";
 }
 
-/* เลือกรถ */
 function selectVehicle(v){
   selectedVehicle=v;
   currentVehicle.innerText=v;
   vehiclePopup.style.display="none";
-  loadRepairs(v);
+  load(v);
 }
 
-/* โหลด + เรียงวันที่ */
-function loadRepairs(v){
+/* load repairs */
+function load(v){
   db.collection("vehicles").doc(v).collection("repairs")
   .onSnapshot(s=>{
     let list=[];
+    s.forEach(doc=>list.push(doc.data()));
 
-    s.forEach(doc=>{
-      let r=doc.data();
-      list.push(r);
+    list.sort((a,b)=>new Date(b["วันที่"])-new Date(a["วันที่"]));
+
+    repairList.innerHTML="";
+    list.forEach(r=>{
+      let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
+
+      repairList.innerHTML+=`
+      <div class="item">
+        📅 ${r["วันที่"]}<br>
+        🔧 ${r["ระบบที่ซ่อม"]}<br>
+        💰 ${cost.toLocaleString()} บาท
+      </div>`;
     });
-
-    // sort ล่าสุดก่อน
-    list.sort((a,b)=> new Date(b["วันที่"]) - new Date(a["วันที่"]));
-
-    render(list);
-  });
-}
-
-/* render */
-function render(list){
-  repairList.innerHTML="";
-
-  list.forEach(r=>{
-    let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
-
-    repairList.innerHTML+=`
-    <div class="item">
-      📅 <b>${r["วันที่"]||"-"}</b><br>
-      🔧 ${r["ระบบที่ซ่อม"]||"-"}<br>
-      🧠 ${r["อาการเสีย"]||"-"}<br>
-      👨‍🔧 ${r["ช่างผู้รับผิดชอบ"]||"-"}<br>
-      💰 ${cost.toLocaleString()} บาท
-    </div>`;
   });
 }
 
