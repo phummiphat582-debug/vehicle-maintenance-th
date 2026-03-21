@@ -2,27 +2,32 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>SC Maintenance (Full Data)</title>
+<title>SC Maintenance PRO</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <style>
+:root{
+  --primary:#4f46e5;
+  --danger:#dc2626;
+}
 body{margin:0;font-family:Segoe UI;background:#f3f4f6}
 
+/* header */
 .header{
-  background:#4f46e5;
+  background:var(--primary);
   color:#fff;
   padding:20px;
   font-size:22px;
 }
 
+/* vehicle */
 .vehicle-bar{
   display:flex;
   gap:10px;
   padding:10px 20px;
 }
-
 .vehicle{
   padding:8px 12px;
   background:#ddd;
@@ -30,31 +35,37 @@ body{margin:0;font-family:Segoe UI;background:#f3f4f6}
   cursor:pointer;
 }
 .vehicle.active{
-  background:#4f46e5;
+  background:var(--primary);
   color:#fff;
 }
 
+/* list */
 .list{padding:20px}
-
 .item{
   background:#fff;
   padding:15px;
   border-radius:12px;
-  margin-bottom:12px;
+  margin-bottom:10px;
   line-height:1.6;
 }
 
-.cost{color:green;font-weight:bold}
-
-button{
-  padding:8px;
+/* button */
+.btn{
+  background:var(--primary);
+  color:#fff;
+  padding:12px;
   border:none;
-  border-radius:8px;
+  border-radius:12px;
   cursor:pointer;
+  box-shadow:0 6px 15px rgba(0,0,0,.2);
+  transition:.15s;
 }
-.btn{background:#4f46e5;color:#fff}
-.btn-danger{background:#dc2626;color:#fff}
+.btn:active{transform:scale(.96)}
+.btn-danger{
+  background:var(--danger);
+}
 
+/* modal */
 .modal{
   position:fixed;
   inset:0;
@@ -63,31 +74,72 @@ button{
   align-items:center;
   justify-content:center;
 }
+
 .modal-box{
   background:#fff;
+  border-radius:20px;
+  width:90%;
+  max-width:800px;
+  height:90vh;
+  display:flex;
+  flex-direction:column;
   padding:20px;
-  border-radius:12px;
-  width:400px;
-  max-height:90vh;
-  overflow:auto;
 }
 
+/* form */
+.form{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  flex:1;
+}
+
+.full{grid-column:span 2}
+
 input,textarea{
-  width:100%;
-  margin-bottom:10px;
-  padding:8px;
+  padding:12px;
+  border-radius:12px;
+  border:1px solid #ddd;
+  transition:.2s;
+}
+input:focus,textarea:focus{
+  outline:none;
+  border-color:var(--primary);
+  box-shadow:0 0 0 2px rgba(79,70,229,.2);
+}
+
+/* confirm */
+.confirm{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.5);
+  display:none;
+  align-items:center;
+  justify-content:center;
+}
+.confirm-box{
+  background:#fff;
+  padding:20px;
+  border-radius:20px;
+  width:300px;
+  text-align:center;
+  animation:pop .2s ease;
+}
+@keyframes pop{
+  from{transform:scale(.8);opacity:0}
+  to{transform:scale(1);opacity:1}
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">🚗 SC Maintenance (ข้อมูลครบ)</div>
+<div class="header">🚗 SC Maintenance PRO</div>
 
 <div class="vehicle-bar" id="vehicleList"></div>
 
 <div style="padding:20px">
-  <button class="btn" onclick="openModal()">➕ เพิ่ม</button>
+  <button class="btn" onclick="openModal()">➕ เพิ่มรายการ</button>
 </div>
 
 <div class="list" id="log"></div>
@@ -98,13 +150,16 @@ input,textarea{
 
 <h3>เพิ่มรายการซ่อม</h3>
 
+<div class="form">
+
 <input type="date" id="date">
 <input id="mileage" placeholder="เลขไมล์">
-<input id="jobNo" placeholder="ใบงาน">
 
+<input id="jobNo" placeholder="ใบงาน">
 <input id="system" placeholder="ระบบ">
-<textarea id="symptoms" placeholder="อาการ"></textarea>
-<textarea id="parts" placeholder="อะไหล่"></textarea>
+
+<textarea id="symptoms" class="full" placeholder="อาการ"></textarea>
+<textarea id="parts" class="full" placeholder="อะไหล่"></textarea>
 
 <input id="technician" placeholder="ช่าง">
 <input id="approver" placeholder="ผู้อนุมัติ">
@@ -112,12 +167,25 @@ input,textarea{
 <input id="partsCost" placeholder="ค่าอะไหล่">
 <input id="laborCost" placeholder="ค่าแรง">
 
-<textarea id="note" placeholder="หมายเหตุ"></textarea>
-
-<button class="btn" onclick="save()">บันทึก</button>
-<button class="btn-danger" onclick="closeModal()">ยกเลิก</button>
+<textarea id="note" class="full" placeholder="หมายเหตุ"></textarea>
 
 </div>
+
+<div style="display:flex; gap:10px;">
+  <button class="btn" onclick="confirmSave()">💾 บันทึก</button>
+  <button class="btn btn-danger" onclick="closeModal()">❌ ยกเลิก</button>
+</div>
+
+</div>
+</div>
+
+<!-- confirm -->
+<div class="confirm" id="confirmBox">
+  <div class="confirm-box">
+    <h3>ยืนยันการบันทึก?</h3><br>
+    <button class="btn" onclick="save()">ยืนยัน</button>
+    <button class="btn btn-danger" onclick="closeConfirm()">ยกเลิก</button>
+  </div>
 </div>
 
 <script>
@@ -176,25 +244,29 @@ function load(v){
 
         log.innerHTML+=`
         <div class="item">
-          📅 <b>${r["วันที่"]||"-"}</b><br>
-          📏 ไมล์: ${r["เลขไมล์"]||"-"}<br>
-          🧾 ใบงาน: ${r["เลขที่ใบงาน"]||"-"}<br>
-          🔧 ระบบ: ${r["ระบบที่ซ่อม"]||"-"}<br>
-          🧠 อาการ: ${r["อาการเสีย"]||"-"}<br>
-          🧩 อะไหล่: ${r["อะไหล่ที่เปลี่ยน"]||"-"}<br>
-          👨‍🔧 ช่าง: ${r["ช่างผู้รับผิดชอบ"]||"-"}<br>
-          👤 อนุมัติ: ${r["ผู้อนุมัติ"]||"-"}<br>
-          📌 หมายเหตุ: ${r["หมายเหตุ"]||"-"}<br>
-          💰 <span class="cost">${cost.toLocaleString()} บาท</span><br><br>
-
-          <button class="btn-danger" onclick="del('${id}')">ลบ</button>
+          📅 ${r["วันที่"]||"-"}<br>
+          🔧 ${r["ระบบที่ซ่อม"]||"-"}<br>
+          🧠 ${r["อาการเสีย"]||"-"}<br>
+          💰 ${cost.toLocaleString()} บาท<br>
+          👨‍🔧 ${r["ช่างผู้รับผิดชอบ"]||"-"}<br><br>
+          <button class="btn btn-danger" onclick="del('${id}')">ลบ</button>
         </div>`;
       });
     });
 }
 
+/* confirm */
+function confirmSave(){
+  confirmBox.style.display="flex";
+}
+function closeConfirm(){
+  confirmBox.style.display="none";
+}
+
 /* save */
 function save(){
+  confirmBox.style.display="none";
+
   if(!selectedVehicle) return alert("เลือกคันก่อน");
 
   db.collection("vehicles").doc(selectedVehicle)
