@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>SC Maintenance Terminal</title>
+<title>SC Maintenance Terminal Pro</title>
 
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap" rel="stylesheet">
 
@@ -13,24 +13,15 @@
 body{
   margin:0;
   font-family:'JetBrains Mono', monospace;
-  background:#000;
-  color:#00ff9f;
-}
-
-/* scanline */
-body::after{
-  content:"";
-  position:fixed;
-  inset:0;
-  background:linear-gradient(rgba(0,255,0,0.05) 1px, transparent 1px);
-  background-size:100% 3px;
-  pointer-events:none;
+  background:#020617;
+  color:#22c55e;
 }
 
 /* header */
 .header{
   padding:15px;
-  border-bottom:1px solid #00ff9f;
+  border-bottom:1px solid #14532d;
+  font-size:14px;
 }
 
 /* container */
@@ -38,63 +29,87 @@ body::after{
   padding:20px;
 }
 
-/* filter */
-select{
-  background:#000;
-  color:#0f0;
-  border:1px solid #0f0;
-  padding:5px;
+/* vehicle block */
+.vehicle-block{
+  margin-bottom:30px;
+  border:1px solid #14532d;
+  border-radius:10px;
+  padding:15px;
+  background:rgba(0,255,100,0.03);
+}
+
+/* vehicle title */
+.vehicle-title{
+  font-size:16px;
+  margin-bottom:10px;
+  color:#4ade80;
+}
+
+/* date group */
+.date-group{
   margin-bottom:15px;
+  padding-left:10px;
+  border-left:2px solid #14532d;
 }
 
-/* log */
-.log{
-  line-height:1.6;
+/* date */
+.date{
+  font-size:13px;
+  color:#86efac;
+  margin-bottom:5px;
 }
 
-.line{
-  margin-bottom:6px;
+/* item */
+.item{
+  padding:8px 10px;
+  margin-bottom:5px;
+  background:#020617;
+  border-radius:6px;
+  border:1px solid #14532d;
 }
 
-/* glow */
-.line span{
-  text-shadow:0 0 5px #00ff9f;
+/* hover */
+.item:hover{
+  background:#022c22;
 }
 
-/* input */
-input,textarea{
-  width:100%;
-  background:#000;
-  border:1px solid #0f0;
-  color:#0f0;
-  margin-bottom:8px;
-  padding:5px;
-}
-
-/* button */
-button{
-  background:#000;
-  color:#0f0;
-  border:1px solid #0f0;
-  padding:8px;
-  cursor:pointer;
-}
-button:hover{
-  background:#0f0;
-  color:#000;
+/* cost */
+.cost{
+  color:#4ade80;
 }
 
 /* modal */
 .modal{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.9);
+  background:rgba(0,0,0,.8);
   display:none;
   align-items:center;
   justify-content:center;
 }
+
 .modal-box{
-  width:400px;
+  background:#020617;
+  padding:20px;
+  border:1px solid #14532d;
+  width:350px;
+}
+
+input,textarea{
+  width:100%;
+  margin-bottom:8px;
+  padding:6px;
+  background:#000;
+  border:1px solid #14532d;
+  color:#22c55e;
+}
+
+button{
+  background:#000;
+  color:#22c55e;
+  border:1px solid #22c55e;
+  padding:8px;
+  cursor:pointer;
 }
 </style>
 </head>
@@ -102,16 +117,12 @@ button:hover{
 <body>
 
 <div class="header">
-  > SC_MAINTENANCE_SYSTEM v1.0
+> SC MAINTENANCE SYSTEM (READABLE MODE)
 </div>
 
 <div class="container">
-
-<select id="vehicleFilter"></select>
-<button onclick="openModal()">ADD_LOG</button>
-
-<div class="log" id="log"></div>
-
+  <button onclick="openModal()">+ ADD LOG</button>
+  <div id="log"></div>
 </div>
 
 <!-- modal -->
@@ -120,12 +131,13 @@ button:hover{
 
 <h3>> ADD REPAIR</h3>
 
+<input id="vehicle" placeholder="รถ">
 <input type="date" id="date">
-<input id="system" placeholder="system">
-<textarea id="symptoms" placeholder="symptoms"></textarea>
-<input id="technician" placeholder="technician">
-<input id="partsCost" placeholder="parts cost">
-<input id="laborCost" placeholder="labor cost">
+<input id="system" placeholder="ระบบ">
+<textarea id="symptoms" placeholder="อาการ"></textarea>
+<input id="technician" placeholder="ช่าง">
+<input id="partsCost" placeholder="ค่าอะไหล่">
+<input id="laborCost" placeholder="ค่าแรง">
 
 <button onclick="save()">EXECUTE</button>
 
@@ -141,62 +153,80 @@ firebase.initializeApp({
 
 const db=firebase.firestore();
 
-let allData=[];
-
 /* โหลดทั้งหมด */
 db.collection("vehicles").onSnapshot(async s=>{
-  allData=[];
-  vehicleFilter.innerHTML="<option value='all'>ALL</option>";
+  let all={};
 
   for(const d of s.docs){
     let v=d.id;
-    vehicleFilter.innerHTML+=`<option>${v}</option>`;
-
     let snap=await db.collection("vehicles").doc(v).collection("repairs").get();
 
     snap.forEach(doc=>{
       let r=doc.data();
-      r.vehicle=v;
-      allData.push(r);
+
+      if(!all[v]) all[v]=[];
+      all[v].push(r);
     });
   }
 
-  render();
+  render(all);
 });
 
 /* render */
-function render(){
-  let filter=vehicleFilter.value;
-
-  let list=allData.filter(r=>{
-    return filter==="all" || r.vehicle===filter;
-  });
-
-  list.sort((a,b)=>new Date(b["วันที่"])-new Date(a["วันที่"]));
-
+function render(data){
   log.innerHTML="";
 
-  list.forEach(r=>{
-    let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
+  for(let v in data){
 
-    log.innerHTML+=`
-    <div class="line">
-      <span>[${r.vehicle}]</span> 
-      ${r["วันที่"]} | 
-      ${r["ระบบที่ซ่อม"]} | 
-      ${r["อาการเสีย"]} | 
-      ${cost}฿
-    </div>`;
-  });
+    let list=data[v];
+
+    // sort วันที่
+    list.sort((a,b)=>new Date(b["วันที่"])-new Date(a["วันที่"]));
+
+    // group by date
+    let group={};
+
+    list.forEach(r=>{
+      let d=r["วันที่"]||"unknown";
+      if(!group[d]) group[d]=[];
+      group[d].push(r);
+    });
+
+    let html=`
+    <div class="vehicle-block">
+      <div class="vehicle-title">🚗 ${v}</div>
+    `;
+
+    for(let d in group){
+      html+=`<div class="date-group">
+        <div class="date">📅 ${d}</div>`;
+
+      group[d].forEach(r=>{
+        let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
+
+        html+=`
+        <div class="item">
+          🔧 ${r["ระบบที่ซ่อม"]||"-"} | 
+          ${r["อาการเสีย"]||"-"} | 
+          👨‍🔧 ${r["ช่างผู้รับผิดชอบ"]||"-"} | 
+          💰 <span class="cost">${cost}</span>
+        </div>`;
+      });
+
+      html+=`</div>`;
+    }
+
+    html+=`</div>`;
+
+    log.innerHTML+=html;
+  }
 }
-
-/* filter */
-vehicleFilter.onchange=render;
 
 /* save */
 function save(){
-  let v=vehicleFilter.value;
-  if(v==="all") return alert("เลือกคันก่อน");
+  let v=vehicle.value;
+
+  if(!v) return alert("ใส่ชื่อรถ");
 
   db.collection("vehicles").doc(v)
     .collection("repairs")
