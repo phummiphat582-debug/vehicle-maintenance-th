@@ -2,259 +2,177 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>SC Fleet System</title>
+<title>Maintenance Mail UI</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
-<style>
-:root{
-  --bg:#0f172a;
-  --card:#111827;
-  --border:#1f2937;
-  --text:#e5e7eb;
-  --sub:#9ca3af;
-  --primary:#6366f1;
-}
+<link rel="stylesheet" href="style.css">
 
-body{
-  margin:0;
-  font-family:Inter,Segoe UI;
-  background:var(--bg);
-  color:var(--text);
-}
-
-/* layout */
-.container{
-  max-width:1200px;
-  margin:auto;
-  padding:30px;
-}
-
-/* header */
-.header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:30px;
-}
-
-.title{
-  font-size:24px;
-  font-weight:600;
-}
-
-/* grid */
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:20px;
-}
-
-/* vehicle */
-.vehicle{
-  background:var(--card);
-  border:1px solid var(--border);
-  padding:18px;
-  border-radius:16px;
-  cursor:pointer;
-  transition:.2s;
-}
-.vehicle:hover{
-  border-color:var(--primary);
-}
-.vehicle.active{
-  background:var(--primary);
-}
-
-/* panel */
-.panel{
-  margin-top:15px;
-  display:none;
-}
-.panel.open{
-  display:block;
-}
-
-/* item */
-.item{
-  background:var(--card);
-  border:1px solid var(--border);
-  padding:14px;
-  border-radius:12px;
-  margin-top:10px;
-  transition:.2s;
-}
-.item:hover{
-  transform:translateY(-2px);
-}
-
-/* text */
-.sub{
-  color:var(--sub);
-  font-size:13px;
-}
-
-/* button */
-.btn{
-  background:var(--primary);
-  border:none;
-  color:#fff;
-  padding:10px 14px;
-  border-radius:10px;
-  cursor:pointer;
-}
-.btn:active{
-  transform:scale(.96);
-}
-
-/* modal */
-.modal{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.6);
-  display:none;
-  align-items:center;
-  justify-content:center;
-}
-.modal-box{
-  background:var(--card);
-  padding:20px;
-  border-radius:16px;
-  width:400px;
-}
-
-/* input */
-input,textarea{
-  width:100%;
-  margin-bottom:10px;
-  padding:10px;
-  border-radius:10px;
-  border:1px solid var(--border);
-  background:#020617;
-  color:#fff;
-}
-</style>
 </head>
 
 <body>
 
+<div class="container app">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <h1 class="logo">🚗 Maintenance</h1>
+
+  <nav class="main-nav">
+    <ul>
+      <li class="active">
+        <a href="#">รถทั้งหมด</a>
+        <a href="#" class="btn btn-primary" onclick="openModal()">+ เพิ่มรายการ</a>
+
+        <ul id="vehicleList"></ul>
+      </li>
+    </ul>
+  </nav>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+
+<header class="header">
+  <input type="search" placeholder="ค้นหา..." id="search">
+</header>
+
 <div class="container">
 
-<div class="header">
-  <div class="title">🚗 Fleet Maintenance</div>
-  <button class="btn" onclick="openModal()">+ เพิ่ม</button>
+<!-- LIST -->
+<div class="messages">
+  <h1 id="currentVehicle">เลือกรถ</h1>
+  <ul class="message-list" id="repairList"></ul>
 </div>
 
-<div id="vehicleGrid" class="grid"></div>
+<!-- DETAIL -->
+<section class="message">
+  <h2 id="title">รายละเอียด</h2>
+
+  <div class="meta-data" id="meta"></div>
+
+  <div class="body" id="detail"></div>
+
+</section>
 
 </div>
 
-<!-- modal -->
-<div class="modal" id="modal">
-<div class="modal-box">
+</div>
+</div>
+
+<!-- MODAL -->
+<div class="modal" id="modal" style="display:none;">
+<div style="background:#fff;padding:20px;width:400px;border-radius:10px">
 
 <h3>เพิ่มรายการซ่อม</h3>
 
 <input type="date" id="date">
 <input id="system" placeholder="ระบบ">
+<textarea id="symptoms" placeholder="อาการ"></textarea>
 <input id="technician" placeholder="ช่าง">
 <input id="partsCost" placeholder="ค่าอะไหล่">
 <input id="laborCost" placeholder="ค่าแรง">
 
-<button class="btn" onclick="save()">บันทึก</button>
+<button onclick="save()">บันทึก</button>
+<button onclick="closeModal()">ยกเลิก</button>
 
 </div>
 </div>
 
 <script>
 firebase.initializeApp({
-  apiKey:"AIzaSyCowDEvUQpBmq7AwUGiC6IuGOudPhi_0kM",
-  authDomain:"vehicle-maintenance-64890.firebaseapp.com",
-  projectId:"vehicle-maintenance-64890"
+  apiKey: "AIzaSyCowDEvUQpBmq7AwUGiC6IuGOudPhi_0kM",
+  authDomain: "vehicle-maintenance-64890.firebaseapp.com",
+  projectId: "vehicle-maintenance-64890",
 });
 
-const db=firebase.firestore();
-let selected=null;
+const db = firebase.firestore();
 
-/* load vehicles */
+let selectedVehicle=null;
+
+/* โหลดรถ */
 db.collection("vehicles").onSnapshot(s=>{
-  vehicleGrid.innerHTML="";
+  vehicleList.innerHTML="";
 
   s.forEach(d=>{
     let v=d.id;
 
-    vehicleGrid.innerHTML+=`
-    <div>
-      <div class="vehicle" onclick="toggle('${v}', this)">
-        🚗 ${v}
-      </div>
-
-      <div class="panel" id="p-${v}"></div>
-    </div>`;
+    vehicleList.innerHTML+=`
+    <li onclick="loadRepair('${v}')">
+      <a href="#">🚗 ${v}</a>
+    </li>`;
   });
 });
 
-/* toggle */
-function toggle(v,el){
-  selected=v;
+/* โหลดรายการ */
+function loadRepair(v){
+  selectedVehicle=v;
+  currentVehicle.innerText=v;
 
-  let panel=document.getElementById("p-"+v);
-
-  if(panel.classList.contains("open")){
-    panel.classList.remove("open");
-    return;
-  }
-
-  document.querySelectorAll(".panel")
-    .forEach(p=>p.classList.remove("open"));
-
-  panel.classList.add("open");
-
-  load(v);
-}
-
-/* load repairs */
-function load(v){
   db.collection("vehicles").doc(v).collection("repairs")
   .onSnapshot(s=>{
-    let html="";
+    repairList.innerHTML="";
 
     s.forEach(doc=>{
       let r=doc.data();
-      let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
+      let id=doc.id;
 
-      html+=`
-      <div class="item">
-        <b>${r["ระบบที่ซ่อม"]||"-"}</b><br>
-        <div class="sub">${r["วันที่"]||"-"} • ${r["ช่างผู้รับผิดชอบ"]||"-"}</div>
-        <div>💰 ${cost.toLocaleString()} บาท</div>
-      </div>`;
+      repairList.innerHTML+=`
+      <li onclick="openDetail('${v}','${id}')">
+        <div class="preview">
+          <h3>${r["ระบบที่ซ่อม"]||"-"} <small>${r["วันที่"]||""}</small></h3>
+          <p>${r["อาการเสีย"]||""}</p>
+        </div>
+      </li>`;
     });
+  });
+}
 
-    document.getElementById("p-"+v).innerHTML=html;
+/* รายละเอียด */
+function openDetail(v,id){
+  db.collection("vehicles").doc(v).collection("repairs").doc(id)
+  .get().then(doc=>{
+    let r=doc.data();
+    let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
+
+    title.innerText=r["ระบบที่ซ่อม"]||"-";
+
+    meta.innerHTML=`
+      👨‍🔧 ${r["ช่างผู้รับผิดชอบ"]||"-"}<br>
+      📅 ${r["วันที่"]||"-"}
+    `;
+
+    detail.innerHTML=`
+      <p><b>อาการ:</b> ${r["อาการเสีย"]||"-"}</p>
+      <p><b>ค่าใช้จ่าย:</b> ${cost.toLocaleString()} บาท</p>
+      <p><b>หมายเหตุ:</b> ${r["หมายเหตุ"]||"-"}</p>
+    `;
   });
 }
 
 /* save */
 function save(){
-  if(!selected) return alert("เลือกคันก่อน");
+  if(!selectedVehicle) return alert("เลือกคันก่อน");
 
-  db.collection("vehicles").doc(selected)
-    .collection("repairs")
-    .add({
-      "วันที่":date.value,
-      "ระบบที่ซ่อม":system.value,
-      "ช่างผู้รับผิดชอบ":technician.value,
-      "ค่าอะไหล่":partsCost.value,
-      "ค่าแรง":laborCost.value
-    });
+  db.collection("vehicles").doc(selectedVehicle)
+  .collection("repairs")
+  .add({
+    "วันที่":date.value,
+    "ระบบที่ซ่อม":system.value,
+    "อาการเสีย":symptoms.value,
+    "ช่างผู้รับผิดชอบ":technician.value,
+    "ค่าอะไหล่":partsCost.value,
+    "ค่าแรง":laborCost.value,
+    "เวลาบันทึก":new Date()
+  });
 
-  modal.style.display="none";
+  closeModal();
 }
 
 /* modal */
 function openModal(){modal.style.display="flex";}
+function closeModal(){modal.style.display="none";}
 </script>
 
 </body>
