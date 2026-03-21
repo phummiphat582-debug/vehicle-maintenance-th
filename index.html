@@ -2,85 +2,49 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>Manager Dashboard</title>
+<title>Manager Dashboard (Fixed)</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <style>
-body{
-  margin:0;
-  font-family:Segoe UI;
-  display:flex;
-  background:#eef2ff;
-}
+body{margin:0;font-family:Segoe UI;background:#f3f4f6}
 
-/* sidebar */
-.sidebar{
-  width:90px;
-  background:linear-gradient(#6366f1,#4f46e5);
-  height:100vh;
+/* header */
+.header{
+  background:#4f46e5;
   color:#fff;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  padding-top:20px;
+  padding:20px;
+  font-size:22px;
 }
 
-/* main */
-.main{
-  flex:1;
+/* dashboard */
+.dashboard{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:15px;
   padding:20px;
 }
 
-/* top */
-.top{
-  display:flex;
-  justify-content:space-between;
-  margin-bottom:20px;
-}
-
-/* grid */
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
-  gap:20px;
-}
-
-/* card */
 .card{
   background:#fff;
-  border-radius:20px;
-  padding:20px;
-  box-shadow:0 10px 25px rgba(0,0,0,.1);
+  padding:15px;
+  border-radius:15px;
 }
 
-.big{grid-column:span 2;}
-
-.value{
-  font-size:26px;
-  font-weight:bold;
-}
-
-/* warning */
-.warn{
-  color:#dc2626;
-  font-weight:bold;
-}
-
-/* list */
-.item{
-  background:#f9fafb;
-  padding:10px;
-  border-radius:10px;
-  margin-top:8px;
-}
+.value{font-size:22px;font-weight:bold}
 
 /* vehicle */
+.vehicle-bar{
+  display:flex;
+  gap:10px;
+  padding:10px 20px;
+}
+
 .vehicle{
   padding:8px 12px;
-  border-radius:10px;
   background:#ddd;
+  border-radius:10px;
   cursor:pointer;
 }
 .vehicle.active{
@@ -88,71 +52,98 @@ body{
   color:#fff;
 }
 
-/* input */
-input{
-  padding:10px;
+/* list */
+.list{padding:20px}
+.item{
+  background:#fff;
+  padding:15px;
   border-radius:10px;
-  border:none;
+  margin-bottom:10px;
 }
+
+/* modal */
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.5);
+  display:none;
+  align-items:center;
+  justify-content:center;
+}
+.modal-box{
+  background:#fff;
+  padding:20px;
+  border-radius:15px;
+  width:400px;
+  max-height:90vh;
+  overflow:auto;
+}
+
+input,textarea{
+  width:100%;
+  margin-bottom:10px;
+  padding:8px;
+}
+
+button{
+  padding:10px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+}
+.btn{background:#4f46e5;color:#fff}
+.btn-danger{background:#dc2626;color:#fff}
 </style>
 </head>
 
 <body>
 
-<div class="sidebar">
-  📊<br><br>
-  🚗<br><br>
-  ⚙️
+<div class="header">📊 Manager Dashboard</div>
+
+<!-- dashboard -->
+<div class="dashboard">
+  <div class="card">💰 รวม <div id="totalCost" class="value">0</div></div>
+  <div class="card">📅 เดือนนี้ <div id="monthCost" class="value">0</div></div>
+  <div class="card">🔧 งาน <div id="totalJobs" class="value">0</div></div>
 </div>
 
-<div class="main">
+<!-- vehicles -->
+<div class="vehicle-bar" id="vehicleList"></div>
 
-<div class="top">
-  <h2>Manager Dashboard</h2>
-  <input id="search" placeholder="ค้นหา...">
+<!-- add -->
+<div style="padding:20px">
+  <button class="btn" onclick="openModal()">➕ เพิ่ม</button>
 </div>
 
-<div id="vehicleList" style="display:flex;gap:10px;margin-bottom:20px;"></div>
+<!-- list -->
+<div class="list" id="log"></div>
 
-<div class="grid">
+<!-- modal -->
+<div class="modal" id="modal">
+<div class="modal-box">
 
-<div class="card">
-  💰 ค่าใช้จ่ายรวม
-  <div class="value" id="totalCost">0</div>
-</div>
+<h3>เพิ่มรายการ</h3>
 
-<div class="card">
-  📅 เดือนนี้
-  <div class="value" id="monthCost">0</div>
-</div>
+<input type="date" id="date">
+<input id="mileage" placeholder="เลขไมล์">
+<input id="jobNo" placeholder="ใบงาน">
 
-<div class="card">
-  🔧 งานทั้งหมด
-  <div class="value" id="totalJobs">0</div>
-</div>
+<input id="system" placeholder="ระบบ">
+<textarea id="symptoms" placeholder="อาการ"></textarea>
+<textarea id="parts" placeholder="อะไหล่"></textarea>
 
-<div class="card">
-  ⚠️ รถเสี่ยง
-  <div class="value warn" id="riskCar">-</div>
-</div>
+<input id="technician" placeholder="ช่าง">
+<input id="approver" placeholder="ผู้อนุมัติ">
 
-<div class="card big">
-  🚗 รถที่ซ่อมบ่อย
-  <div id="topCars"></div>
-</div>
+<input id="partsCost" placeholder="ค่าอะไหล่">
+<input id="laborCost" placeholder="ค่าแรง">
 
-<div class="card big">
-  📊 ค่าใช้จ่ายตามระบบ
-  <div id="systemStats"></div>
-</div>
+<textarea id="note" placeholder="หมายเหตุ"></textarea>
 
-<div class="card big">
-  📋 รายการล่าสุด
-  <div id="log"></div>
-</div>
+<button class="btn" onclick="save()">บันทึก</button>
+<button class="btn-danger" onclick="closeModal()">ยกเลิก</button>
 
 </div>
-
 </div>
 
 <script>
@@ -162,78 +153,108 @@ firebase.initializeApp({
   projectId: "vehicle-maintenance-64890",
 });
 
-const db = firebase.firestore();
+const db=firebase.firestore();
 
 let selectedVehicle=null;
-let allData=[];
-let vehicleStats={};
+let all=[];
 
 /* โหลดรถ */
-db.collection("vehicles").onSnapshot(async s=>{
+db.collection("vehicles").onSnapshot(s=>{
   vehicleList.innerHTML="";
-  vehicleStats={};
+  let first=null;
 
-  for(const d of s.docs){
-    let name=d.id;
-    vehicleStats[name]=[];
+  s.forEach(d=>{
+    if(!first) first=d.id;
 
-    let snap=await db.collection("vehicles").doc(name).collection("repairs").get();
-    snap.forEach(doc=>{
-      vehicleStats[name].push(doc.data());
-    });
-  }
+    let div=document.createElement("div");
+    div.className="vehicle";
+    div.innerText=d.id;
 
-  renderDashboard();
+    div.onclick=()=>{
+      document.querySelectorAll(".vehicle")
+        .forEach(v=>v.classList.remove("active"));
+
+      div.classList.add("active");
+      selectedVehicle=d.id;
+      load(d.id);
+    };
+
+    vehicleList.appendChild(div);
+  });
+
+  if(first) vehicleList.children[0].click();
 });
 
-/* วิเคราะห์ */
-function renderDashboard(){
-  let total=0, month=0, jobs=0;
-  let systemMap={};
-  let carCount={};
+/* โหลด */
+function load(v){
+  db.collection("vehicles").doc(v).collection("repairs")
+  .onSnapshot(s=>{
+    all=[];
+    let total=0, month=0;
 
-  let today=new Date().toISOString().slice(0,7);
+    let now=new Date().toISOString().slice(0,7);
 
-  for(let car in vehicleStats){
-    carCount[car]=vehicleStats[car].length;
-
-    vehicleStats[car].forEach(r=>{
+    s.forEach(doc=>{
+      let r=doc.data();
       let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
+
       total+=cost;
-      jobs++;
+      if((r["วันที่"]||"").startsWith(now)) month+=cost;
 
-      if((r["วันที่"]||"").startsWith(today)) month+=cost;
-
-      let sys=r["ระบบที่ซ่อม"]||"อื่นๆ";
-      systemMap[sys]=(systemMap[sys]||0)+cost;
-    });
-  }
-
-  totalCost.innerText=total.toLocaleString();
-  monthCost.innerText=month.toLocaleString();
-  totalJobs.innerText=jobs;
-
-  /* รถพังบ่อย */
-  let worst=Object.entries(carCount).sort((a,b)=>b[1]-a[1])[0];
-  riskCar.innerText=worst ? worst[0]+" ("+worst[1]+")" : "-";
-
-  /* top cars */
-  topCars.innerHTML="";
-  Object.entries(carCount)
-    .sort((a,b)=>b[1]-a[1])
-    .slice(0,5)
-    .forEach(c=>{
-      topCars.innerHTML+=`<div class="item">${c[0]} - ${c[1]} ครั้ง</div>`;
+      all.push(r);
     });
 
-  /* system stats */
-  systemStats.innerHTML="";
-  Object.entries(systemMap)
-    .sort((a,b)=>b[1]-a[1])
-    .forEach(s=>{
-      systemStats.innerHTML+=`<div class="item">${s[0]} - ${s[1].toLocaleString()} บาท</div>`;
-    });
+    totalCost.innerText=total.toLocaleString();
+    monthCost.innerText=month.toLocaleString();
+    totalJobs.innerText=all.length;
+
+    render(all);
+  });
 }
+
+/* render */
+function render(list){
+  log.innerHTML="";
+
+  list.forEach(r=>{
+    let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
+
+    log.innerHTML+=`
+    <div class="item">
+      🔧 ${r["ระบบที่ซ่อม"]||"-"}<br>
+      💰 ${cost.toLocaleString()} บาท<br>
+      📅 ${r["วันที่"]||"-"}
+    </div>`;
+  });
+}
+
+/* save */
+function save(){
+  if(!selectedVehicle) return alert("เลือกคันก่อน");
+
+  db.collection("vehicles").doc(selectedVehicle)
+  .collection("repairs")
+  .add({
+    "วันที่":date.value,
+    "เลขไมล์":mileage.value,
+    "เลขที่ใบงาน":jobNo.value,
+    "ระบบที่ซ่อม":system.value,
+    "อาการเสีย":symptoms.value,
+    "อะไหล่ที่เปลี่ยน":parts.value,
+    "ช่างผู้รับผิดชอบ":technician.value,
+    "ผู้อนุมัติ":approver.value,
+    "หมายเหตุ":note.value,
+    "ค่าอะไหล่":partsCost.value,
+    "ค่าแรง":laborCost.value,
+    "เวลาบันทึก":new Date()
+  });
+
+  closeModal();
+}
+
+/* modal */
+function openModal(){modal.style.display="flex";}
+function closeModal(){modal.style.display="none";}
 </script>
 
 </body>
