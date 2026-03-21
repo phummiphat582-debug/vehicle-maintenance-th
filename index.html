@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>Maintenance Mail UI</title>
+<title>SC Maintenance - Simplest UI</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -11,33 +11,54 @@
 body{
   margin:0;
   font-family:Segoe UI;
-  display:flex;
-  height:100vh;
 }
 
-/* LEFT */
+/* HEADER */
+.header{
+  background:#4db6c6;
+  color:#fff;
+  padding:15px;
+  display:flex;
+  justify-content:space-between;
+}
+
+/* LAYOUT */
+.app{
+  display:flex;
+  height:calc(100vh - 60px);
+}
+
+/* SIDEBAR */
 .sidebar{
   width:220px;
-  background:#2f353a;
+  background:#3a3f44;
   color:#fff;
   padding:20px;
 }
 .sidebar h2{
   margin-bottom:20px;
 }
-.sidebar .vehicle{
+.sidebar button{
+  width:100%;
+  padding:10px;
+  background:#4db6c6;
+  border:none;
+  color:#fff;
+  margin-bottom:15px;
+  cursor:pointer;
+}
+.vehicle{
   padding:10px;
   cursor:pointer;
-  border-radius:6px;
 }
-.sidebar .vehicle:hover{
-  background:#3c434a;
+.vehicle:hover{
+  background:#555;
 }
 
 /* CENTER */
 .center{
   width:400px;
-  background:#f5f5f5;
+  background:#f3f3f3;
   border-right:1px solid #ddd;
   display:flex;
   flex-direction:column;
@@ -46,12 +67,19 @@ body{
   margin:0;
   padding:15px;
 }
+.search{
+  padding:10px;
+}
+.search input{
+  width:100%;
+  padding:8px;
+}
 .list{
   flex:1;
   overflow:auto;
 }
 .item{
-  padding:15px;
+  padding:12px;
   border-bottom:1px solid #ddd;
   cursor:pointer;
 }
@@ -73,16 +101,6 @@ body{
   margin-bottom:10px;
 }
 
-/* BUTTON */
-button{
-  padding:10px;
-  border:none;
-  background:#44c4e7;
-  color:#fff;
-  border-radius:6px;
-  cursor:pointer;
-}
-
 /* MODAL */
 .modal{
   position:fixed;
@@ -102,28 +120,44 @@ input,textarea{
   margin-bottom:10px;
   padding:8px;
 }
+button{
+  cursor:pointer;
+}
 </style>
 </head>
 
 <body>
 
-<!-- LEFT -->
+<div class="header">
+  <div>Simplest</div>
+  <div>SC Maintenance</div>
+</div>
+
+<div class="app">
+
+<!-- SIDEBAR -->
 <div class="sidebar">
-  <h2>🚗 รถ</h2>
-  <button onclick="openModal()">+ เพิ่ม</button>
+  <button onclick="openModal()">+ เพิ่มรายการ</button>
   <div id="vehicleList"></div>
 </div>
 
 <!-- CENTER -->
 <div class="center">
   <h2 id="currentVehicle">Inbox</h2>
+
+  <div class="search">
+    <input id="search" placeholder="ค้นหา...">
+  </div>
+
   <div class="list" id="repairList"></div>
 </div>
 
 <!-- RIGHT -->
 <div class="right">
-  <div class="title" id="title">เลือกรายการ</div>
+  <div class="title" id="title">รายละเอียด</div>
   <div id="detail"></div>
+</div>
+
 </div>
 
 <!-- MODAL -->
@@ -140,6 +174,7 @@ input,textarea{
 <input id="laborCost" placeholder="ค่าแรง">
 
 <button onclick="save()">บันทึก</button>
+<button onclick="modal.style.display='none'">ยกเลิก</button>
 
 </div>
 </div>
@@ -154,6 +189,7 @@ firebase.initializeApp({
 const db=firebase.firestore();
 
 let selectedVehicle=null;
+let allRepairs=[];
 
 /* โหลดรถ */
 db.collection("vehicles").onSnapshot(s=>{
@@ -176,41 +212,60 @@ function loadRepair(v){
 
   db.collection("vehicles").doc(v).collection("repairs")
   .onSnapshot(s=>{
+    allRepairs=[];
     repairList.innerHTML="";
 
     s.forEach(doc=>{
       let r=doc.data();
-      let id=doc.id;
-
-      repairList.innerHTML+=`
-      <div class="item" onclick="openDetail('${v}','${id}', this)">
-        <b>${r["ระบบที่ซ่อม"]||"-"}</b><br>
-        ${r["อาการเสีย"]||""}
-      </div>`;
+      r._id=doc.id;
+      allRepairs.push(r);
     });
+
+    render(allRepairs);
+  });
+}
+
+/* render */
+function render(list){
+  repairList.innerHTML="";
+
+  list.forEach(r=>{
+    repairList.innerHTML+=`
+    <div class="item" onclick="openDetail('${r._id}', this)">
+      <b>${r["ระบบที่ซ่อม"]||"-"}</b><br>
+      ${r["อาการเสีย"]||""}
+    </div>`;
   });
 }
 
 /* detail */
-function openDetail(v,id,el){
+function openDetail(id,el){
   document.querySelectorAll(".item")
     .forEach(i=>i.classList.remove("active"));
   el.classList.add("active");
 
-  db.collection("vehicles").doc(v).collection("repairs").doc(id)
-  .get().then(doc=>{
-    let r=doc.data();
-    let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
+  let r=allRepairs.find(x=>x._id===id);
 
-    title.innerText=r["ระบบที่ซ่อม"];
-    detail.innerHTML=`
-      📅 ${r["วันที่"]}<br>
-      👨‍🔧 ${r["ช่างผู้รับผิดชอบ"]}<br>
-      💰 ${cost.toLocaleString()} บาท<br><br>
-      ${r["อาการเสีย"]}
-    `;
-  });
+  let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
+
+  title.innerText=r["ระบบที่ซ่อม"];
+  detail.innerHTML=`
+    📅 ${r["วันที่"]}<br>
+    👨‍🔧 ${r["ช่างผู้รับผิดชอบ"]}<br>
+    💰 ${cost.toLocaleString()} บาท<br><br>
+    ${r["อาการเสีย"]}
+  `;
 }
+
+/* search */
+search.oninput=()=>{
+  let q=search.value.toLowerCase();
+
+  render(allRepairs.filter(r=>
+    (r["ระบบที่ซ่อม"]||"").toLowerCase().includes(q) ||
+    (r["อาการเสีย"]||"").toLowerCase().includes(q)
+  ));
+};
 
 /* save */
 function save(){
