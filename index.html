@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>Control Maintenance UI</title>
+<title>Soft Control Maintenance</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -10,8 +10,8 @@
 <style>
 :root{
   --bg:#e6e9ef;
-  --shadow1:#ffffff;
-  --shadow2:#c5c8ce;
+  --light:#ffffff;
+  --dark:#c5c8ce;
   --primary:#0ea5a5;
 }
 
@@ -19,147 +19,96 @@ body{
   margin:0;
   font-family:Segoe UI;
   background:var(--bg);
-  color:#333;
   padding:20px;
 }
 
-/* neumorphism card */
+/* card */
 .card{
   background:var(--bg);
   border-radius:20px;
   padding:20px;
-  box-shadow:8px 8px 16px var(--shadow2),
-             -8px -8px 16px var(--shadow1);
+  box-shadow:8px 8px 16px var(--dark),
+             -8px -8px 16px var(--light);
 }
 
 /* grid */
 .grid{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
   gap:20px;
-}
-
-/* title */
-.title{
-  font-weight:bold;
-  margin-bottom:10px;
-}
-
-/* value */
-.value{
-  font-size:24px;
-  color:var(--primary);
 }
 
 /* vehicle */
 .vehicle{
-  padding:10px;
-  border-radius:12px;
-  cursor:pointer;
   text-align:center;
-  box-shadow:inset 4px 4px 8px var(--shadow2),
-             inset -4px -4px 8px var(--shadow1);
+  padding:15px;
+  border-radius:15px;
+  cursor:pointer;
+  transition:.2s;
+  box-shadow:inset 4px 4px 8px var(--dark),
+             inset -4px -4px 8px var(--light);
+}
+.vehicle:active{
+  transform:scale(.95);
 }
 .vehicle.active{
   background:var(--primary);
   color:#fff;
 }
 
-/* slider */
-.slider{
-  width:100%;
+/* panel */
+.panel{
+  margin-top:10px;
+  max-height:0;
+  overflow:hidden;
+  transition:max-height .35s ease;
+}
+.panel.open{
+  max-height:2000px;
 }
 
-/* toggle */
-.toggle{
-  width:50px;
-  height:25px;
-  border-radius:20px;
-  background:#ccc;
-  position:relative;
-  cursor:pointer;
-}
-.toggle::after{
-  content:"";
-  width:20px;height:20px;
-  background:#fff;
-  position:absolute;
-  top:2px;left:2px;
-  border-radius:50%;
-  transition:.2s;
-}
-.toggle.active{
-  background:var(--primary);
-}
-.toggle.active::after{
-  left:26px;
-}
-
-/* list */
+/* item */
 .item{
   margin-top:10px;
   padding:10px;
   border-radius:12px;
-  box-shadow:inset 4px 4px 8px var(--shadow2),
-             inset -4px -4px 8px var(--shadow1);
+  background:var(--bg);
+  box-shadow:inset 4px 4px 8px var(--dark),
+             inset -4px -4px 8px var(--light);
+  animation:fade .3s;
+}
+@keyframes fade{
+  from{opacity:0;transform:translateY(10px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+/* header */
+.title{
+  font-weight:bold;
+  margin-bottom:10px;
 }
 
 /* button */
 .btn{
-  margin-top:10px;
   padding:10px;
   border:none;
   border-radius:12px;
-  cursor:pointer;
   background:var(--primary);
   color:#fff;
-  box-shadow:4px 4px 10px var(--shadow2),
-             -4px -4px 10px var(--shadow1);
+  cursor:pointer;
+  margin-top:10px;
 }
 .btn:active{
-  box-shadow:inset 4px 4px 10px var(--shadow2),
-             inset -4px -4px 10px var(--shadow1);
+  transform:scale(.95);
 }
 </style>
 </head>
 
 <body>
 
-<h2>🚗 Control Dashboard</h2>
+<h2>🚗 Maintenance Control</h2>
 
-<!-- vehicles -->
-<div class="grid" id="vehicleList"></div>
-
-<br>
-
-<div class="grid">
-
-<div class="card">
-  <div class="title">💰 ค่าใช้จ่ายรวม</div>
-  <div class="value" id="totalCost">0</div>
-</div>
-
-<div class="card">
-  <div class="title">🔧 งานทั้งหมด</div>
-  <div class="value" id="totalJobs">0</div>
-</div>
-
-<div class="card">
-  <div class="title">🎚️ ควบคุมงบ (จำลอง)</div>
-  <input type="range" class="slider">
-</div>
-
-<div class="card">
-  <div class="title">⚙️ เปิด/ปิดระบบ</div>
-  <div class="toggle" onclick="this.classList.toggle('active')"></div>
-</div>
-
-<div class="card" style="grid-column:span 2;">
-  <div class="title">📋 รายการซ่อม</div>
-  <div id="log"></div>
-</div>
-
-</div>
+<div class="grid" id="vehicleContainer"></div>
 
 <script>
 firebase.initializeApp({
@@ -168,61 +117,78 @@ firebase.initializeApp({
   projectId: "vehicle-maintenance-64890",
 });
 
-const db=firebase.firestore();
+const db = firebase.firestore();
 
-let selectedVehicle=null;
+let vehicleData={};
 
 /* โหลดรถ */
-db.collection("vehicles").onSnapshot(s=>{
-  vehicleList.innerHTML="";
-  let first=null;
+db.collection("vehicles").onSnapshot(async s=>{
+  vehicleContainer.innerHTML="";
 
-  s.forEach(d=>{
-    if(!first) first=d.id;
+  for(const d of s.docs){
+    let name=d.id;
 
-    let div=document.createElement("div");
-    div.className="vehicle";
-    div.innerText=d.id;
+    let snap = await db.collection("vehicles")
+      .doc(name).collection("repairs").get();
 
-    div.onclick=()=>{
-      document.querySelectorAll(".vehicle")
-        .forEach(v=>v.classList.remove("active"));
-
-      div.classList.add("active");
-      selectedVehicle=d.id;
-      load(d.id);
-    };
-
-    vehicleList.appendChild(div);
-  });
-
-  if(first) vehicleList.children[0].click();
-});
-
-/* โหลดข้อมูล */
-function load(v){
-  db.collection("vehicles").doc(v).collection("repairs")
-  .onSnapshot(s=>{
-    log.innerHTML="";
-    let total=0;
-
-    s.forEach(doc=>{
+    let repairs=[];
+    snap.forEach(doc=>{
       let r=doc.data();
-      let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
-
-      total+=cost;
-
-      log.innerHTML+=`
-      <div class="item">
-        🔧 ${r["ระบบที่ซ่อม"]||"-"}<br>
-        📅 ${r["วันที่"]||"-"}<br>
-        💰 ${cost.toLocaleString()} บาท
-      </div>`;
+      r._id=doc.id;
+      repairs.push(r);
     });
 
-    totalCost.innerText=total.toLocaleString();
-    totalJobs.innerText=s.size;
-  });
+    vehicleData[name]=repairs;
+
+    vehicleContainer.innerHTML+=`
+    <div class="card">
+      <div class="vehicle" onclick="toggle('${name}', this)">
+        🚗 ${name}
+      </div>
+
+      <div class="panel" id="panel-${name}">
+        ${renderList(repairs, name)}
+      </div>
+    </div>`;
+  }
+});
+
+/* toggle */
+function toggle(name, el){
+  let panel=document.getElementById("panel-"+name);
+
+  document.querySelectorAll(".panel")
+    .forEach(p=>{
+      if(p.id !== "panel-"+name){
+        p.classList.remove("open");
+      }
+    });
+
+  panel.classList.toggle("open");
+
+  document.querySelectorAll(".vehicle")
+    .forEach(v=>v.classList.remove("active"));
+
+  el.classList.toggle("active");
+}
+
+/* render */
+function renderList(list, v){
+  if(!list.length){
+    return `<div class="item">ไม่มีข้อมูล</div>`;
+  }
+
+  return list.map(r=>{
+    let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
+
+    return `
+    <div class="item">
+      📅 ${r["วันที่"]||"-"}<br>
+      🔧 ${r["ระบบที่ซ่อม"]||"-"}<br>
+      💰 ${cost.toLocaleString()} บาท<br>
+      👨‍🔧 ${r["ช่างผู้รับผิดชอบ"]||"-"}<br>
+    </div>`;
+  }).join("");
 }
 </script>
 
