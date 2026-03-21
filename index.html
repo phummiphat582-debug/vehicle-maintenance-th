@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>SC Maintenance PRO</title>
+<title>SC Maintenance PRO+</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -12,7 +12,11 @@
   --primary:#4f46e5;
   --danger:#dc2626;
 }
-body{margin:0;font-family:Segoe UI;background:#f3f4f6}
+body{
+  margin:0;
+  font-family:Segoe UI;
+  background:#f3f4f6;
+}
 
 /* header */
 .header{
@@ -23,30 +27,44 @@ body{margin:0;font-family:Segoe UI;background:#f3f4f6}
 }
 
 /* vehicle */
-.vehicle-bar{
-  display:flex;
-  gap:10px;
-  padding:10px 20px;
-}
 .vehicle{
-  padding:8px 12px;
   background:#ddd;
-  border-radius:10px;
+  padding:12px;
+  margin:10px 20px;
+  border-radius:12px;
   cursor:pointer;
+  transition:.2s;
+}
+.vehicle:active{
+  transform:scale(.95);
 }
 .vehicle.active{
   background:var(--primary);
   color:#fff;
 }
 
-/* list */
-.list{padding:20px}
+/* list accordion */
+.list{
+  overflow:hidden;
+  max-height:0;
+  transition:max-height .3s ease;
+  margin:0 20px;
+}
+.list.open{
+  max-height:2000px;
+}
+
+/* item */
 .item{
   background:#fff;
   padding:15px;
   border-radius:12px;
-  margin-bottom:10px;
-  line-height:1.6;
+  margin-top:10px;
+  animation:fadeIn .3s;
+}
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(10px)}
+  to{opacity:1;transform:translateY(0)}
 }
 
 /* button */
@@ -57,10 +75,11 @@ body{margin:0;font-family:Segoe UI;background:#f3f4f6}
   border:none;
   border-radius:12px;
   cursor:pointer;
-  box-shadow:0 6px 15px rgba(0,0,0,.2);
   transition:.15s;
 }
-.btn:active{transform:scale(.96)}
+.btn:active{
+  transform:scale(.95);
+}
 .btn-danger{
   background:var(--danger);
 }
@@ -74,16 +93,20 @@ body{margin:0;font-family:Segoe UI;background:#f3f4f6}
   align-items:center;
   justify-content:center;
 }
-
 .modal-box{
   background:#fff;
   border-radius:20px;
   width:90%;
   max-width:800px;
   height:90vh;
+  padding:20px;
   display:flex;
   flex-direction:column;
-  padding:20px;
+  animation:pop .25s;
+}
+@keyframes pop{
+  from{transform:scale(.85);opacity:0}
+  to{transform:scale(1);opacity:1}
 }
 
 /* form */
@@ -93,7 +116,6 @@ body{margin:0;font-family:Segoe UI;background:#f3f4f6}
   gap:10px;
   flex:1;
 }
-
 .full{grid-column:span 2}
 
 input,textarea{
@@ -123,26 +145,20 @@ input:focus,textarea:focus{
   border-radius:20px;
   width:300px;
   text-align:center;
-  animation:pop .2s ease;
-}
-@keyframes pop{
-  from{transform:scale(.8);opacity:0}
-  to{transform:scale(1);opacity:1}
+  animation:pop .2s;
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">🚗 SC Maintenance PRO</div>
-
-<div class="vehicle-bar" id="vehicleList"></div>
+<div class="header">🚗 SC Maintenance PRO+</div>
 
 <div style="padding:20px">
   <button class="btn" onclick="openModal()">➕ เพิ่มรายการ</button>
 </div>
 
-<div class="list" id="log"></div>
+<div id="vehicleContainer"></div>
 
 <!-- modal -->
 <div class="modal" id="modal">
@@ -198,61 +214,62 @@ firebase.initializeApp({
 const db=firebase.firestore();
 
 let selectedVehicle=null;
-let unsubscribe=null;
+let vehicleData={};
 
-/* โหลดรถ */
-db.collection("vehicles").onSnapshot(s=>{
-  vehicleList.innerHTML="";
-  let first=null;
+/* โหลดรถ + ข้อมูล */
+db.collection("vehicles").onSnapshot(async s=>{
+  vehicleContainer.innerHTML="";
 
-  s.forEach(d=>{
-    if(!first) first=d.id;
+  for(const d of s.docs){
+    let vName=d.id;
 
-    let div=document.createElement("div");
-    div.className="vehicle";
-    div.innerText=d.id;
+    let snap=await db.collection("vehicles")
+      .doc(vName).collection("repairs").get();
 
-    div.onclick=()=>{
-      document.querySelectorAll(".vehicle")
-        .forEach(v=>v.classList.remove("active"));
+    let repairs=[];
+    snap.forEach(doc=>{
+      let r=doc.data();
+      r._id=doc.id;
+      repairs.push(r);
+    });
 
-      div.classList.add("active");
-      selectedVehicle=d.id;
-      load(d.id);
-    };
+    vehicleData[vName]=repairs;
 
-    vehicleList.appendChild(div);
-  });
+    vehicleContainer.innerHTML+=`
+    <div class="vehicle" onclick="toggleVehicle('${vName}', this)">
+      🚗 ${vName}
+    </div>
 
-  if(first) vehicleList.children[0].click();
+    <div class="list" id="list-${vName}">
+      ${renderRepairsHTML(repairs, vName)}
+    </div>`;
+  }
 });
 
-/* โหลดข้อมูล */
-function load(v){
-  if(unsubscribe) unsubscribe();
+/* toggle accordion */
+function toggleVehicle(name, el){
+  selectedVehicle=name;
 
-  unsubscribe = db.collection("vehicles")
-    .doc(v).collection("repairs")
-    .onSnapshot(s=>{
-      log.innerHTML="";
+  let list=document.getElementById("list-"+name);
 
-      s.forEach(doc=>{
-        let r=doc.data();
-        let id=doc.id;
+  list.classList.toggle("open");
+}
 
-        let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
+/* render */
+function renderRepairsHTML(list,v){
+  return list.map(r=>{
+    let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
 
-        log.innerHTML+=`
-        <div class="item">
-          📅 ${r["วันที่"]||"-"}<br>
-          🔧 ${r["ระบบที่ซ่อม"]||"-"}<br>
-          🧠 ${r["อาการเสีย"]||"-"}<br>
-          💰 ${cost.toLocaleString()} บาท<br>
-          👨‍🔧 ${r["ช่างผู้รับผิดชอบ"]||"-"}<br><br>
-          <button class="btn btn-danger" onclick="del('${id}')">ลบ</button>
-        </div>`;
-      });
-    });
+    return `
+    <div class="item">
+      📅 ${r["วันที่"]||"-"}<br>
+      🔧 ${r["ระบบที่ซ่อม"]||"-"}<br>
+      🧠 ${r["อาการเสีย"]||"-"}<br>
+      💰 ${cost.toLocaleString()} บาท<br>
+      👨‍🔧 ${r["ช่างผู้รับผิดชอบ"]||"-"}<br><br>
+      <button class="btn btn-danger" onclick="del('${v}','${r._id}')">ลบ</button>
+    </div>`;
+  }).join("");
 }
 
 /* confirm */
@@ -290,9 +307,9 @@ function save(){
 }
 
 /* delete */
-function del(id){
+function del(v,id){
   db.collection("vehicles")
-    .doc(selectedVehicle)
+    .doc(v)
     .collection("repairs")
     .doc(id)
     .delete();
