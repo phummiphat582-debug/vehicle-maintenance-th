@@ -7,63 +7,128 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
-<link rel="stylesheet" href="style.css">
+<style>
+body{
+  margin:0;
+  font-family:Segoe UI;
+  display:flex;
+  height:100vh;
+}
 
+/* LEFT */
+.sidebar{
+  width:220px;
+  background:#2f353a;
+  color:#fff;
+  padding:20px;
+}
+.sidebar h2{
+  margin-bottom:20px;
+}
+.sidebar .vehicle{
+  padding:10px;
+  cursor:pointer;
+  border-radius:6px;
+}
+.sidebar .vehicle:hover{
+  background:#3c434a;
+}
+
+/* CENTER */
+.center{
+  width:400px;
+  background:#f5f5f5;
+  border-right:1px solid #ddd;
+  display:flex;
+  flex-direction:column;
+}
+.center h2{
+  margin:0;
+  padding:15px;
+}
+.list{
+  flex:1;
+  overflow:auto;
+}
+.item{
+  padding:15px;
+  border-bottom:1px solid #ddd;
+  cursor:pointer;
+}
+.item:hover{
+  background:#fff;
+}
+.item.active{
+  background:#ff8a65;
+  color:#fff;
+}
+
+/* RIGHT */
+.right{
+  flex:1;
+  padding:20px;
+}
+.title{
+  font-size:20px;
+  margin-bottom:10px;
+}
+
+/* BUTTON */
+button{
+  padding:10px;
+  border:none;
+  background:#44c4e7;
+  color:#fff;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+/* MODAL */
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.5);
+  display:none;
+  align-items:center;
+  justify-content:center;
+}
+.modal-box{
+  background:#fff;
+  padding:20px;
+  width:400px;
+}
+input,textarea{
+  width:100%;
+  margin-bottom:10px;
+  padding:8px;
+}
+</style>
 </head>
 
 <body>
 
-<div class="container app">
-
-<!-- SIDEBAR -->
-<aside class="sidebar">
-  <h1 class="logo">🚗 Maintenance</h1>
-
-  <nav class="main-nav">
-    <ul>
-      <li class="active">
-        <a href="#">รถทั้งหมด</a>
-        <a href="#" class="btn btn-primary" onclick="openModal()">+ เพิ่มรายการ</a>
-
-        <ul id="vehicleList"></ul>
-      </li>
-    </ul>
-  </nav>
-</aside>
-
-<!-- MAIN -->
-<div class="main">
-
-<header class="header">
-  <input type="search" placeholder="ค้นหา..." id="search">
-</header>
-
-<div class="container">
-
-<!-- LIST -->
-<div class="messages">
-  <h1 id="currentVehicle">เลือกรถ</h1>
-  <ul class="message-list" id="repairList"></ul>
+<!-- LEFT -->
+<div class="sidebar">
+  <h2>🚗 รถ</h2>
+  <button onclick="openModal()">+ เพิ่ม</button>
+  <div id="vehicleList"></div>
 </div>
 
-<!-- DETAIL -->
-<section class="message">
-  <h2 id="title">รายละเอียด</h2>
-
-  <div class="meta-data" id="meta"></div>
-
-  <div class="body" id="detail"></div>
-
-</section>
-
+<!-- CENTER -->
+<div class="center">
+  <h2 id="currentVehicle">Inbox</h2>
+  <div class="list" id="repairList"></div>
 </div>
 
-</div>
+<!-- RIGHT -->
+<div class="right">
+  <div class="title" id="title">เลือกรายการ</div>
+  <div id="detail"></div>
 </div>
 
 <!-- MODAL -->
-<div class="modal" id="modal" style="display:none;">
-<div style="background:#fff;padding:20px;width:400px;border-radius:10px">
+<div class="modal" id="modal">
+<div class="modal-box">
 
 <h3>เพิ่มรายการซ่อม</h3>
 
@@ -75,19 +140,18 @@
 <input id="laborCost" placeholder="ค่าแรง">
 
 <button onclick="save()">บันทึก</button>
-<button onclick="closeModal()">ยกเลิก</button>
 
 </div>
 </div>
 
 <script>
 firebase.initializeApp({
-  apiKey: "AIzaSyCowDEvUQpBmq7AwUGiC6IuGOudPhi_0kM",
-  authDomain: "vehicle-maintenance-64890.firebaseapp.com",
-  projectId: "vehicle-maintenance-64890",
+  apiKey:"AIzaSyCowDEvUQpBmq7AwUGiC6IuGOudPhi_0kM",
+  authDomain:"vehicle-maintenance-64890.firebaseapp.com",
+  projectId:"vehicle-maintenance-64890"
 });
 
-const db = firebase.firestore();
+const db=firebase.firestore();
 
 let selectedVehicle=null;
 
@@ -99,9 +163,9 @@ db.collection("vehicles").onSnapshot(s=>{
     let v=d.id;
 
     vehicleList.innerHTML+=`
-    <li onclick="loadRepair('${v}')">
-      <a href="#">🚗 ${v}</a>
-    </li>`;
+    <div class="vehicle" onclick="loadRepair('${v}')">
+      🚗 ${v}
+    </div>`;
   });
 });
 
@@ -119,34 +183,31 @@ function loadRepair(v){
       let id=doc.id;
 
       repairList.innerHTML+=`
-      <li onclick="openDetail('${v}','${id}')">
-        <div class="preview">
-          <h3>${r["ระบบที่ซ่อม"]||"-"} <small>${r["วันที่"]||""}</small></h3>
-          <p>${r["อาการเสีย"]||""}</p>
-        </div>
-      </li>`;
+      <div class="item" onclick="openDetail('${v}','${id}', this)">
+        <b>${r["ระบบที่ซ่อม"]||"-"}</b><br>
+        ${r["อาการเสีย"]||""}
+      </div>`;
     });
   });
 }
 
-/* รายละเอียด */
-function openDetail(v,id){
+/* detail */
+function openDetail(v,id,el){
+  document.querySelectorAll(".item")
+    .forEach(i=>i.classList.remove("active"));
+  el.classList.add("active");
+
   db.collection("vehicles").doc(v).collection("repairs").doc(id)
   .get().then(doc=>{
     let r=doc.data();
     let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
 
-    title.innerText=r["ระบบที่ซ่อม"]||"-";
-
-    meta.innerHTML=`
-      👨‍🔧 ${r["ช่างผู้รับผิดชอบ"]||"-"}<br>
-      📅 ${r["วันที่"]||"-"}
-    `;
-
+    title.innerText=r["ระบบที่ซ่อม"];
     detail.innerHTML=`
-      <p><b>อาการ:</b> ${r["อาการเสีย"]||"-"}</p>
-      <p><b>ค่าใช้จ่าย:</b> ${cost.toLocaleString()} บาท</p>
-      <p><b>หมายเหตุ:</b> ${r["หมายเหตุ"]||"-"}</p>
+      📅 ${r["วันที่"]}<br>
+      👨‍🔧 ${r["ช่างผู้รับผิดชอบ"]}<br>
+      💰 ${cost.toLocaleString()} บาท<br><br>
+      ${r["อาการเสีย"]}
     `;
   });
 }
@@ -156,23 +217,21 @@ function save(){
   if(!selectedVehicle) return alert("เลือกคันก่อน");
 
   db.collection("vehicles").doc(selectedVehicle)
-  .collection("repairs")
-  .add({
-    "วันที่":date.value,
-    "ระบบที่ซ่อม":system.value,
-    "อาการเสีย":symptoms.value,
-    "ช่างผู้รับผิดชอบ":technician.value,
-    "ค่าอะไหล่":partsCost.value,
-    "ค่าแรง":laborCost.value,
-    "เวลาบันทึก":new Date()
-  });
+    .collection("repairs")
+    .add({
+      "วันที่":date.value,
+      "ระบบที่ซ่อม":system.value,
+      "อาการเสีย":symptoms.value,
+      "ช่างผู้รับผิดชอบ":technician.value,
+      "ค่าอะไหล่":partsCost.value,
+      "ค่าแรง":laborCost.value
+    });
 
-  closeModal();
+  modal.style.display="none";
 }
 
 /* modal */
 function openModal(){modal.style.display="flex";}
-function closeModal(){modal.style.display="none";}
 </script>
 
 </body>
