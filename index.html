@@ -2,127 +2,123 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>SC Maintenance Pro</title>
+<title>SC Maintenance Enterprise</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <style>
-:root{
-  --bg:#eef2ff;
-  --card:#fff;
-  --primary:#7c3aed;
-}
 body{
   margin:0;
-  font-family:Inter,Segoe UI;
-  background:var(--bg);
+  font-family:Inter;
+  background:#f1f5f9;
 }
 
-/* header */
-header{
-  background:linear-gradient(90deg,#7c3aed,#9333ea);
+/* layout */
+.app{
+  display:flex;
+}
+
+/* sidebar */
+.sidebar{
+  width:220px;
+  height:100vh;
+  background:#0f172a;
   color:#fff;
   padding:20px;
-  font-size:22px;
 }
 
-/* container */
-.container{
-  padding:25px;
-  max-width:1400px;
-  margin:auto;
+/* main */
+.main{
+  flex:1;
+  padding:20px;
 }
 
 /* grid */
 .grid{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:15px;
+  gap:20px;
 }
 
 /* card */
 .card{
-  background:var(--card);
-  border-radius:18px;
-  padding:18px;
-  box-shadow:0 10px 30px rgba(0,0,0,.08);
+  background:#fff;
+  padding:20px;
+  border-radius:15px;
+  box-shadow:0 10px 25px rgba(0,0,0,.08);
 }
 
-/* button */
-button{
-  padding:10px;
-  border:none;
-  border-radius:10px;
-  background:var(--primary);
-  color:#fff;
-  cursor:pointer;
-}
-button.danger{background:#ef4444}
-
-/* item */
-.item{
-  padding:15px;
-  border-radius:12px;
-  background:#f9fafb;
-  margin-bottom:10px;
-  display:flex;
-  justify-content:space-between;
-}
-
-/* cost */
-.cost{
+/* stat */
+.stat{
+  font-size:26px;
   font-weight:bold;
-  color:#7c3aed;
 }
 
-/* input */
-input,select{
+/* list */
+.item{
   padding:10px;
-  border-radius:10px;
-  border:1px solid #ddd;
+  border-bottom:1px solid #eee;
+}
+
+/* canvas */
+canvas{
+  width:100%;
+  height:200px;
 }
 </style>
 </head>
 
 <body>
 
-<header>🚗 SC Maintenance (Pro UI)</header>
+<div class="app">
 
-<div class="container">
-
-<!-- CONTROL -->
-<div class="card grid">
-  <select id="vehicleSelect"></select>
-  <button onclick="openModal()">➕ เพิ่มรายการ</button>
-  <input id="searchInput" placeholder="ค้นหา...">
+<!-- sidebar -->
+<div class="sidebar">
+  <h2>🚗 SC</h2>
+  Dashboard
 </div>
 
-<!-- DASHBOARD -->
+<!-- main -->
+<div class="main">
+
+<h2>Dashboard</h2>
+
+<!-- KPI -->
+<div class="grid">
+  <div class="card">
+    💰 ค่าใช้จ่ายรวม
+    <div class="stat" id="totalCost">0</div>
+  </div>
+
+  <div class="card">
+    🔧 งานทั้งหมด
+    <div class="stat" id="totalJobs">0</div>
+  </div>
+
+  <div class="card">
+    🚗 จำนวนรถ
+    <div class="stat" id="totalVehicles">0</div>
+  </div>
+</div>
+
+<br>
+
+<!-- GRAPH -->
 <div class="card">
-  💰 ค่าใช้จ่ายรวม: <span id="totalCost">0</span> บาท
+  <h3>📈 ค่าใช้จ่ายรายวัน</h3>
+  <canvas id="chart"></canvas>
 </div>
+
+<br>
 
 <!-- LIST -->
 <div class="card">
-  <div id="listView"></div>
+  <h3>📋 รายการล่าสุด</h3>
+  <div id="list"></div>
 </div>
-
-</div>
-
-<!-- modal -->
-<div id="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);align-items:center;justify-content:center;">
-<div style="background:#fff;padding:20px;border-radius:15px;width:350px">
-
-<h3>เพิ่มรายการ</h3>
-
-<input type="date" id="date">
-<input id="system" placeholder="ระบบ">
-<input id="technician" placeholder="ช่าง">
-<input id="partsCost" placeholder="ค่าอะไหล่">
-<input id="laborCost" placeholder="ค่าแรง">
-
-<button onclick="save()">บันทึก</button>
 
 </div>
 </div>
@@ -136,85 +132,56 @@ firebase.initializeApp({
 
 const db=firebase.firestore();
 
-let allRepairs=[];
+/* โหลดทั้งหมด */
+db.collection("vehicles").onSnapshot(async s=>{
+  let totalCost=0;
+  let totalJobs=0;
+  let daily={};
 
-/* โหลดรถ */
-db.collection("vehicles").onSnapshot(s=>{
-  vehicleSelect.innerHTML="";
-  s.forEach(d=>{
-    vehicleSelect.innerHTML+=`<option>${d.id}</option>`;
-  });
-  load(vehicleSelect.value);
+  totalVehicles.innerText=s.size;
+
+  for(const d of s.docs){
+    let snap=await db.collection("vehicles").doc(d.id).collection("repairs").get();
+
+    snap.forEach(doc=>{
+      let r=doc.data();
+      let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
+
+      totalCost+=cost;
+      totalJobs++;
+
+      let day=r["วันที่"]||"unknown";
+      if(!daily[day]) daily[day]=0;
+      daily[day]+=cost;
+    });
+  }
+
+  totalCostEl.innerText=totalCost.toLocaleString();
+  totalJobsEl.innerText=totalJobs;
+
+  drawChart(daily);
 });
 
-vehicleSelect.onchange=()=>load(vehicleSelect.value);
+/* draw graph */
+function drawChart(data){
+  let ctx=chart.getContext("2d");
+  ctx.clearRect(0,0,chart.width,chart.height);
 
-/* โหลดข้อมูล */
-function load(v){
-  db.collection("vehicles").doc(v).collection("repairs")
-  .onSnapshot(s=>{
-    allRepairs=[];
-    let total=0;
+  let keys=Object.keys(data).sort();
+  let values=keys.map(k=>data[k]);
 
-    s.forEach(doc=>{
-      let r=doc.data();
-      allRepairs.push(r);
+  let max=Math.max(...values,1);
 
-      total+=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
-    });
+  keys.forEach((k,i)=>{
+    let x=i*50+30;
+    let h=(values[i]/max)*150;
 
-    totalCost.innerText=total.toLocaleString();
-    render(allRepairs);
+    ctx.fillStyle="#6366f1";
+    ctx.fillRect(x,180-h,30,h);
+
+    ctx.fillText(k,x,195);
   });
 }
-
-/* render */
-function render(list){
-  listView.innerHTML="";
-
-  list.sort((a,b)=>new Date(b["วันที่"]) - new Date(a["วันที่"]));
-
-  list.forEach(r=>{
-    let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
-
-    listView.innerHTML+=`
-    <div class="item">
-      <div>
-        <b>${r["ระบบที่ซ่อม"]||"-"}</b><br>
-        ${r["วันที่"]||"-"} | ${r["ช่างผู้รับผิดชอบ"]||"-"}
-      </div>
-      <div class="cost">${cost.toLocaleString()} ฿</div>
-    </div>`;
-  });
-}
-
-/* search */
-searchInput.oninput=()=>{
-  let q=searchInput.value.toLowerCase();
-  render(allRepairs.filter(r=>
-    (r["ระบบที่ซ่อม"]||"").toLowerCase().includes(q)
-  ));
-};
-
-/* save */
-function save(){
-  let v=vehicleSelect.value;
-
-  db.collection("vehicles").doc(v)
-    .collection("repairs")
-    .add({
-      "วันที่":date.value,
-      "ระบบที่ซ่อม":system.value,
-      "ช่างผู้รับผิดชอบ":technician.value,
-      "ค่าอะไหล่":partsCost.value,
-      "ค่าแรง":laborCost.value
-    });
-
-  modal.style.display="none";
-}
-
-/* modal */
-function openModal(){modal.style.display="flex";}
 </script>
 
 </body>
