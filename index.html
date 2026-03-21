@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>SC Maintenance Dashboard</title>
+<title>SC Maintenance Designer UI</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 
@@ -10,10 +10,17 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <style>
+:root{
+  --bg:#eef2ff;
+  --card:#ffffff;
+  --primary:#7c3aed;
+  --accent:#f59e0b;
+}
+
 body{
   margin:0;
   font-family:Inter;
-  background:#eef2ff;
+  background:var(--bg);
 }
 
 /* layout */
@@ -24,28 +31,27 @@ body{
 
 /* sidebar */
 .sidebar{
-  width:80px;
+  width:90px;
   background:linear-gradient(180deg,#7c3aed,#9333ea);
   color:#fff;
   padding:20px 10px;
-}
-.sidebar div{
-  margin-bottom:20px;
-  text-align:center;
-  cursor:pointer;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:20px;
 }
 
 /* main */
 .main{
   flex:1;
-  padding:20px;
+  padding:30px;
 }
 
 /* header */
 .header{
   display:flex;
   justify-content:space-between;
-  margin-bottom:20px;
+  margin-bottom:25px;
 }
 
 /* grid */
@@ -57,10 +63,14 @@ body{
 
 /* card */
 .card{
-  background:#fff;
-  padding:20px;
+  background:var(--card);
   border-radius:20px;
-  box-shadow:0 10px 30px rgba(0,0,0,.1);
+  padding:20px;
+  box-shadow:0 15px 40px rgba(0,0,0,.08);
+  transition:.25s;
+}
+.card:hover{
+  transform:translateY(-5px);
 }
 
 /* welcome */
@@ -69,7 +79,13 @@ body{
   color:#000;
 }
 
-/* vehicles */
+/* stat */
+.stat{
+  font-size:28px;
+  font-weight:600;
+}
+
+/* vehicle */
 .vehicle{
   padding:10px;
   border-radius:10px;
@@ -87,10 +103,14 @@ body{
   border-bottom:1px solid #eee;
 }
 
-/* stat */
-.stat{
-  font-size:22px;
-  font-weight:bold;
+/* button */
+.btn{
+  padding:10px 15px;
+  border:none;
+  border-radius:10px;
+  background:var(--primary);
+  color:#fff;
+  cursor:pointer;
 }
 </style>
 </head>
@@ -111,6 +131,7 @@ body{
 
 <div class="header">
   <h2>Dashboard</h2>
+  <button class="btn" onclick="openModal()">+ เพิ่ม</button>
 </div>
 
 <div class="grid">
@@ -120,16 +141,16 @@ body{
 
 <div class="card welcome">
   <h3>SC Maintenance</h3>
-  <p>ระบบจัดการรถและซ่อมบำรุง</p>
+  <p>ระบบจัดการซ่อมบำรุง</p>
 </div>
 
 <div class="card">
-  <h3>📊 ค่าใช้จ่ายรวม</h3>
+  <h3>💰 ค่าใช้จ่ายรวม</h3>
   <div class="stat" id="totalCost">0</div>
 </div>
 
 <div class="card">
-  <h3>📋 รายการซ่อม</h3>
+  <h3>📋 รายการซ่อมล่าสุด</h3>
   <div id="repairList"></div>
 </div>
 
@@ -143,9 +164,31 @@ body{
   <div id="vehicleList"></div>
 </div>
 
+<div class="card">
+  <h3>📊 งานทั้งหมด</h3>
+  <div class="stat" id="totalJobs">0</div>
 </div>
 
 </div>
+
+</div>
+
+</div>
+</div>
+
+<!-- modal -->
+<div id="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);align-items:center;justify-content:center;">
+<div style="background:#fff;padding:20px;border-radius:15px;width:350px">
+
+<h3>เพิ่มรายการ</h3>
+
+<input type="date" id="date">
+<input id="system" placeholder="ระบบ">
+<input id="technician" placeholder="ช่าง">
+<input id="partsCost" placeholder="ค่าอะไหล่">
+<input id="laborCost" placeholder="ค่าแรง">
+
+<button onclick="save()">บันทึก</button>
 
 </div>
 </div>
@@ -169,25 +212,33 @@ db.collection("vehicles").onSnapshot(s=>{
     let v=d.id;
 
     vehicleList.innerHTML+=`
-    <div class="vehicle" onclick="load('${v}')">
+    <div class="vehicle" onclick="selectVehicle('${v}')">
       🚗 ${v}
     </div>`;
   });
 });
 
+/* เลือกรถ */
+function selectVehicle(v){
+  selectedVehicle=v;
+  load(v);
+}
+
 /* โหลดข้อมูล */
 function load(v){
-  selectedVehicle=v;
-
   db.collection("vehicles").doc(v).collection("repairs")
   .onSnapshot(s=>{
     let total=0;
+    let count=0;
+
     repairList.innerHTML="";
 
     s.forEach(doc=>{
       let r=doc.data();
       let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
+
       total+=cost;
+      count++;
 
       repairList.innerHTML+=`
       <div class="item">
@@ -196,8 +247,28 @@ function load(v){
     });
 
     totalCost.innerText=total.toLocaleString();
+    totalJobs.innerText=count;
   });
 }
+
+/* save */
+function save(){
+  if(!selectedVehicle) return alert("เลือกคันก่อน");
+
+  db.collection("vehicles").doc(selectedVehicle)
+    .collection("repairs")
+    .add({
+      "วันที่":date.value,
+      "ระบบที่ซ่อม":system.value,
+      "ช่างผู้รับผิดชอบ":technician.value,
+      "ค่าอะไหล่":partsCost.value,
+      "ค่าแรง":laborCost.value
+    });
+
+  modal.style.display="none";
+}
+
+function openModal(){modal.style.display="flex";}
 </script>
 
 </body>
