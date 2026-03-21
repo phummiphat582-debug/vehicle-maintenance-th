@@ -2,167 +2,132 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>SC Maintenance Ultra UI</title>
+<title>SC Maintenance Terminal</title>
 
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap" rel="stylesheet">
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <style>
-:root{
-  --bg:#0f172a;
-  --glass:rgba(255,255,255,0.05);
-  --border:rgba(255,255,255,0.1);
-  --primary:#38bdf8;
-}
-
 body{
   margin:0;
   font-family:'JetBrains Mono', monospace;
-  background:linear-gradient(135deg,#0f172a,#020617);
-  color:#fff;
+  background:#000;
+  color:#00ff9f;
+}
+
+/* scanline */
+body::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  background:linear-gradient(rgba(0,255,0,0.05) 1px, transparent 1px);
+  background-size:100% 3px;
+  pointer-events:none;
 }
 
 /* header */
 .header{
-  padding:20px;
-  font-size:18px;
-  backdrop-filter:blur(20px);
-  background:var(--glass);
-  border-bottom:1px solid var(--border);
+  padding:15px;
+  border-bottom:1px solid #00ff9f;
 }
 
-/* layout */
+/* container */
 .container{
   padding:20px;
 }
 
-/* glass card */
-.card{
-  background:var(--glass);
-  border:1px solid var(--border);
-  backdrop-filter:blur(20px);
-  border-radius:20px;
-  padding:18px;
+/* filter */
+select{
+  background:#000;
+  color:#0f0;
+  border:1px solid #0f0;
+  padding:5px;
   margin-bottom:15px;
-  transition:.25s;
 }
-.card:hover{
-  transform:translateY(-4px);
+
+/* log */
+.log{
+  line-height:1.6;
+}
+
+.line{
+  margin-bottom:6px;
+}
+
+/* glow */
+.line span{
+  text-shadow:0 0 5px #00ff9f;
+}
+
+/* input */
+input,textarea{
+  width:100%;
+  background:#000;
+  border:1px solid #0f0;
+  color:#0f0;
+  margin-bottom:8px;
+  padding:5px;
 }
 
 /* button */
-.btn{
-  padding:12px;
-  border-radius:14px;
-  border:none;
-  background:var(--primary);
+button{
+  background:#000;
+  color:#0f0;
+  border:1px solid #0f0;
+  padding:8px;
+  cursor:pointer;
+}
+button:hover{
+  background:#0f0;
   color:#000;
-  cursor:pointer;
-  font-weight:600;
-  transition:.2s;
-}
-.btn:active{
-  transform:scale(.95);
-}
-
-/* floating panel */
-.sheet{
-  position:fixed;
-  left:0;
-  right:0;
-  bottom:0;
-  background:#020617;
-  border-radius:20px 20px 0 0;
-  padding:20px;
-  transform:translateY(100%);
-  transition:.35s cubic-bezier(.2,.8,.2,1);
-}
-.sheet.open{
-  transform:translateY(0);
-}
-
-/* vehicle */
-.vehicle{
-  padding:12px;
-  border-bottom:1px solid #222;
-  cursor:pointer;
-}
-.vehicle:hover{
-  color:var(--primary);
 }
 
 /* modal */
 .modal{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.5);
+  background:rgba(0,0,0,.9);
   display:none;
   align-items:center;
   justify-content:center;
 }
-
 .modal-box{
-  background:#020617;
-  padding:20px;
-  border-radius:20px;
-  width:350px;
-  animation:pop .3s;
-}
-@keyframes pop{
-  from{transform:scale(.8);opacity:0}
-  to{transform:scale(1);opacity:1}
-}
-
-/* input */
-input,textarea{
-  width:100%;
-  margin-bottom:10px;
-  padding:10px;
-  border-radius:10px;
-  border:none;
-  background:#111;
-  color:#fff;
+  width:400px;
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">🚗 SC Maintenance Ultra</div>
+<div class="header">
+  > SC_MAINTENANCE_SYSTEM v1.0
+</div>
 
 <div class="container">
 
-<button class="btn" onclick="openSheet()">🚗 เลือกรถ</button>
-<button class="btn" onclick="openModal()">➕ เพิ่ม</button>
+<select id="vehicleFilter"></select>
+<button onclick="openModal()">ADD_LOG</button>
 
-<h3 id="currentVehicle">ยังไม่ได้เลือกรถ</h3>
+<div class="log" id="log"></div>
 
-<div id="repairList"></div>
-
-</div>
-
-<!-- bottom sheet -->
-<div class="sheet" id="sheet">
-  <h3>เลือกรถ</h3>
-  <div id="vehicleList"></div>
 </div>
 
 <!-- modal -->
 <div class="modal" id="modal">
 <div class="modal-box">
 
-<h3>เพิ่มรายการ</h3>
+<h3>> ADD REPAIR</h3>
 
 <input type="date" id="date">
-<input id="system" placeholder="ระบบ">
-<textarea id="symptoms" placeholder="อาการ"></textarea>
-<input id="technician" placeholder="ช่าง">
-<input id="partsCost" placeholder="ค่าอะไหล่">
-<input id="laborCost" placeholder="ค่าแรง">
+<input id="system" placeholder="system">
+<textarea id="symptoms" placeholder="symptoms"></textarea>
+<input id="technician" placeholder="technician">
+<input id="partsCost" placeholder="parts cost">
+<input id="laborCost" placeholder="labor cost">
 
-<button class="btn" onclick="save()">บันทึก</button>
+<button onclick="save()">EXECUTE</button>
 
 </div>
 </div>
@@ -175,58 +140,65 @@ firebase.initializeApp({
 });
 
 const db=firebase.firestore();
-let selectedVehicle=null;
 
-/* vehicles */
-db.collection("vehicles").onSnapshot(s=>{
-  vehicleList.innerHTML="";
-  s.forEach(d=>{
-    vehicleList.innerHTML+=`
-    <div class="vehicle" onclick="selectVehicle('${d.id}')">
-      🚗 ${d.id}
-    </div>`;
-  });
+let allData=[];
+
+/* โหลดทั้งหมด */
+db.collection("vehicles").onSnapshot(async s=>{
+  allData=[];
+  vehicleFilter.innerHTML="<option value='all'>ALL</option>";
+
+  for(const d of s.docs){
+    let v=d.id;
+    vehicleFilter.innerHTML+=`<option>${v}</option>`;
+
+    let snap=await db.collection("vehicles").doc(v).collection("repairs").get();
+
+    snap.forEach(doc=>{
+      let r=doc.data();
+      r.vehicle=v;
+      allData.push(r);
+    });
+  }
+
+  render();
 });
 
-function openSheet(){
-  sheet.classList.add("open");
-}
+/* render */
+function render(){
+  let filter=vehicleFilter.value;
 
-function selectVehicle(v){
-  selectedVehicle=v;
-  currentVehicle.innerText=v;
-  sheet.classList.remove("open");
-  load(v);
-}
+  let list=allData.filter(r=>{
+    return filter==="all" || r.vehicle===filter;
+  });
 
-/* load repairs */
-function load(v){
-  db.collection("vehicles").doc(v).collection("repairs")
-  .onSnapshot(s=>{
-    let list=[];
-    s.forEach(doc=>list.push(doc.data()));
+  list.sort((a,b)=>new Date(b["วันที่"])-new Date(a["วันที่"]));
 
-    list.sort((a,b)=>new Date(b["วันที่"])-new Date(a["วันที่"]));
+  log.innerHTML="";
 
-    repairList.innerHTML="";
-    list.forEach(r=>{
-      let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
+  list.forEach(r=>{
+    let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
 
-      repairList.innerHTML+=`
-      <div class="card">
-        📅 ${r["วันที่"]}<br>
-        🔧 ${r["ระบบที่ซ่อม"]}<br>
-        💰 ${cost.toLocaleString()} บาท
-      </div>`;
-    });
+    log.innerHTML+=`
+    <div class="line">
+      <span>[${r.vehicle}]</span> 
+      ${r["วันที่"]} | 
+      ${r["ระบบที่ซ่อม"]} | 
+      ${r["อาการเสีย"]} | 
+      ${cost}฿
+    </div>`;
   });
 }
+
+/* filter */
+vehicleFilter.onchange=render;
 
 /* save */
 function save(){
-  if(!selectedVehicle) return alert("เลือกคันก่อน");
+  let v=vehicleFilter.value;
+  if(v==="all") return alert("เลือกคันก่อน");
 
-  db.collection("vehicles").doc(selectedVehicle)
+  db.collection("vehicles").doc(v)
     .collection("repairs")
     .add({
       "วันที่":date.value,
