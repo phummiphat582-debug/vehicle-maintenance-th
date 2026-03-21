@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>SC Maintenance - Simplest UI</title>
+<title>SC Maintenance</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -22,86 +22,74 @@ body{
   justify-content:space-between;
 }
 
-/* LAYOUT */
+/* layout */
 .app{
   display:flex;
   height:calc(100vh - 60px);
 }
 
-/* SIDEBAR */
+/* LEFT */
 .sidebar{
   width:220px;
   background:#3a3f44;
-  color:#fff;
   padding:20px;
-}
-.sidebar h2{
-  margin-bottom:20px;
 }
 .sidebar button{
   width:100%;
   padding:10px;
+  margin-bottom:10px;
   background:#4db6c6;
   border:none;
   color:#fff;
-  margin-bottom:15px;
   cursor:pointer;
-}
-.vehicle{
-  padding:10px;
-  cursor:pointer;
-}
-.vehicle:hover{
-  background:#555;
 }
 
 /* CENTER */
 .center{
-  width:400px;
-  background:#f3f3f3;
-  border-right:1px solid #ddd;
-  display:flex;
-  flex-direction:column;
-}
-.center h2{
-  margin:0;
-  padding:15px;
-}
-.search{
-  padding:10px;
-}
-.search input{
-  width:100%;
-  padding:8px;
-}
-.list{
   flex:1;
+  padding:20px;
+  background:#f3f3f3;
   overflow:auto;
 }
+
+.title{
+  font-size:20px;
+  margin-bottom:15px;
+}
+
+/* repair item */
 .item{
-  padding:12px;
+  background:#fff;
+  padding:15px;
+  border-radius:8px;
+  margin-bottom:10px;
+  border-left:5px solid #4db6c6;
+}
+
+/* popup */
+.popup{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.5);
+  display:none;
+  align-items:center;
+  justify-content:center;
+}
+.popup-box{
+  background:#fff;
+  padding:20px;
+  width:300px;
+}
+.vehicle{
+  padding:10px;
   border-bottom:1px solid #ddd;
   cursor:pointer;
 }
-.item:hover{
-  background:#fff;
-}
-.item.active{
-  background:#ff8a65;
-  color:#fff;
+.vehicle:hover{
+  background:#eee;
 }
 
-/* RIGHT */
-.right{
-  flex:1;
-  padding:20px;
-}
-.title{
-  font-size:20px;
-  margin-bottom:10px;
-}
-
-/* MODAL */
+/* modal */
 .modal{
   position:fixed;
   inset:0;
@@ -120,47 +108,37 @@ input,textarea{
   margin-bottom:10px;
   padding:8px;
 }
-button{
-  cursor:pointer;
-}
 </style>
 </head>
 
 <body>
 
 <div class="header">
-  <div>Simplest</div>
   <div>SC Maintenance</div>
 </div>
 
 <div class="app">
 
-<!-- SIDEBAR -->
+<!-- LEFT -->
 <div class="sidebar">
-  <button onclick="openModal()">+ เพิ่มรายการ</button>
-  <div id="vehicleList"></div>
+  <button onclick="openVehiclePopup()">🚗 เลือกรถ</button>
+  <button onclick="openModal()">➕ เพิ่มรายการ</button>
 </div>
 
 <!-- CENTER -->
 <div class="center">
-  <h2 id="currentVehicle">Inbox</h2>
-
-  <div class="search">
-    <input id="search" placeholder="ค้นหา...">
-  </div>
-
-  <div class="list" id="repairList"></div>
-</div>
-
-<!-- RIGHT -->
-<div class="right">
-  <div class="title" id="title">รายละเอียด</div>
-  <div id="detail"></div>
+  <div class="title" id="currentVehicle">ยังไม่ได้เลือกรถ</div>
+  <div id="repairList"></div>
 </div>
 
 </div>
 
-<!-- MODAL -->
+<!-- POPUP เลือกรถ -->
+<div class="popup" id="vehiclePopup">
+  <div class="popup-box" id="vehicleList"></div>
+</div>
+
+<!-- MODAL เพิ่ม -->
 <div class="modal" id="modal">
 <div class="modal-box">
 
@@ -189,7 +167,6 @@ firebase.initializeApp({
 const db=firebase.firestore();
 
 let selectedVehicle=null;
-let allRepairs=[];
 
 /* โหลดรถ */
 db.collection("vehicles").onSnapshot(s=>{
@@ -199,29 +176,40 @@ db.collection("vehicles").onSnapshot(s=>{
     let v=d.id;
 
     vehicleList.innerHTML+=`
-    <div class="vehicle" onclick="loadRepair('${v}')">
+    <div class="vehicle" onclick="selectVehicle('${v}')">
       🚗 ${v}
     </div>`;
   });
 });
 
-/* โหลดรายการ */
-function loadRepair(v){
+/* เปิด popup */
+function openVehiclePopup(){
+  vehiclePopup.style.display="flex";
+}
+
+/* เลือกรถ */
+function selectVehicle(v){
   selectedVehicle=v;
   currentVehicle.innerText=v;
+  vehiclePopup.style.display="none";
+  loadRepairs(v);
+}
 
+/* โหลด + เรียงวันที่ */
+function loadRepairs(v){
   db.collection("vehicles").doc(v).collection("repairs")
   .onSnapshot(s=>{
-    allRepairs=[];
-    repairList.innerHTML="";
+    let list=[];
 
     s.forEach(doc=>{
       let r=doc.data();
-      r._id=doc.id;
-      allRepairs.push(r);
+      list.push(r);
     });
 
-    render(allRepairs);
+    // sort ล่าสุดก่อน
+    list.sort((a,b)=> new Date(b["วันที่"]) - new Date(a["วันที่"]));
+
+    render(list);
   });
 }
 
@@ -230,42 +218,18 @@ function render(list){
   repairList.innerHTML="";
 
   list.forEach(r=>{
+    let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
+
     repairList.innerHTML+=`
-    <div class="item" onclick="openDetail('${r._id}', this)">
-      <b>${r["ระบบที่ซ่อม"]||"-"}</b><br>
-      ${r["อาการเสีย"]||""}
+    <div class="item">
+      📅 <b>${r["วันที่"]||"-"}</b><br>
+      🔧 ${r["ระบบที่ซ่อม"]||"-"}<br>
+      🧠 ${r["อาการเสีย"]||"-"}<br>
+      👨‍🔧 ${r["ช่างผู้รับผิดชอบ"]||"-"}<br>
+      💰 ${cost.toLocaleString()} บาท
     </div>`;
   });
 }
-
-/* detail */
-function openDetail(id,el){
-  document.querySelectorAll(".item")
-    .forEach(i=>i.classList.remove("active"));
-  el.classList.add("active");
-
-  let r=allRepairs.find(x=>x._id===id);
-
-  let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
-
-  title.innerText=r["ระบบที่ซ่อม"];
-  detail.innerHTML=`
-    📅 ${r["วันที่"]}<br>
-    👨‍🔧 ${r["ช่างผู้รับผิดชอบ"]}<br>
-    💰 ${cost.toLocaleString()} บาท<br><br>
-    ${r["อาการเสีย"]}
-  `;
-}
-
-/* search */
-search.oninput=()=>{
-  let q=search.value.toLowerCase();
-
-  render(allRepairs.filter(r=>
-    (r["ระบบที่ซ่อม"]||"").toLowerCase().includes(q) ||
-    (r["อาการเสีย"]||"").toLowerCase().includes(q)
-  ));
-};
 
 /* save */
 function save(){
