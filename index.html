@@ -2,206 +2,163 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>SC Maintenance PRO+</title>
+<title>Control Maintenance UI</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <style>
 :root{
-  --primary:#4f46e5;
-  --danger:#dc2626;
+  --bg:#e6e9ef;
+  --shadow1:#ffffff;
+  --shadow2:#c5c8ce;
+  --primary:#0ea5a5;
 }
+
 body{
   margin:0;
   font-family:Segoe UI;
-  background:#f3f4f6;
+  background:var(--bg);
+  color:#333;
+  padding:20px;
 }
 
-/* header */
-.header{
-  background:var(--primary);
-  color:#fff;
+/* neumorphism card */
+.card{
+  background:var(--bg);
+  border-radius:20px;
   padding:20px;
-  font-size:22px;
+  box-shadow:8px 8px 16px var(--shadow2),
+             -8px -8px 16px var(--shadow1);
+}
+
+/* grid */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:20px;
+}
+
+/* title */
+.title{
+  font-weight:bold;
+  margin-bottom:10px;
+}
+
+/* value */
+.value{
+  font-size:24px;
+  color:var(--primary);
 }
 
 /* vehicle */
 .vehicle{
-  background:#ddd;
-  padding:12px;
-  margin:10px 20px;
+  padding:10px;
   border-radius:12px;
   cursor:pointer;
-  transition:.2s;
-}
-.vehicle:active{
-  transform:scale(.95);
+  text-align:center;
+  box-shadow:inset 4px 4px 8px var(--shadow2),
+             inset -4px -4px 8px var(--shadow1);
 }
 .vehicle.active{
   background:var(--primary);
   color:#fff;
 }
 
-/* list accordion */
-.list{
-  overflow:hidden;
-  max-height:0;
-  transition:max-height .3s ease;
-  margin:0 20px;
-}
-.list.open{
-  max-height:2000px;
+/* slider */
+.slider{
+  width:100%;
 }
 
-/* item */
-.item{
-  background:#fff;
-  padding:15px;
-  border-radius:12px;
-  margin-top:10px;
-  animation:fadeIn .3s;
+/* toggle */
+.toggle{
+  width:50px;
+  height:25px;
+  border-radius:20px;
+  background:#ccc;
+  position:relative;
+  cursor:pointer;
 }
-@keyframes fadeIn{
-  from{opacity:0;transform:translateY(10px)}
-  to{opacity:1;transform:translateY(0)}
+.toggle::after{
+  content:"";
+  width:20px;height:20px;
+  background:#fff;
+  position:absolute;
+  top:2px;left:2px;
+  border-radius:50%;
+  transition:.2s;
+}
+.toggle.active{
+  background:var(--primary);
+}
+.toggle.active::after{
+  left:26px;
+}
+
+/* list */
+.item{
+  margin-top:10px;
+  padding:10px;
+  border-radius:12px;
+  box-shadow:inset 4px 4px 8px var(--shadow2),
+             inset -4px -4px 8px var(--shadow1);
 }
 
 /* button */
 .btn{
-  background:var(--primary);
-  color:#fff;
-  padding:12px;
+  margin-top:10px;
+  padding:10px;
   border:none;
   border-radius:12px;
   cursor:pointer;
-  transition:.15s;
+  background:var(--primary);
+  color:#fff;
+  box-shadow:4px 4px 10px var(--shadow2),
+             -4px -4px 10px var(--shadow1);
 }
 .btn:active{
-  transform:scale(.95);
-}
-.btn-danger{
-  background:var(--danger);
-}
-
-/* modal */
-.modal{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.5);
-  display:none;
-  align-items:center;
-  justify-content:center;
-}
-.modal-box{
-  background:#fff;
-  border-radius:20px;
-  width:90%;
-  max-width:800px;
-  height:90vh;
-  padding:20px;
-  display:flex;
-  flex-direction:column;
-  animation:pop .25s;
-}
-@keyframes pop{
-  from{transform:scale(.85);opacity:0}
-  to{transform:scale(1);opacity:1}
-}
-
-/* form */
-.form{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-  flex:1;
-}
-.full{grid-column:span 2}
-
-input,textarea{
-  padding:12px;
-  border-radius:12px;
-  border:1px solid #ddd;
-  transition:.2s;
-}
-input:focus,textarea:focus{
-  outline:none;
-  border-color:var(--primary);
-  box-shadow:0 0 0 2px rgba(79,70,229,.2);
-}
-
-/* confirm */
-.confirm{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.5);
-  display:none;
-  align-items:center;
-  justify-content:center;
-}
-.confirm-box{
-  background:#fff;
-  padding:20px;
-  border-radius:20px;
-  width:300px;
-  text-align:center;
-  animation:pop .2s;
+  box-shadow:inset 4px 4px 10px var(--shadow2),
+             inset -4px -4px 10px var(--shadow1);
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">🚗 SC Maintenance PRO+</div>
+<h2>🚗 Control Dashboard</h2>
 
-<div style="padding:20px">
-  <button class="btn" onclick="openModal()">➕ เพิ่มรายการ</button>
+<!-- vehicles -->
+<div class="grid" id="vehicleList"></div>
+
+<br>
+
+<div class="grid">
+
+<div class="card">
+  <div class="title">💰 ค่าใช้จ่ายรวม</div>
+  <div class="value" id="totalCost">0</div>
 </div>
 
-<div id="vehicleContainer"></div>
-
-<!-- modal -->
-<div class="modal" id="modal">
-<div class="modal-box">
-
-<h3>เพิ่มรายการซ่อม</h3>
-
-<div class="form">
-
-<input type="date" id="date">
-<input id="mileage" placeholder="เลขไมล์">
-
-<input id="jobNo" placeholder="ใบงาน">
-<input id="system" placeholder="ระบบ">
-
-<textarea id="symptoms" class="full" placeholder="อาการ"></textarea>
-<textarea id="parts" class="full" placeholder="อะไหล่"></textarea>
-
-<input id="technician" placeholder="ช่าง">
-<input id="approver" placeholder="ผู้อนุมัติ">
-
-<input id="partsCost" placeholder="ค่าอะไหล่">
-<input id="laborCost" placeholder="ค่าแรง">
-
-<textarea id="note" class="full" placeholder="หมายเหตุ"></textarea>
-
+<div class="card">
+  <div class="title">🔧 งานทั้งหมด</div>
+  <div class="value" id="totalJobs">0</div>
 </div>
 
-<div style="display:flex; gap:10px;">
-  <button class="btn" onclick="confirmSave()">💾 บันทึก</button>
-  <button class="btn btn-danger" onclick="closeModal()">❌ ยกเลิก</button>
+<div class="card">
+  <div class="title">🎚️ ควบคุมงบ (จำลอง)</div>
+  <input type="range" class="slider">
 </div>
 
-</div>
+<div class="card">
+  <div class="title">⚙️ เปิด/ปิดระบบ</div>
+  <div class="toggle" onclick="this.classList.toggle('active')"></div>
 </div>
 
-<!-- confirm -->
-<div class="confirm" id="confirmBox">
-  <div class="confirm-box">
-    <h3>ยืนยันการบันทึก?</h3><br>
-    <button class="btn" onclick="save()">ยืนยัน</button>
-    <button class="btn btn-danger" onclick="closeConfirm()">ยกเลิก</button>
-  </div>
+<div class="card" style="grid-column:span 2;">
+  <div class="title">📋 รายการซ่อม</div>
+  <div id="log"></div>
+</div>
+
 </div>
 
 <script>
@@ -214,110 +171,59 @@ firebase.initializeApp({
 const db=firebase.firestore();
 
 let selectedVehicle=null;
-let vehicleData={};
 
-/* โหลดรถ + ข้อมูล */
-db.collection("vehicles").onSnapshot(async s=>{
-  vehicleContainer.innerHTML="";
+/* โหลดรถ */
+db.collection("vehicles").onSnapshot(s=>{
+  vehicleList.innerHTML="";
+  let first=null;
 
-  for(const d of s.docs){
-    let vName=d.id;
+  s.forEach(d=>{
+    if(!first) first=d.id;
 
-    let snap=await db.collection("vehicles")
-      .doc(vName).collection("repairs").get();
+    let div=document.createElement("div");
+    div.className="vehicle";
+    div.innerText=d.id;
 
-    let repairs=[];
-    snap.forEach(doc=>{
-      let r=doc.data();
-      r._id=doc.id;
-      repairs.push(r);
-    });
+    div.onclick=()=>{
+      document.querySelectorAll(".vehicle")
+        .forEach(v=>v.classList.remove("active"));
 
-    vehicleData[vName]=repairs;
+      div.classList.add("active");
+      selectedVehicle=d.id;
+      load(d.id);
+    };
 
-    vehicleContainer.innerHTML+=`
-    <div class="vehicle" onclick="toggleVehicle('${vName}', this)">
-      🚗 ${vName}
-    </div>
+    vehicleList.appendChild(div);
+  });
 
-    <div class="list" id="list-${vName}">
-      ${renderRepairsHTML(repairs, vName)}
-    </div>`;
-  }
+  if(first) vehicleList.children[0].click();
 });
 
-/* toggle accordion */
-function toggleVehicle(name, el){
-  selectedVehicle=name;
+/* โหลดข้อมูล */
+function load(v){
+  db.collection("vehicles").doc(v).collection("repairs")
+  .onSnapshot(s=>{
+    log.innerHTML="";
+    let total=0;
 
-  let list=document.getElementById("list-"+name);
+    s.forEach(doc=>{
+      let r=doc.data();
+      let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
 
-  list.classList.toggle("open");
-}
+      total+=cost;
 
-/* render */
-function renderRepairsHTML(list,v){
-  return list.map(r=>{
-    let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
-
-    return `
-    <div class="item">
-      📅 ${r["วันที่"]||"-"}<br>
-      🔧 ${r["ระบบที่ซ่อม"]||"-"}<br>
-      🧠 ${r["อาการเสีย"]||"-"}<br>
-      💰 ${cost.toLocaleString()} บาท<br>
-      👨‍🔧 ${r["ช่างผู้รับผิดชอบ"]||"-"}<br><br>
-      <button class="btn btn-danger" onclick="del('${v}','${r._id}')">ลบ</button>
-    </div>`;
-  }).join("");
-}
-
-/* confirm */
-function confirmSave(){
-  confirmBox.style.display="flex";
-}
-function closeConfirm(){
-  confirmBox.style.display="none";
-}
-
-/* save */
-function save(){
-  confirmBox.style.display="none";
-
-  if(!selectedVehicle) return alert("เลือกคันก่อน");
-
-  db.collection("vehicles").doc(selectedVehicle)
-    .collection("repairs")
-    .add({
-      "วันที่":date.value,
-      "เลขไมล์":mileage.value,
-      "เลขที่ใบงาน":jobNo.value,
-      "ระบบที่ซ่อม":system.value,
-      "อาการเสีย":symptoms.value,
-      "อะไหล่ที่เปลี่ยน":parts.value,
-      "ช่างผู้รับผิดชอบ":technician.value,
-      "ผู้อนุมัติ":approver.value,
-      "หมายเหตุ":note.value,
-      "ค่าอะไหล่":partsCost.value,
-      "ค่าแรง":laborCost.value,
-      "เวลาบันทึก":new Date()
+      log.innerHTML+=`
+      <div class="item">
+        🔧 ${r["ระบบที่ซ่อม"]||"-"}<br>
+        📅 ${r["วันที่"]||"-"}<br>
+        💰 ${cost.toLocaleString()} บาท
+      </div>`;
     });
 
-  closeModal();
+    totalCost.innerText=total.toLocaleString();
+    totalJobs.innerText=s.size;
+  });
 }
-
-/* delete */
-function del(v,id){
-  db.collection("vehicles")
-    .doc(v)
-    .collection("repairs")
-    .doc(id)
-    .delete();
-}
-
-/* modal */
-function openModal(){modal.style.display="flex";}
-function closeModal(){modal.style.display="none";}
 </script>
 
 </body>
