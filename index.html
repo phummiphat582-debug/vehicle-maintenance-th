@@ -2,55 +2,60 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>SC Maintenance Enterprise</title>
+<title>SC Maintenance Stable</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=JetBrains+Mono&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <style>
-:root{
-  --bg:#f8fafc;
-  --card:#ffffff;
-  --primary:#4f46e5;
-  --border:#e5e7eb;
-}
-
-body{
-  margin:0;
-  font-family:Inter;
-  background:var(--bg);
-}
+body{margin:0;font-family:Inter;background:#f8fafc}
 
 /* header */
 header{
-  padding:18px 25px;
+  padding:18px;
   background:#111827;
   color:#fff;
-  font-weight:600;
 }
 
 /* container */
 .container{
-  padding:25px;
-  max-width:1400px;
+  padding:20px;
+  max-width:1200px;
   margin:auto;
+}
+
+/* card */
+.card{
+  background:#fff;
+  border-radius:12px;
+  padding:15px;
+  margin-bottom:15px;
+  border:1px solid #e5e7eb;
+}
+
+/* item */
+.item{
+  padding:12px;
+  border-bottom:1px solid #eee;
+  display:flex;
+  justify-content:space-between;
+}
+
+/* input */
+input,select{
+  padding:10px;
+  border-radius:8px;
+  border:1px solid #ddd;
+  width:100%;
 }
 
 /* grid */
 .grid{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:15px;
-}
-
-/* card */
-.card{
-  background:var(--card);
-  border-radius:14px;
-  padding:18px;
-  border:1px solid var(--border);
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:10px;
 }
 
 /* button */
@@ -58,50 +63,10 @@ button{
   padding:10px;
   border:none;
   border-radius:8px;
-  background:var(--primary);
+  background:#4f46e5;
   color:#fff;
   cursor:pointer;
 }
-button.secondary{
-  background:#e5e7eb;
-  color:#111;
-}
-
-/* list */
-.item{
-  padding:14px;
-  border-bottom:1px solid var(--border);
-  display:flex;
-  justify-content:space-between;
-}
-
-/* input */
-input,textarea,select{
-  width:100%;
-  padding:10px;
-  border-radius:8px;
-  border:1px solid var(--border);
-}
-
-/* modal */
-.modal{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.4);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  animation:fade .2s;
-}
-.modal-box{
-  background:#fff;
-  padding:20px;
-  width:500px;
-  border-radius:12px;
-  animation:pop .25s;
-}
-@keyframes fade{from{opacity:0}to{opacity:1}}
-@keyframes pop{from{transform:scale(.9)}to{transform:scale(1)}}
 </style>
 </head>
 
@@ -111,53 +76,31 @@ input,textarea,select{
 
 <div class="container">
 
-<!-- CONTROL -->
 <div class="card grid">
   <select id="vehicleSelect"></select>
-  <button onclick="openModal()">Add Record</button>
-  <input id="search" placeholder="Search...">
+  <button onclick="openModal()">Add</button>
+  <input id="searchInput" placeholder="Search">
 </div>
 
-<!-- LIST -->
 <div class="card">
   <div id="list"></div>
 </div>
 
 </div>
 
-<!-- FORM MODAL -->
-<div class="modal" id="modal">
-<div class="modal-box">
-
-<h3>Create Maintenance Record</h3>
+<!-- MODAL -->
+<div id="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);align-items:center;justify-content:center;">
+<div style="background:#fff;padding:20px;width:400px;border-radius:10px">
 
 <input type="date" id="date">
-<input id="mileage" placeholder="Mileage">
-<input id="jobNo" placeholder="Job No">
 <input id="system" placeholder="System">
 <input id="technician" placeholder="Technician">
-<input id="approver" placeholder="Approver">
-<textarea id="symptoms" placeholder="Symptoms"></textarea>
-<textarea id="parts" placeholder="Parts"></textarea>
-<textarea id="note" placeholder="Note"></textarea>
 <input id="partsCost" placeholder="Parts Cost">
 <input id="laborCost" placeholder="Labor Cost">
 
-<div class="grid">
-  <button onclick="confirmSave()">Save</button>
-  <button class="secondary" onclick="closeModal()">Cancel</button>
-</div>
+<button onclick="save()">Save</button>
+<button onclick="closeModal()">Cancel</button>
 
-</div>
-</div>
-
-<!-- CONFIRM -->
-<div class="modal" id="confirm">
-<div class="modal-box">
-<h3>Confirm Save</h3>
-<p>Are you sure?</p>
-<button onclick="save()">Confirm</button>
-<button class="secondary" onclick="confirm.style.display='none'">Cancel</button>
 </div>
 </div>
 
@@ -169,9 +112,14 @@ firebase.initializeApp({
 });
 
 const db=firebase.firestore();
-let all=[];
 
-/* load vehicles */
+const vehicleSelect=document.getElementById("vehicleSelect");
+const listEl=document.getElementById("list");
+const searchInput=document.getElementById("searchInput");
+
+let allRepairs=[];
+
+/* โหลดรถ */
 db.collection("vehicles").onSnapshot(s=>{
   vehicleSelect.innerHTML="";
   s.forEach(d=>{
@@ -182,50 +130,47 @@ db.collection("vehicles").onSnapshot(s=>{
 
 vehicleSelect.onchange=()=>load(vehicleSelect.value);
 
-/* load repairs */
+/* โหลดข้อมูล */
 function load(v){
   db.collection("vehicles").doc(v).collection("repairs")
   .onSnapshot(s=>{
-    all=[];
-    s.forEach(doc=>all.push(doc.data()));
-    render(all);
+    allRepairs=[];
+    s.forEach(doc=>{
+      let r=doc.data();
+      r._id=doc.id;
+      allRepairs.push(r);
+    });
+    render(allRepairs);
   });
 }
 
 /* render */
-function render(list){
-  list.sort((a,b)=>new Date(b["วันที่"])-new Date(a["วันที่"]));
-  listEl="";
-  list.innerHTML="";
+function render(data){
+  listEl.innerHTML="";
 
-  list.forEach(r=>{
+  data.sort((a,b)=>new Date(b["วันที่"]) - new Date(a["วันที่"]));
+
+  data.forEach(r=>{
     let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
 
-    list.innerHTML+=`
+    listEl.innerHTML+=`
     <div class="item">
       <div>
-        <b>${r["ระบบที่ซ่อม"]}</b><br>
-        ${r["วันที่"]} | ${r["ช่างผู้รับผิดชอบ"]}
+        <b>${r["ระบบที่ซ่อม"]||"-"}</b><br>
+        ${r["วันที่"]||"-"} | ${r["ช่างผู้รับผิดชอบ"]||"-"}
       </div>
-      <div>${cost}</div>
+      <div>${cost.toLocaleString()}</div>
     </div>`;
   });
 }
 
 /* search */
-search.oninput=()=>{
-  let q=search.value.toLowerCase();
-  render(all.filter(r=>
+searchInput.oninput=()=>{
+  let q=searchInput.value.toLowerCase();
+  render(allRepairs.filter(r=>
     (r["ระบบที่ซ่อม"]||"").toLowerCase().includes(q)
   ));
 };
-
-/* modal */
-function openModal(){modal.style.display="flex";}
-function closeModal(){modal.style.display="none";}
-
-/* confirm */
-function confirmSave(){confirm.style.display="flex";}
 
 /* save */
 function save(){
@@ -235,21 +180,17 @@ function save(){
   .collection("repairs")
   .add({
     "วันที่":date.value,
-    "เลขไมล์":mileage.value,
-    "เลขที่ใบงาน":jobNo.value,
     "ระบบที่ซ่อม":system.value,
-    "อาการเสีย":symptoms.value,
-    "อะไหล่ที่เปลี่ยน":parts.value,
     "ช่างผู้รับผิดชอบ":technician.value,
-    "ผู้อนุมัติ":approver.value,
-    "หมายเหตุ":note.value,
     "ค่าอะไหล่":partsCost.value,
     "ค่าแรง":laborCost.value
   });
 
-  modal.style.display="none";
-  confirm.style.display="none";
+  closeModal();
 }
+
+function openModal(){modal.style.display="flex";}
+function closeModal(){modal.style.display="none";}
 </script>
 
 </body>
