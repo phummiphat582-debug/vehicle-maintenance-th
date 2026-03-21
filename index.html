@@ -2,113 +2,184 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>Soft Control Maintenance</title>
+<title>SC Maintenance System</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <style>
-:root{
-  --bg:#e6e9ef;
-  --light:#ffffff;
-  --dark:#c5c8ce;
-  --primary:#0ea5a5;
-}
-
+/* ===== BASE ===== */
 body{
   margin:0;
   font-family:Segoe UI;
-  background:var(--bg);
+  background:#0f172a;
+  color:#fff;
+}
+
+/* ===== LAYOUT ===== */
+.app{
+  display:flex;
+  height:100vh;
+}
+
+.sidebar{
+  width:220px;
+  background:#020617;
   padding:20px;
 }
 
-/* card */
-.card{
-  background:var(--bg);
-  border-radius:20px;
-  padding:20px;
-  box-shadow:8px 8px 16px var(--dark),
-             -8px -8px 16px var(--light);
+.sidebar h2{
+  margin-bottom:20px;
 }
 
-/* grid */
+.sidebar a{
+  display:block;
+  padding:10px;
+  border-radius:10px;
+  cursor:pointer;
+}
+.sidebar a:hover{
+  background:#1e293b;
+}
+
+/* ===== MAIN ===== */
+.main{
+  flex:1;
+  padding:20px;
+  overflow:auto;
+}
+
 .grid{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
   gap:20px;
 }
 
-/* vehicle */
-.vehicle{
-  text-align:center;
-  padding:15px;
+/* ===== CARD ===== */
+.card{
+  background:#1e293b;
+  padding:20px;
   border-radius:15px;
+}
+
+/* ===== VEHICLE ===== */
+.vehicle{
+  padding:15px;
+  background:#1e293b;
+  border-radius:12px;
   cursor:pointer;
   transition:.2s;
-  box-shadow:inset 4px 4px 8px var(--dark),
-             inset -4px -4px 8px var(--light);
 }
-.vehicle:active{
-  transform:scale(.95);
+.vehicle:hover{
+  background:#334155;
 }
 .vehicle.active{
-  background:var(--primary);
-  color:#fff;
+  background:#4f46e5;
 }
 
-/* panel */
-.panel{
-  margin-top:10px;
-  max-height:0;
-  overflow:hidden;
-  transition:max-height .35s ease;
-}
-.panel.open{
-  max-height:2000px;
-}
-
-/* item */
+/* ===== LIST ===== */
 .item{
+  background:#1e293b;
+  padding:15px;
+  border-radius:10px;
   margin-top:10px;
-  padding:10px;
-  border-radius:12px;
-  background:var(--bg);
-  box-shadow:inset 4px 4px 8px var(--dark),
-             inset -4px -4px 8px var(--light);
   animation:fade .3s;
 }
 @keyframes fade{
   from{opacity:0;transform:translateY(10px)}
-  to{opacity:1;transform:translateY(0)}
+  to{opacity:1}
 }
 
-/* header */
-.title{
-  font-weight:bold;
-  margin-bottom:10px;
-}
-
-/* button */
-.btn{
+/* ===== BUTTON ===== */
+button{
   padding:10px;
   border:none;
-  border-radius:12px;
-  background:var(--primary);
-  color:#fff;
+  border-radius:10px;
   cursor:pointer;
-  margin-top:10px;
 }
-.btn:active{
-  transform:scale(.95);
+.btn{background:#4f46e5;color:#fff}
+.btn-danger{background:#dc2626;color:#fff}
+
+/* ===== MODAL ===== */
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.6);
+  display:none;
+  align-items:center;
+  justify-content:center;
+}
+.modal-box{
+  background:#111827;
+  padding:20px;
+  border-radius:15px;
+  width:400px;
+  max-height:90vh;
+  overflow:auto;
+}
+
+/* ===== INPUT ===== */
+input,textarea{
+  width:100%;
+  padding:10px;
+  margin-bottom:10px;
+  border-radius:10px;
+  border:none;
 }
 </style>
 </head>
 
 <body>
 
-<h2>🚗 Maintenance Control</h2>
+<div class="app">
 
-<div class="grid" id="vehicleContainer"></div>
+<!-- sidebar -->
+<div class="sidebar">
+  <h2>🚗 SC</h2>
+  <a>Dashboard</a>
+  <a>Maintenance</a>
+</div>
+
+<!-- main -->
+<div class="main">
+
+<h2>🚗 รถทั้งหมด</h2>
+<div class="grid" id="vehicleList"></div>
+
+<br>
+
+<button class="btn" onclick="openModal()">➕ เพิ่มรายการ</button>
+
+<h2>🔧 ประวัติการซ่อม</h2>
+<div id="log"></div>
+
+</div>
+
+</div>
+
+<!-- modal -->
+<div class="modal" id="modal">
+<div class="modal-box">
+
+<h3>เพิ่มรายการซ่อม</h3>
+
+<input type="date" id="date">
+<input id="mileage" placeholder="เลขไมล์">
+<input id="jobNo" placeholder="ใบงาน">
+<input id="system" placeholder="ระบบ">
+<textarea id="symptoms" placeholder="อาการ"></textarea>
+<textarea id="parts" placeholder="อะไหล่"></textarea>
+<input id="technician" placeholder="ช่าง">
+<input id="approver" placeholder="ผู้อนุมัติ">
+<input id="partsCost" placeholder="ค่าอะไหล่">
+<input id="laborCost" placeholder="ค่าแรง">
+<textarea id="note" placeholder="หมายเหตุ"></textarea>
+
+<button class="btn" onclick="save()">บันทึก</button>
+<button class="btn-danger" onclick="closeModal()">ยกเลิก</button>
+
+</div>
+</div>
 
 <script>
 firebase.initializeApp({
@@ -119,77 +190,94 @@ firebase.initializeApp({
 
 const db = firebase.firestore();
 
-let vehicleData={};
+let selectedVehicle=null;
 
 /* โหลดรถ */
-db.collection("vehicles").onSnapshot(async s=>{
-  vehicleContainer.innerHTML="";
+db.collection("vehicles").onSnapshot(s=>{
+  vehicleList.innerHTML="";
 
-  for(const d of s.docs){
+  s.forEach(d=>{
     let name=d.id;
 
-    let snap = await db.collection("vehicles")
-      .doc(name).collection("repairs").get();
+    let div=document.createElement("div");
+    div.className="vehicle";
+    div.innerText=name;
 
-    let repairs=[];
-    snap.forEach(doc=>{
-      let r=doc.data();
-      r._id=doc.id;
-      repairs.push(r);
-    });
+    div.onclick=()=>{
+      document.querySelectorAll(".vehicle")
+        .forEach(v=>v.classList.remove("active"));
 
-    vehicleData[name]=repairs;
+      div.classList.add("active");
+      selectedVehicle=name;
+      load(name);
+    };
 
-    vehicleContainer.innerHTML+=`
-    <div class="card">
-      <div class="vehicle" onclick="toggle('${name}', this)">
-        🚗 ${name}
-      </div>
-
-      <div class="panel" id="panel-${name}">
-        ${renderList(repairs, name)}
-      </div>
-    </div>`;
-  }
+    vehicleList.appendChild(div);
+  });
 });
 
-/* toggle */
-function toggle(name, el){
-  let panel=document.getElementById("panel-"+name);
+/* โหลดข้อมูล */
+function load(v){
+  db.collection("vehicles")
+    .doc(v)
+    .collection("repairs")
+    .onSnapshot(s=>{
+      log.innerHTML="";
 
-  document.querySelectorAll(".panel")
-    .forEach(p=>{
-      if(p.id !== "panel-"+name){
-        p.classList.remove("open");
-      }
+      s.forEach(doc=>{
+        let r=doc.data();
+        let id=doc.id;
+        let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
+
+        log.innerHTML+=`
+        <div class="item">
+          📅 ${r["วันที่"]||"-"}<br>
+          🔧 ${r["ระบบที่ซ่อม"]||"-"}<br>
+          🧠 ${r["อาการเสีย"]||"-"}<br>
+          💰 ${cost.toLocaleString()} บาท<br>
+          👨‍🔧 ${r["ช่างผู้รับผิดชอบ"]||"-"}<br><br>
+          <button class="btn-danger" onclick="del('${id}')">ลบ</button>
+        </div>`;
+      });
+    });
+}
+
+/* save */
+function save(){
+  if(!selectedVehicle) return alert("เลือกคันก่อน");
+
+  db.collection("vehicles").doc(selectedVehicle)
+    .collection("repairs")
+    .add({
+      "วันที่":date.value,
+      "เลขไมล์":mileage.value,
+      "เลขที่ใบงาน":jobNo.value,
+      "ระบบที่ซ่อม":system.value,
+      "อาการเสีย":symptoms.value,
+      "อะไหล่ที่เปลี่ยน":parts.value,
+      "ช่างผู้รับผิดชอบ":technician.value,
+      "ผู้อนุมัติ":approver.value,
+      "หมายเหตุ":note.value,
+      "ค่าอะไหล่":partsCost.value,
+      "ค่าแรง":laborCost.value,
+      "เวลาบันทึก":new Date()
     });
 
-  panel.classList.toggle("open");
-
-  document.querySelectorAll(".vehicle")
-    .forEach(v=>v.classList.remove("active"));
-
-  el.classList.toggle("active");
+  closeModal();
 }
 
-/* render */
-function renderList(list, v){
-  if(!list.length){
-    return `<div class="item">ไม่มีข้อมูล</div>`;
-  }
-
-  return list.map(r=>{
-    let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
-
-    return `
-    <div class="item">
-      📅 ${r["วันที่"]||"-"}<br>
-      🔧 ${r["ระบบที่ซ่อม"]||"-"}<br>
-      💰 ${cost.toLocaleString()} บาท<br>
-      👨‍🔧 ${r["ช่างผู้รับผิดชอบ"]||"-"}<br>
-    </div>`;
-  }).join("");
+/* delete */
+function del(id){
+  db.collection("vehicles")
+    .doc(selectedVehicle)
+    .collection("repairs")
+    .doc(id)
+    .delete();
 }
+
+/* modal */
+function openModal(){modal.style.display="flex";}
+function closeModal(){modal.style.display="none";}
 </script>
 
 </body>
