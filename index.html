@@ -2,9 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>SC Maintenance Designer UI</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<title>SC Maintenance Pro</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -12,168 +10,104 @@
 <style>
 :root{
   --bg:#eef2ff;
-  --card:#ffffff;
+  --card:#fff;
   --primary:#7c3aed;
-  --accent:#f59e0b;
 }
-
 body{
   margin:0;
-  font-family:Inter;
+  font-family:Inter,Segoe UI;
   background:var(--bg);
 }
 
-/* layout */
-.app{
-  display:flex;
-  height:100vh;
-}
-
-/* sidebar */
-.sidebar{
-  width:90px;
-  background:linear-gradient(180deg,#7c3aed,#9333ea);
-  color:#fff;
-  padding:20px 10px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:20px;
-}
-
-/* main */
-.main{
-  flex:1;
-  padding:30px;
-}
-
 /* header */
-.header{
-  display:flex;
-  justify-content:space-between;
-  margin-bottom:25px;
+header{
+  background:linear-gradient(90deg,#7c3aed,#9333ea);
+  color:#fff;
+  padding:20px;
+  font-size:22px;
+}
+
+/* container */
+.container{
+  padding:25px;
+  max-width:1400px;
+  margin:auto;
 }
 
 /* grid */
 .grid{
   display:grid;
-  grid-template-columns:2fr 1fr;
-  gap:20px;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:15px;
 }
 
 /* card */
 .card{
   background:var(--card);
-  border-radius:20px;
-  padding:20px;
-  box-shadow:0 15px 40px rgba(0,0,0,.08);
-  transition:.25s;
-}
-.card:hover{
-  transform:translateY(-5px);
-}
-
-/* welcome */
-.welcome{
-  background:linear-gradient(135deg,#fbbf24,#f59e0b);
-  color:#000;
-}
-
-/* stat */
-.stat{
-  font-size:28px;
-  font-weight:600;
-}
-
-/* vehicle */
-.vehicle{
-  padding:10px;
-  border-radius:10px;
-  background:#f1f5f9;
-  margin-bottom:10px;
-  cursor:pointer;
-}
-.vehicle:hover{
-  background:#e2e8f0;
-}
-
-/* repair */
-.item{
-  padding:10px;
-  border-bottom:1px solid #eee;
+  border-radius:18px;
+  padding:18px;
+  box-shadow:0 10px 30px rgba(0,0,0,.08);
 }
 
 /* button */
-.btn{
-  padding:10px 15px;
+button{
+  padding:10px;
   border:none;
   border-radius:10px;
   background:var(--primary);
   color:#fff;
   cursor:pointer;
 }
+button.danger{background:#ef4444}
+
+/* item */
+.item{
+  padding:15px;
+  border-radius:12px;
+  background:#f9fafb;
+  margin-bottom:10px;
+  display:flex;
+  justify-content:space-between;
+}
+
+/* cost */
+.cost{
+  font-weight:bold;
+  color:#7c3aed;
+}
+
+/* input */
+input,select{
+  padding:10px;
+  border-radius:10px;
+  border:1px solid #ddd;
+}
 </style>
 </head>
 
 <body>
 
-<div class="app">
+<header>🚗 SC Maintenance (Pro UI)</header>
 
-<!-- sidebar -->
-<div class="sidebar">
-  🚗
-  📊
-  ⚙️
+<div class="container">
+
+<!-- CONTROL -->
+<div class="card grid">
+  <select id="vehicleSelect"></select>
+  <button onclick="openModal()">➕ เพิ่มรายการ</button>
+  <input id="searchInput" placeholder="ค้นหา...">
 </div>
 
-<!-- main -->
-<div class="main">
-
-<div class="header">
-  <h2>Dashboard</h2>
-  <button class="btn" onclick="openModal()">+ เพิ่ม</button>
-</div>
-
-<div class="grid">
-
-<!-- LEFT -->
-<div>
-
-<div class="card welcome">
-  <h3>SC Maintenance</h3>
-  <p>ระบบจัดการซ่อมบำรุง</p>
-</div>
-
+<!-- DASHBOARD -->
 <div class="card">
-  <h3>💰 ค่าใช้จ่ายรวม</h3>
-  <div class="stat" id="totalCost">0</div>
+  💰 ค่าใช้จ่ายรวม: <span id="totalCost">0</span> บาท
 </div>
 
+<!-- LIST -->
 <div class="card">
-  <h3>📋 รายการซ่อมล่าสุด</h3>
-  <div id="repairList"></div>
+  <div id="listView"></div>
 </div>
 
-</div>
-
-<!-- RIGHT -->
-<div>
-
-<div class="card">
-  <h3>🚗 รถทั้งหมด</h3>
-  <div id="vehicleList"></div>
-</div>
-
-<div class="card">
-  <h3>📊 งานทั้งหมด</h3>
-  <div class="stat" id="totalJobs">0</div>
-</div>
-
-</div>
-
-</div>
-
-</div>
 </div>
 
 <!-- modal -->
@@ -202,60 +136,71 @@ firebase.initializeApp({
 
 const db=firebase.firestore();
 
-let selectedVehicle=null;
+let allRepairs=[];
 
 /* โหลดรถ */
 db.collection("vehicles").onSnapshot(s=>{
-  vehicleList.innerHTML="";
-
+  vehicleSelect.innerHTML="";
   s.forEach(d=>{
-    let v=d.id;
-
-    vehicleList.innerHTML+=`
-    <div class="vehicle" onclick="selectVehicle('${v}')">
-      🚗 ${v}
-    </div>`;
+    vehicleSelect.innerHTML+=`<option>${d.id}</option>`;
   });
+  load(vehicleSelect.value);
 });
 
-/* เลือกรถ */
-function selectVehicle(v){
-  selectedVehicle=v;
-  load(v);
-}
+vehicleSelect.onchange=()=>load(vehicleSelect.value);
 
 /* โหลดข้อมูล */
 function load(v){
   db.collection("vehicles").doc(v).collection("repairs")
   .onSnapshot(s=>{
+    allRepairs=[];
     let total=0;
-    let count=0;
-
-    repairList.innerHTML="";
 
     s.forEach(doc=>{
       let r=doc.data();
-      let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
+      allRepairs.push(r);
 
-      total+=cost;
-      count++;
-
-      repairList.innerHTML+=`
-      <div class="item">
-        ${r["วันที่"]} | ${r["ระบบที่ซ่อม"]} | ${cost}฿
-      </div>`;
+      total+=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
     });
 
     totalCost.innerText=total.toLocaleString();
-    totalJobs.innerText=count;
+    render(allRepairs);
   });
 }
 
+/* render */
+function render(list){
+  listView.innerHTML="";
+
+  list.sort((a,b)=>new Date(b["วันที่"]) - new Date(a["วันที่"]));
+
+  list.forEach(r=>{
+    let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
+
+    listView.innerHTML+=`
+    <div class="item">
+      <div>
+        <b>${r["ระบบที่ซ่อม"]||"-"}</b><br>
+        ${r["วันที่"]||"-"} | ${r["ช่างผู้รับผิดชอบ"]||"-"}
+      </div>
+      <div class="cost">${cost.toLocaleString()} ฿</div>
+    </div>`;
+  });
+}
+
+/* search */
+searchInput.oninput=()=>{
+  let q=searchInput.value.toLowerCase();
+  render(allRepairs.filter(r=>
+    (r["ระบบที่ซ่อม"]||"").toLowerCase().includes(q)
+  ));
+};
+
 /* save */
 function save(){
-  if(!selectedVehicle) return alert("เลือกคันก่อน");
+  let v=vehicleSelect.value;
 
-  db.collection("vehicles").doc(selectedVehicle)
+  db.collection("vehicles").doc(v)
     .collection("repairs")
     .add({
       "วันที่":date.value,
@@ -268,6 +213,7 @@ function save(){
   modal.style.display="none";
 }
 
+/* modal */
 function openModal(){modal.style.display="flex";}
 </script>
 
