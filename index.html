@@ -2,17 +2,21 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>Manager Dashboard (Fixed)</title>
+<title>SC Maintenance - Production</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <style>
-body{margin:0;font-family:Segoe UI;background:#f3f4f6}
+:root{
+  --primary:#4f46e5;
+  --bg:#f3f4f6;
+}
+body{margin:0;font-family:Segoe UI;background:var(--bg)}
 
 /* header */
 .header{
-  background:#4f46e5;
+  background:var(--primary);
   color:#fff;
   padding:20px;
   font-size:22px;
@@ -25,13 +29,11 @@ body{margin:0;font-family:Segoe UI;background:#f3f4f6}
   gap:15px;
   padding:20px;
 }
-
 .card{
   background:#fff;
   padding:15px;
   border-radius:15px;
 }
-
 .value{font-size:22px;font-weight:bold}
 
 /* vehicle */
@@ -39,8 +41,8 @@ body{margin:0;font-family:Segoe UI;background:#f3f4f6}
   display:flex;
   gap:10px;
   padding:10px 20px;
+  overflow:auto;
 }
-
 .vehicle{
   padding:8px 12px;
   background:#ddd;
@@ -48,8 +50,17 @@ body{margin:0;font-family:Segoe UI;background:#f3f4f6}
   cursor:pointer;
 }
 .vehicle.active{
-  background:#4f46e5;
+  background:var(--primary);
   color:#fff;
+}
+
+/* search */
+.search{padding:10px 20px}
+.search input{
+  width:100%;
+  padding:10px;
+  border-radius:10px;
+  border:none;
 }
 
 /* list */
@@ -59,6 +70,20 @@ body{margin:0;font-family:Segoe UI;background:#f3f4f6}
   padding:15px;
   border-radius:10px;
   margin-bottom:10px;
+}
+.cost{color:green;font-weight:bold}
+
+/* button */
+.btn{
+  background:var(--primary);
+  color:#fff;
+  border:none;
+  padding:10px;
+  border-radius:10px;
+  cursor:pointer;
+}
+.btn-danger{
+  background:#dc2626;
 }
 
 /* modal */
@@ -78,27 +103,17 @@ body{margin:0;font-family:Segoe UI;background:#f3f4f6}
   max-height:90vh;
   overflow:auto;
 }
-
 input,textarea{
   width:100%;
   margin-bottom:10px;
   padding:8px;
 }
-
-button{
-  padding:10px;
-  border:none;
-  border-radius:10px;
-  cursor:pointer;
-}
-.btn{background:#4f46e5;color:#fff}
-.btn-danger{background:#dc2626;color:#fff}
 </style>
 </head>
 
 <body>
 
-<div class="header">📊 Manager Dashboard</div>
+<div class="header">🚗 SC Maintenance</div>
 
 <!-- dashboard -->
 <div class="dashboard">
@@ -110,9 +125,14 @@ button{
 <!-- vehicles -->
 <div class="vehicle-bar" id="vehicleList"></div>
 
+<!-- search -->
+<div class="search">
+  <input id="search" placeholder="ค้นหา...">
+</div>
+
 <!-- add -->
-<div style="padding:20px">
-  <button class="btn" onclick="openModal()">➕ เพิ่ม</button>
+<div style="padding:0 20px">
+  <button class="btn" onclick="openModal()">➕ เพิ่มรายการ</button>
 </div>
 
 <!-- list -->
@@ -122,7 +142,7 @@ button{
 <div class="modal" id="modal">
 <div class="modal-box">
 
-<h3>เพิ่มรายการ</h3>
+<h3>เพิ่มรายการซ่อม</h3>
 
 <input type="date" id="date">
 <input id="mileage" placeholder="เลขไมล์">
@@ -157,6 +177,7 @@ const db=firebase.firestore();
 
 let selectedVehicle=null;
 let all=[];
+let unsubscribe=null;
 
 /* โหลดรถ */
 db.collection("vehicles").onSnapshot(s=>{
@@ -185,31 +206,37 @@ db.collection("vehicles").onSnapshot(s=>{
   if(first) vehicleList.children[0].click();
 });
 
-/* โหลด */
+/* โหลดรายการ */
 function load(v){
-  db.collection("vehicles").doc(v).collection("repairs")
-  .onSnapshot(s=>{
-    all=[];
-    let total=0, month=0;
+  if(unsubscribe) unsubscribe();
 
-    let now=new Date().toISOString().slice(0,7);
+  unsubscribe = db.collection("vehicles")
+    .doc(v).collection("repairs")
+    .onSnapshot(s=>{
+      all=[];
+      let total=0, month=0;
 
-    s.forEach(doc=>{
-      let r=doc.data();
-      let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
+      let now=new Date().toISOString().slice(0,7);
 
-      total+=cost;
-      if((r["วันที่"]||"").startsWith(now)) month+=cost;
+      s.forEach(doc=>{
+        let r=doc.data();
+        r._id=doc.id;
 
-      all.push(r);
+        let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
+
+        total+=cost;
+        if((r["วันที่"]||"").startsWith(now)) month+=cost;
+
+        all.push(r);
+      });
+
+      totalCost.innerText=total.toLocaleString();
+      monthCost.innerText=month.toLocaleString();
+      totalJobs.innerText=all.length;
+
+      all.sort((a,b)=>new Date(b["วันที่"])-new Date(a["วันที่"]));
+      render(all);
     });
-
-    totalCost.innerText=total.toLocaleString();
-    monthCost.innerText=month.toLocaleString();
-    totalJobs.innerText=all.length;
-
-    render(all);
-  });
 }
 
 /* render */
@@ -222,8 +249,10 @@ function render(list){
     log.innerHTML+=`
     <div class="item">
       🔧 ${r["ระบบที่ซ่อม"]||"-"}<br>
-      💰 ${cost.toLocaleString()} บาท<br>
-      📅 ${r["วันที่"]||"-"}
+      📅 ${r["วันที่"]||"-"}<br>
+      💰 <span class="cost">${cost.toLocaleString()} บาท</span><br>
+      👨‍🔧 ${r["ช่างผู้รับผิดชอบ"]||"-"}<br><br>
+      <button class="btn-danger" onclick="del('${r._id}')">ลบ</button>
     </div>`;
   });
 }
@@ -233,24 +262,45 @@ function save(){
   if(!selectedVehicle) return alert("เลือกคันก่อน");
 
   db.collection("vehicles").doc(selectedVehicle)
-  .collection("repairs")
-  .add({
-    "วันที่":date.value,
-    "เลขไมล์":mileage.value,
-    "เลขที่ใบงาน":jobNo.value,
-    "ระบบที่ซ่อม":system.value,
-    "อาการเสีย":symptoms.value,
-    "อะไหล่ที่เปลี่ยน":parts.value,
-    "ช่างผู้รับผิดชอบ":technician.value,
-    "ผู้อนุมัติ":approver.value,
-    "หมายเหตุ":note.value,
-    "ค่าอะไหล่":partsCost.value,
-    "ค่าแรง":laborCost.value,
-    "เวลาบันทึก":new Date()
-  });
+    .collection("repairs")
+    .add({
+      "วันที่":date.value,
+      "เลขไมล์":mileage.value,
+      "เลขที่ใบงาน":jobNo.value,
+      "ระบบที่ซ่อม":system.value,
+      "อาการเสีย":symptoms.value,
+      "อะไหล่ที่เปลี่ยน":parts.value,
+      "ช่างผู้รับผิดชอบ":technician.value,
+      "ผู้อนุมัติ":approver.value,
+      "หมายเหตุ":note.value,
+      "ค่าอะไหล่":partsCost.value,
+      "ค่าแรง":laborCost.value,
+      "เวลาบันทึก":new Date()
+    });
 
   closeModal();
 }
+
+/* delete */
+function del(id){
+  db.collection("vehicles")
+    .doc(selectedVehicle)
+    .collection("repairs")
+    .doc(id)
+    .delete();
+}
+
+/* search */
+search.oninput=()=>{
+  let q=search.value.toLowerCase();
+
+  render(all.filter(r=>
+    (r["ระบบที่ซ่อม"]||"").toLowerCase().includes(q) ||
+    (r["อาการเสีย"]||"").toLowerCase().includes(q) ||
+    (r["ช่างผู้รับผิดชอบ"]||"").toLowerCase().includes(q) ||
+    (r["เลขที่ใบงาน"]||"").toLowerCase().includes(q)
+  ));
+};
 
 /* modal */
 function openModal(){modal.style.display="flex";}
