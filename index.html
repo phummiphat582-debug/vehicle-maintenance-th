@@ -2,215 +2,245 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>ระบบสต๊อกกิจกรรม V9</title>
+<title>SC THE ADVENTURE | ระบบซ่อมบำรุง</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 :root{
   --primary:#b91c1c;
   --primary-dark:#7f1d1d;
-  --accent:#ef4444;
   --bg:#f3f4f6;
-  --card:#ffffff;
-  --text:#1f2937;
 }
 
-*{box-sizing:border-box;font-family:Segoe UI}
-body{margin:0;background:var(--bg);color:var(--text)}
-
-/* Sidebar */
-.sidebar{
-  width:250px;height:100vh;position:fixed;
-  background:linear-gradient(180deg,var(--primary-dark),var(--primary));
-  color:#fff;padding:20px
-}
-.menu div{
-  padding:14px;border-radius:12px;margin:8px 0;cursor:pointer
-}
-.menu div:hover{background:rgba(255,255,255,.15)}
-.active{background:#fff;color:var(--primary);font-weight:bold}
-
-/* Header */
+body{margin:0;font-family:Segoe UI;background:var(--bg)}
 header{
-  margin-left:250px;
   background:linear-gradient(90deg,var(--primary-dark),var(--primary));
-  color:#fff;padding:20px;font-size:20px;font-weight:700
+  color:#fff;padding:20px;font-size:22px;font-weight:700
 }
 
-/* Main */
-.main{margin-left:250px;padding:30px}
-
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-  gap:20px
-}
+.container{padding:25px;max-width:1600px;margin:auto}
 
 .card{
-  background:#fff;border-radius:18px;padding:20px;
+  background:#fff;padding:20px;border-radius:18px;
   box-shadow:0 10px 30px rgba(0,0,0,.08);
-  transition:.2s
-}
-.card:hover{transform:translateY(-3px)}
-
-.stat{
-  font-size:28px;
-  font-weight:bold;
-  color:var(--primary)
+  margin-bottom:20px
 }
 
-/* Button */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:15px}
+
 button{
-  padding:10px 14px;border:none;border-radius:10px;
+  padding:12px;border:none;border-radius:12px;
   background:var(--primary);color:#fff;cursor:pointer
 }
-button:hover{background:var(--accent)}
+button:hover{opacity:.9}
 
-.secondary{
-  background:#fff;color:var(--primary);
-  border:2px solid var(--primary)
+button.danger{background:#dc2626}
+
+input,textarea,select{
+  padding:10px;border-radius:10px;border:1px solid #ddd;width:100%
 }
 
-/* Table */
-table{width:100%;border-collapse:collapse;margin-top:20px}
-th,td{padding:12px;border-bottom:1px solid #ddd;text-align:left}
+table{width:100%;border-collapse:collapse}
+th,td{padding:12px;border-bottom:1px solid #eee}
 
-/* Modal */
 .modal{
-  position:fixed;inset:0;
-  background:rgba(0,0,0,.6);
+  position:fixed;inset:0;background:rgba(0,0,0,.6);
   display:none;align-items:center;justify-content:center
 }
 .modal-box{
   background:#fff;padding:25px;border-radius:16px;
-  width:95%;max-width:500px;
+  width:95%;max-width:1200px;
   animation:pop .2s ease
 }
 @keyframes pop{
   from{transform:scale(.9);opacity:0}
   to{transform:scale(1);opacity:1}
 }
-
-input{width:100%;padding:10px;margin:8px 0;border-radius:10px;border:1px solid #ddd}
 </style>
 </head>
 
 <body>
 
-<div class="sidebar">
-  <h2>📦 Stock V9</h2>
-  <div class="menu">
-    <div class="active">Dashboard</div>
-    <div onclick="openModal()">+ เพิ่มสินค้า</div>
-  </div>
+<header>🚗 ระบบซ่อมบำรุง (Enterprise Red UI)</header>
+
+<div class="container">
+
+<div class="card grid">
+<select id="vehicleSelect"></select>
+<button onclick="openModal()">➕ เพิ่มรายการ</button>
+<button class="danger" onclick="confirmDeleteAll()">ลบรถทั้งหมด</button>
 </div>
 
-<header>ระบบสต๊อกกิจกรรม (แดงขาว Enterprise)</header>
-
-<div class="main">
-
-<div class="grid">
-  <div class="card">
-    <div>จำนวนสินค้า</div>
-    <div class="stat" id="totalItems">0</div>
-  </div>
-
-  <div class="card">
-    <div>จำนวนคงเหลือ</div>
-    <div class="stat" id="totalQty">0</div>
-  </div>
-
-  <div class="card">
-    <div>มูลค่ารวม</div>
-    <div class="stat" id="totalValue">0</div>
-  </div>
+<div class="card grid">
+<input id="searchInput" placeholder="ค้นหา...">
+<button onclick="search()">ค้นหา</button>
+<button onclick="resetSearch()">ล้าง</button>
 </div>
 
-<button style="margin-top:20px" onclick="openModal()">➕ เพิ่มสินค้า</button>
-
+<div class="card">
 <table>
 <thead>
 <tr>
-<th>ชื่อ</th>
-<th>จำนวน</th>
-<th>ราคา</th>
+<th>วันที่</th>
+<th>รถ</th>
+<th>ระบบ</th>
+<th>อาการ</th>
+<th>ช่าง</th>
+<th>ค่าใช้จ่าย</th>
 <th>ลบ</th>
 </tr>
 </thead>
 <tbody id="tbody"></tbody>
 </table>
+</div>
 
 </div>
 
 <!-- Modal -->
 <div class="modal" id="modal">
-  <div class="modal-box">
-    <h3>เพิ่มสินค้า</h3>
-    <input id="name" placeholder="ชื่อสินค้า">
-    <input id="qty" type="number" placeholder="จำนวน">
-    <input id="price" type="number" placeholder="ราคา">
-    <button onclick="save()">บันทึก</button>
-    <button class="secondary" onclick="closeModal()">ยกเลิก</button>
-  </div>
+<div class="modal-box">
+
+<h3>เพิ่มรายการซ่อม</h3>
+
+<div class="grid">
+<input type="date" id="date">
+<input id="mileage" placeholder="เลขไมล์">
+<input id="jobNo" placeholder="ใบงาน">
+<input id="system" placeholder="ระบบ">
+<input id="technician" placeholder="ช่าง">
+<textarea id="symptoms" placeholder="อาการ"></textarea>
+<input id="partsCost" placeholder="ค่าอะไหล่">
+<input id="laborCost" placeholder="ค่าแรง">
 </div>
 
+<br>
+<button onclick="save()">บันทึก</button>
+<button class="danger" onclick="closeModal()">ยกเลิก</button>
+
+</div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
 <script>
-let data = JSON.parse(localStorage.getItem("stock") || "[]");
+firebase.initializeApp({
+  apiKey: "AIzaSyCowDEvUQpBmq7AwUGiC6IuGOudPhi_0kM",
+  authDomain: "vehicle-maintenance-64890.firebaseapp.com",
+  projectId: "vehicle-maintenance-64890",
+});
+const db = firebase.firestore();
 
-function render(){
-  let tbody = document.getElementById("tbody");
+let allRepairs=[];
+
+function loadVehicles(){
+  db.collection("vehicles").onSnapshot(s=>{
+    vehicleSelect.innerHTML="";
+    s.forEach(d=>{
+      const o=document.createElement("option");
+      o.value=d.id;
+      o.textContent=d.id;
+      vehicleSelect.appendChild(o);
+    });
+    if(vehicleSelect.value) loadRepairs(vehicleSelect.value);
+  });
+}
+
+vehicleSelect.onchange=()=>loadRepairs(vehicleSelect.value);
+
+function loadRepairs(v){
+  db.collection("vehicles").doc(v).collection("repairs")
+  .onSnapshot(s=>{
+    allRepairs=[];
+    s.forEach(doc=>{
+      let r=doc.data();
+      r._id=doc.id;
+      allRepairs.push(r);
+    });
+
+    // 🔥 เรียงใหม่ -> เก่า
+    allRepairs.sort((a,b)=> new Date(b["วันที่"]) - new Date(a["วันที่"]));
+
+    render(allRepairs,v);
+  });
+}
+
+function render(list,v){
   tbody.innerHTML="";
-
-  let totalItems=data.length;
-  let totalQty=0;
-  let totalValue=0;
-
-  data.forEach((d,i)=>{
-    totalQty+= +d.qty;
-    totalValue+= d.qty*d.price;
+  list.forEach(r=>{
+    let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
 
     tbody.innerHTML+=`
     <tr>
-      <td>${d.name}</td>
-      <td>${d.qty}</td>
-      <td>${d.price}</td>
-      <td><button onclick="del(${i})">ลบ</button></td>
+    <td>${r["วันที่"]||""}</td>
+    <td>${v}</td>
+    <td>${r["ระบบที่ซ่อม"]||""}</td>
+    <td>${r["อาการเสีย"]||""}</td>
+    <td>${r["ช่างผู้รับผิดชอบ"]||""}</td>
+    <td>${cost}</td>
+    <td><button onclick="del('${v}','${r._id}')">ลบ</button></td>
     </tr>`;
   });
-
-  totalItemsEl.textContent=totalItems;
-  totalQtyEl.textContent=totalQty;
-  totalValueEl.textContent=totalValue;
 }
 
 function save(){
-  let name=document.getElementById("name").value;
-  let qty=document.getElementById("qty").value;
-  let price=document.getElementById("price").value;
+  if(!vehicleSelect.value) return alert("เลือกรถก่อน");
 
-  if(!name || !qty || !price) return alert("กรอกข้อมูลให้ครบ");
-
-  data.push({name,qty,price});
-  localStorage.setItem("stock",JSON.stringify(data));
+  db.collection("vehicles").doc(vehicleSelect.value)
+  .collection("repairs").add({
+    "วันที่":date.value,
+    "เลขไมล์":mileage.value,
+    "เลขที่ใบงาน":jobNo.value,
+    "ระบบที่ซ่อม":system.value,
+    "อาการเสีย":symptoms.value,
+    "ช่างผู้รับผิดชอบ":technician.value,
+    "ค่าอะไหล่":partsCost.value,
+    "ค่าแรง":laborCost.value,
+    "เวลาบันทึก":new Date()
+  });
 
   closeModal();
-  render();
 }
 
-function del(i){
-  data.splice(i,1);
-  localStorage.setItem("stock",JSON.stringify(data));
-  render();
+function del(v,id){
+  db.collection("vehicles").doc(v)
+  .collection("repairs").doc(id).delete();
 }
 
-function openModal(){modal.style.display="flex"}
+function confirmDeleteAll(){
+  if(!vehicleSelect.value) return;
+  let v=vehicleSelect.value;
+
+  if(confirm("ลบทั้งหมด?")){
+    db.collection("vehicles").doc(v).collection("repairs")
+    .get().then(s=>{
+      let batch=db.batch();
+      s.forEach(d=>batch.delete(d.ref));
+      batch.commit();
+    });
+  }
+}
+
+function search(){
+  let q=searchInput.value.toLowerCase();
+  let res=allRepairs.filter(r=>
+    (r["ระบบที่ซ่อม"]||"").toLowerCase().includes(q) ||
+    (r["อาการเสีย"]||"").toLowerCase().includes(q)
+  );
+  render(res,vehicleSelect.value);
+}
+
+function resetSearch(){
+  render(allRepairs,vehicleSelect.value);
+}
+
+function openModal(){
+  if(!vehicleSelect.value) return alert("เลือกรถก่อน");
+  modal.style.display="flex";
+}
 function closeModal(){modal.style.display="none"}
 
-const totalItemsEl=document.getElementById("totalItems");
-const totalQtyEl=document.getElementById("totalQty");
-const totalValueEl=document.getElementById("totalValue");
-
-render();
+loadVehicles();
 </script>
 
 </body>
