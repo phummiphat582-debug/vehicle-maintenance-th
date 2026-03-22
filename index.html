@@ -3,108 +3,102 @@
 <head>
 <meta charset="UTF-8">
 <title>ระบบซ่อมบำรุง</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 :root{
-  --red:#b91c1c;
-  --dark:#7f1d1d;
-  --bg:#f4f6f8;
+  --red:#991b1b;
+  --red2:#b91c1c;
+  --bg:#f1f5f9;
 }
 
+/* RESET */
 body{
   margin:0;
-  font-family:Segoe UI,Arial;
+  font-family:Segoe UI;
   background:var(--bg);
+}
+
+/* SIDEBAR */
+.sidebar{
+  width:240px;
+  height:100vh;
+  position:fixed;
+  background:linear-gradient(180deg,var(--red),#7f1d1d);
+  color:#fff;
+  padding:20px;
+}
+
+.menu div{
+  padding:12px;
+  border-radius:10px;
+  margin:8px 0;
+  cursor:pointer;
+}
+.menu div:hover{
+  background:rgba(255,255,255,.1);
+}
+.active{
+  background:#fff;
+  color:var(--red);
 }
 
 /* HEADER */
 header{
-  background:linear-gradient(90deg,var(--dark),var(--red));
+  margin-left:240px;
+  background:linear-gradient(90deg,var(--red),var(--red2));
   color:#fff;
-  padding:18px 30px;
-  font-size:20px;
+  padding:18px;
   font-weight:600;
 }
 
-/* LAYOUT */
-.container{
-  max-width:1600px;
-  margin:auto;
-  padding:20px;
+/* MAIN */
+.main{
+  margin-left:240px;
+  padding:25px;
 }
 
+/* CARD */
 .card{
   background:#fff;
-  padding:15px;
-  border-radius:12px;
-  margin-bottom:15px;
-  box-shadow:0 6px 20px rgba(0,0,0,.05);
+  padding:20px;
+  border-radius:16px;
+  box-shadow:0 10px 25px rgba(0,0,0,.06);
+  margin-bottom:20px;
 }
 
 /* GRID */
 .grid{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:10px;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:20px;
 }
 
-/* INPUT */
-input,select,textarea{
+/* STAT */
+.stat{
+  font-size:28px;
+  font-weight:700;
+  color:var(--red);
+}
+
+/* TABLE */
+.table{
   width:100%;
-  padding:8px;
-  border:1px solid #ddd;
-  border-radius:6px;
-  font-size:13px;
-}
-
-/* BUTTON */
-button{
-  padding:8px 12px;
-  border:none;
-  border-radius:6px;
-  background:var(--red);
-  color:#fff;
-  cursor:pointer;
-  font-size:13px;
-}
-button:hover{opacity:.9}
-.danger{background:#dc2626}
-
-/* TABLE FIX */
-.table-wrap{
-  width:100%;
-  overflow-x:auto;
-}
-
-table{
-  width:100%;
-  min-width:1200px;
   border-collapse:collapse;
 }
 
-thead th{
-  position:sticky;
-  top:0;
-  background:#fff;
-  z-index:2;
-}
-
 th,td{
-  padding:10px 8px;
+  padding:12px;
   border-bottom:1px solid #eee;
-  white-space:nowrap;
   text-align:left;
-  font-size:13px;
 }
 
-tbody tr:hover{
-  background:#fef2f2;
-}
-
-td{
-  overflow:hidden;
-  text-overflow:ellipsis;
+button{
+  padding:8px 12px;
+  border:none;
+  border-radius:8px;
+  background:var(--red2);
+  color:#fff;
+  cursor:pointer;
 }
 
 /* MODAL */
@@ -120,124 +114,73 @@ td{
 .modal-box{
   background:#fff;
   padding:20px;
-  border-radius:10px;
-  width:95%;
-  max-width:1100px;
-  max-height:90vh;
-  overflow:auto;
+  border-radius:12px;
+  width:90%;
+  max-width:800px;
 }
 
-/* FORM */
-.form-grid-2{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-}
-.form-grid-3{
-  display:grid;
-  grid-template-columns:1fr 1fr 1fr;
-  gap:10px;
-}
-textarea{min-height:80px}
-
-/* DETAIL */
 .detail-row{
   display:grid;
   grid-template-columns:180px 1fr;
-  padding:6px 0;
-  border-bottom:1px dashed #ddd;
+  margin-bottom:8px;
 }
-.detail-row b{color:var(--red)}
+.detail-row b{
+  color:var(--red);
+}
 </style>
 </head>
 
 <body>
 
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <h3>ระบบซ่อมบำรุง</h3>
+  <div class="menu">
+    <div class="active">Dashboard</div>
+  </div>
+</div>
+
 <header>ระบบซ่อมบำรุง</header>
 
-<div class="container">
+<div class="main">
 
-<div class="card grid">
-<select id="vehicleSelect"></select>
-<button onclick="openModal()">เพิ่มรายการ</button>
-<button class="danger" onclick="deleteAll()">ลบทั้งหมด</button>
+<!-- SUMMARY -->
+<div class="grid">
+  <div class="card">
+    <div>จำนวนรายการ</div>
+    <div class="stat" id="count">0</div>
+  </div>
+  <div class="card">
+    <div>ค่าใช้จ่ายรวม</div>
+    <div class="stat" id="total">0</div>
+  </div>
 </div>
 
-<div class="card grid">
-<input id="searchInput" placeholder="ค้นหา">
-<button onclick="resetSearch()">ล้าง</button>
-</div>
-
-<div class="card table-wrap">
-<table>
+<!-- TABLE (โชว์แค่สำคัญ) -->
+<div class="card">
+<table class="table">
 <thead>
 <tr>
-<th onclick="setSort('วันที่')">วันที่</th>
+<th>วันที่</th>
 <th>รถ</th>
-<th onclick="setSort('ระบบที่ซ่อม')">ระบบ</th>
-<th onclick="setSort('อาการเสีย')">อาการ</th>
-<th onclick="setSort('ช่างผู้รับผิดชอบ')">ช่าง</th>
-<th>ค่าใช้จ่าย</th>
-<th>รายละเอียด</th>
-<th>ลบ</th>
+<th>ระบบ</th>
+<th>ช่าง</th>
+<th>ดู</th>
 </tr>
 </thead>
 <tbody id="tbody"></tbody>
 </table>
 </div>
 
-<div class="card" style="display:flex;justify-content:space-between;">
-<div id="pageInfo"></div>
-<div>
-<button onclick="prevPage()">ก่อนหน้า</button>
-<button onclick="nextPage()">ถัดไป</button>
-</div>
 </div>
 
-</div>
-
-<!-- MODAL -->
+<!-- DETAIL MODAL -->
 <div class="modal" id="modal">
 <div class="modal-box">
-
-<h3>เพิ่มประวัติการซ่อม</h3>
-
-<div class="form-grid-3">
-<input type="date" id="date">
-<input id="mileage" placeholder="เลขไมล์">
-<input id="jobNo" placeholder="เลขที่ใบงาน">
-</div>
-
-<div class="form-grid-2">
-<input id="system" placeholder="ระบบ">
-<input id="technician" placeholder="ช่าง">
-</div>
-
-<div class="form-grid-3">
-<textarea id="symptoms" placeholder="อาการ"></textarea>
-<textarea id="parts" placeholder="อะไหล่"></textarea>
-<textarea id="note" placeholder="หมายเหตุ"></textarea>
-</div>
-
-<div class="form-grid-2">
-<input type="number" id="partsCost" placeholder="ค่าอะไหล่">
-<input type="number" id="laborCost" placeholder="ค่าแรง">
-</div>
-
-<br>
-<button onclick="save()">บันทึก</button>
-<button class="danger" onclick="closeModal()">ยกเลิก</button>
-
-</div>
-</div>
-
-<!-- DETAIL -->
-<div class="modal" id="detailModal">
-<div class="modal-box">
 <h3>รายละเอียด</h3>
-<div id="detailContent"></div>
+<div id="detail"></div>
 <br>
-<button onclick="detailModal.style.display='none'">ปิด</button>
+<button onclick="modal.style.display='none'">ปิด</button>
 </div>
 </div>
 
@@ -252,144 +195,55 @@ firebase.initializeApp({
 const db=firebase.firestore();
 
 let all=[];
-let currentPage=1;
-let perPage=10;
-let currentSort=null;
-let sortAsc=true;
 
-function loadVehicles(){
-  db.collection("vehicles").onSnapshot(s=>{
-    vehicleSelect.innerHTML="";
-    s.forEach(d=>{
-      let o=document.createElement("option");
-      o.value=d.id;
-      o.textContent=d.id;
-      vehicleSelect.appendChild(o);
+db.collection("vehicles").get().then(vs=>{
+  vs.forEach(v=>{
+    db.collection("vehicles").doc(v.id).collection("repairs")
+    .onSnapshot(s=>{
+      all=[];
+      s.forEach(d=>{
+        let r=d.data();
+        r.vehicle=v.id;
+        all.push(r);
+      });
+
+      render();
     });
-    if(vehicleSelect.value) loadRepairs(vehicleSelect.value);
   });
-}
+});
 
-vehicleSelect.onchange=()=>loadRepairs(vehicleSelect.value);
-
-function loadRepairs(v){
-  db.collection("vehicles").doc(v).collection("repairs")
-  .onSnapshot(s=>{
-    all=[];
-    s.forEach(d=>{
-      let r=d.data();
-      r._id=d.id;
-      all.push(r);
-    });
-
-    all.sort((a,b)=> new Date(b["วันที่"]) - new Date(a["วันที่"]));
-    render();
-  });
-}
-
-function render(list=all){
-  if(currentSort){
-    list=[...list].sort((a,b)=>{
-      let va=a[currentSort]||"";
-      let vb=b[currentSort]||"";
-      return sortAsc
-        ? va.toString().localeCompare(vb)
-        : vb.toString().localeCompare(va);
-    });
-  }
-
-  let start=(currentPage-1)*perPage;
-  let page=list.slice(start,start+perPage);
-
+function render(){
   tbody.innerHTML="";
-  page.forEach(r=>{
+  let total=0;
+
+  all.forEach(r=>{
     let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
+    total+=cost;
 
     tbody.innerHTML+=`
     <tr>
       <td>${r["วันที่"]||""}</td>
-      <td>${vehicleSelect.value}</td>
+      <td>${r.vehicle}</td>
       <td>${r["ระบบที่ซ่อม"]||""}</td>
-      <td>${r["อาการเสีย"]||""}</td>
       <td>${r["ช่างผู้รับผิดชอบ"]||""}</td>
-      <td>${cost}</td>
-      <td><button onclick='showDetail(${JSON.stringify(r)})'>ดู</button></td>
-      <td><button onclick="del('${r._id}')">ลบ</button></td>
+      <td><button onclick='show(${JSON.stringify(r)})'>ดู</button></td>
     </tr>`;
   });
 
-  pageInfo.innerText=`หน้า ${currentPage} / ${Math.ceil(list.length/perPage)}`;
+  count.innerText=all.length;
+  totalEl.innerText=total;
 }
 
-function setSort(f){
-  if(currentSort===f){sortAsc=!sortAsc}
-  else{currentSort=f;sortAsc=true}
-  render();
-}
-
-searchInput.addEventListener("input",()=>{
-  let q=searchInput.value.toLowerCase();
-  let res=all.filter(r=>
-    (r["ระบบที่ซ่อม"]||"").toLowerCase().includes(q) ||
-    (r["อาการเสีย"]||"").toLowerCase().includes(q)
-  );
-  currentPage=1;
-  render(res);
-});
-
-function resetSearch(){
-  searchInput.value="";
-  render();
-}
-
-function save(){
-  db.collection("vehicles").doc(vehicleSelect.value)
-  .collection("repairs").add({
-    "วันที่":date.value,
-    "เลขไมล์":mileage.value,
-    "เลขที่ใบงาน":jobNo.value,
-    "ระบบที่ซ่อม":system.value,
-    "อาการเสีย":symptoms.value,
-    "อะไหล่ที่เปลี่ยน":parts.value,
-    "ช่างผู้รับผิดชอบ":technician.value,
-    "หมายเหตุ":note.value,
-    "ค่าอะไหล่":partsCost.value,
-    "ค่าแรง":laborCost.value
-  });
-  closeModal();
-}
-
-function del(id){
-  db.collection("vehicles").doc(vehicleSelect.value)
-  .collection("repairs").doc(id).delete();
-}
-
-function openModal(){modal.style.display="flex"}
-function closeModal(){modal.style.display="none"}
-
-function showDetail(d){
+function show(d){
   let html="";
   for(let k in d){
     html+=`<div class="detail-row"><b>${k}</b><div>${d[k]||"-"}</div></div>`;
   }
-  detailContent.innerHTML=html;
-  detailModal.style.display="flex";
+  detail.innerHTML=html;
+  modal.style.display="flex";
 }
 
-function nextPage(){currentPage++;render()}
-function prevPage(){if(currentPage>1)currentPage--;render()}
-
-function deleteAll(){
-  let v=vehicleSelect.value;
-  db.collection("vehicles").doc(v).collection("repairs")
-  .get().then(s=>{
-    let batch=db.batch();
-    s.forEach(d=>batch.delete(d.ref));
-    batch.commit();
-  });
-}
-
-loadVehicles();
+const totalEl=document.getElementById("total");
 </script>
 
 </body>
