@@ -9,14 +9,13 @@
 :root{
   --red:#b91c1c;
   --dark:#7f1d1d;
-  --bg:#f5f5f5;
+  --bg:#f4f6f8;
 }
 
 body{
   margin:0;
   font-family:Segoe UI,Arial;
   background:var(--bg);
-  color:#111;
 }
 
 /* Header */
@@ -41,7 +40,7 @@ header{
   padding:20px;
   border-radius:12px;
   margin-bottom:20px;
-  box-shadow:0 8px 25px rgba(0,0,0,.06);
+  box-shadow:0 10px 25px rgba(0,0,0,.06);
 }
 
 /* Grid */
@@ -80,12 +79,10 @@ table{
 th{
   text-align:left;
   background:#f9fafb;
-  font-weight:600;
 }
 th,td{
   padding:12px;
   border-bottom:1px solid #eee;
-  font-size:14px;
 }
 
 /* Modal */
@@ -108,6 +105,28 @@ th,td{
   overflow:auto;
 }
 
+/* Form layout */
+.form-section{margin-top:15px}
+.form-title{
+  font-weight:600;
+  margin-bottom:10px;
+  color:var(--dark)
+}
+.form-grid-2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:15px;
+}
+.form-grid-3{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:15px;
+}
+textarea{
+  min-height:100px;
+  resize:vertical;
+}
+
 /* Detail */
 .detail-row{
   display:grid;
@@ -115,9 +134,7 @@ th,td{
   padding:8px 0;
   border-bottom:1px dashed #ddd;
 }
-.detail-row b{
-  color:var(--red);
-}
+.detail-row b{color:var(--red)}
 </style>
 </head>
 
@@ -131,6 +148,13 @@ th,td{
 <select id="vehicleSelect"></select>
 <button onclick="openModal()">เพิ่มรายการ</button>
 <button class="danger" onclick="deleteAll()">ลบทั้งหมด</button>
+</div>
+
+<!-- 🔍 ค้นหา -->
+<div class="card grid">
+<input id="searchInput" placeholder="ค้นหา (ระบบ / อาการ / ช่าง / ใบงาน)">
+<button onclick="search()">ค้นหา</button>
+<button onclick="resetSearch()">ล้าง</button>
 </div>
 
 <div class="card">
@@ -159,24 +183,41 @@ th,td{
 
 <h3>เพิ่มประวัติการซ่อม</h3>
 
-<div class="grid">
+<div class="form-section">
+<div class="form-title">ข้อมูลหลัก</div>
+<div class="form-grid-3">
 <input type="date" id="date">
 <input id="mileage" placeholder="เลขไมล์">
 <input id="jobNo" placeholder="เลขที่ใบงาน">
-<input id="system" placeholder="ระบบที่ซ่อม">
-<input id="technician" placeholder="ช่าง">
-<input id="approver" placeholder="ผู้อนุมัติ">
+</div>
 </div>
 
-<div class="grid">
+<div class="form-section">
+<div class="form-title">รายละเอียดงานซ่อม</div>
+<div class="form-grid-2">
+<input id="system" placeholder="ระบบที่ซ่อม">
+<input id="technician" placeholder="ช่าง">
+</div>
+<div class="form-grid-2" style="margin-top:10px;">
+<input id="approver" placeholder="ผู้อนุมัติ">
+</div>
+</div>
+
+<div class="form-section">
+<div class="form-title">รายละเอียดเพิ่มเติม</div>
+<div class="form-grid-3">
 <textarea id="symptoms" placeholder="อาการเสีย"></textarea>
 <textarea id="parts" placeholder="อะไหล่ที่เปลี่ยน"></textarea>
 <textarea id="note" placeholder="หมายเหตุ"></textarea>
 </div>
+</div>
 
-<div class="grid">
+<div class="form-section">
+<div class="form-title">ค่าใช้จ่าย</div>
+<div class="form-grid-2">
 <input type="number" id="partsCost" placeholder="ค่าอะไหล่">
 <input type="number" id="laborCost" placeholder="ค่าแรง">
+</div>
 </div>
 
 <br>
@@ -217,7 +258,7 @@ function loadVehicles(){
       o.textContent=d.id;
       vehicleSelect.appendChild(o);
     });
-    loadRepairs(vehicleSelect.value);
+    if(vehicleSelect.value) loadRepairs(vehicleSelect.value);
   });
 }
 
@@ -234,13 +275,13 @@ function loadRepairs(v){
     });
 
     all.sort((a,b)=> new Date(b["วันที่"]) - new Date(a["วันที่"]));
-    render();
+    render(all);
   });
 }
 
-function render(){
+function render(list){
   tbody.innerHTML="";
-  all.forEach(r=>{
+  list.forEach(r=>{
     let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
 
     tbody.innerHTML+=`
@@ -303,7 +344,26 @@ function deleteAll(){
   });
 }
 
-function openModal(){modal.style.display="flex"}
+function search(){
+  let q=searchInput.value.toLowerCase().trim();
+  let res=all.filter(r=>
+    (r["ระบบที่ซ่อม"]||"").toLowerCase().includes(q) ||
+    (r["อาการเสีย"]||"").toLowerCase().includes(q) ||
+    (r["ช่างผู้รับผิดชอบ"]||"").toLowerCase().includes(q) ||
+    (r["เลขที่ใบงาน"]||"").toLowerCase().includes(q)
+  );
+  render(res);
+}
+
+function resetSearch(){
+  searchInput.value="";
+  render(all);
+}
+
+function openModal(){
+  if(!vehicleSelect.value) return alert("กรุณาเลือกรถก่อน");
+  modal.style.display="flex";
+}
 function closeModal(){modal.style.display="none"}
 
 loadVehicles();
