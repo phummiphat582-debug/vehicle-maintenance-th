@@ -2,256 +2,215 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>SC Maintenance Terminal</title>
-
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<title>ระบบสต๊อกกิจกรรม V9</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 :root{
-  --bg:#020617;
-  --card:#020617;
-  --line:#0f172a;
-  --text:#d1fae5;
-  --accent:#22c55e;
+  --primary:#b91c1c;
+  --primary-dark:#7f1d1d;
+  --accent:#ef4444;
+  --bg:#f3f4f6;
+  --card:#ffffff;
+  --text:#1f2937;
 }
 
-body{
-  margin:0;
-  font-family:'JetBrains Mono', monospace;
-  background:var(--bg);
-  color:var(--text);
+*{box-sizing:border-box;font-family:Segoe UI}
+body{margin:0;background:var(--bg);color:var(--text)}
+
+/* Sidebar */
+.sidebar{
+  width:250px;height:100vh;position:fixed;
+  background:linear-gradient(180deg,var(--primary-dark),var(--primary));
+  color:#fff;padding:20px
+}
+.menu div{
+  padding:14px;border-radius:12px;margin:8px 0;cursor:pointer
+}
+.menu div:hover{background:rgba(255,255,255,.15)}
+.active{background:#fff;color:var(--primary);font-weight:bold}
+
+/* Header */
+header{
+  margin-left:250px;
+  background:linear-gradient(90deg,var(--primary-dark),var(--primary));
+  color:#fff;padding:20px;font-size:20px;font-weight:700
 }
 
-/* header */
-.header{
-  padding:15px;
-  border-bottom:1px solid var(--line);
+/* Main */
+.main{margin-left:250px;padding:30px}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:20px
 }
 
-/* container */
-.container{
-  padding:20px;
-  max-width:1300px;
-  margin:auto;
+.card{
+  background:#fff;border-radius:18px;padding:20px;
+  box-shadow:0 10px 30px rgba(0,0,0,.08);
+  transition:.2s
+}
+.card:hover{transform:translateY(-3px)}
+
+.stat{
+  font-size:28px;
+  font-weight:bold;
+  color:var(--primary)
 }
 
-/* panel */
-.panel{
-  border:1px solid var(--line);
-  padding:15px;
-  margin-bottom:15px;
-}
-
-/* input */
-input,select,textarea{
-  width:100%;
-  padding:8px;
-  margin-bottom:8px;
-  background:#000;
-  border:1px solid var(--line);
-  color:var(--text);
-}
-
-/* button */
+/* Button */
 button{
-  background:#000;
-  color:var(--accent);
-  border:1px solid var(--accent);
-  padding:8px 12px;
-  cursor:pointer;
+  padding:10px 14px;border:none;border-radius:10px;
+  background:var(--primary);color:#fff;cursor:pointer
 }
-button:hover{
-  background:var(--accent);
-  color:#000;
+button:hover{background:var(--accent)}
+
+.secondary{
+  background:#fff;color:var(--primary);
+  border:2px solid var(--primary)
 }
 
-/* log */
-.item{
-  padding:10px;
-  border-bottom:1px solid var(--line);
-  transition:.2s;
-}
-.item:hover{
-  background:#021f1f;
-}
+/* Table */
+table{width:100%;border-collapse:collapse;margin-top:20px}
+th,td{padding:12px;border-bottom:1px solid #ddd;text-align:left}
 
-/* modal */
+/* Modal */
 .modal{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.7);
-  display:none;
-  align-items:center;
-  justify-content:center;
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.6);
+  display:none;align-items:center;justify-content:center
 }
 .modal-box{
-  background:#000;
-  border:1px solid var(--accent);
-  padding:20px;
-  width:400px;
-  animation:pop .2s;
+  background:#fff;padding:25px;border-radius:16px;
+  width:95%;max-width:500px;
+  animation:pop .2s ease
 }
 @keyframes pop{
   from{transform:scale(.9);opacity:0}
   to{transform:scale(1);opacity:1}
 }
+
+input{width:100%;padding:10px;margin:8px 0;border-radius:10px;border:1px solid #ddd}
 </style>
 </head>
 
 <body>
 
-<div class="header">
-SYSTEM: SC_MAINTENANCE_TERMINAL
+<div class="sidebar">
+  <h2>📦 Stock V9</h2>
+  <div class="menu">
+    <div class="active">Dashboard</div>
+    <div onclick="openModal()">+ เพิ่มสินค้า</div>
+  </div>
 </div>
 
-<div class="container">
+<header>ระบบสต๊อกกิจกรรม (แดงขาว Enterprise)</header>
 
-<!-- control -->
-<div class="panel">
-<select id="vehicleSelect"></select>
-<button onclick="openModal()">ADD RECORD</button>
-<input id="search" placeholder="SEARCH">
+<div class="main">
+
+<div class="grid">
+  <div class="card">
+    <div>จำนวนสินค้า</div>
+    <div class="stat" id="totalItems">0</div>
+  </div>
+
+  <div class="card">
+    <div>จำนวนคงเหลือ</div>
+    <div class="stat" id="totalQty">0</div>
+  </div>
+
+  <div class="card">
+    <div>มูลค่ารวม</div>
+    <div class="stat" id="totalValue">0</div>
+  </div>
 </div>
 
-<!-- list -->
-<div class="panel" id="list"></div>
+<button style="margin-top:20px" onclick="openModal()">➕ เพิ่มสินค้า</button>
+
+<table>
+<thead>
+<tr>
+<th>ชื่อ</th>
+<th>จำนวน</th>
+<th>ราคา</th>
+<th>ลบ</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
+</table>
 
 </div>
 
-<!-- modal -->
+<!-- Modal -->
 <div class="modal" id="modal">
-<div class="modal-box">
-
-<h3>CREATE RECORD</h3>
-
-<input type="date" id="date">
-<input id="mileage" placeholder="Mileage">
-<input id="jobNo" placeholder="Job No">
-<input id="system" placeholder="System">
-<textarea id="symptoms" placeholder="Symptoms"></textarea>
-<textarea id="parts" placeholder="Parts"></textarea>
-<input id="technician" placeholder="Technician">
-<input id="approver" placeholder="Approver">
-<textarea id="note" placeholder="Note"></textarea>
-<input id="partsCost" placeholder="Parts Cost">
-<input id="laborCost" placeholder="Labor Cost">
-
-<button onclick="confirmSave()">EXECUTE</button>
-<button onclick="closeModal()">CANCEL</button>
-
-</div>
-</div>
-
-<!-- confirm -->
-<div class="modal" id="confirm">
-<div class="modal-box">
-CONFIRM EXECUTION<br><br>
-<button onclick="save()">CONFIRM</button>
-<button onclick="confirm.style.display='none'">CANCEL</button>
-</div>
+  <div class="modal-box">
+    <h3>เพิ่มสินค้า</h3>
+    <input id="name" placeholder="ชื่อสินค้า">
+    <input id="qty" type="number" placeholder="จำนวน">
+    <input id="price" type="number" placeholder="ราคา">
+    <button onclick="save()">บันทึก</button>
+    <button class="secondary" onclick="closeModal()">ยกเลิก</button>
+  </div>
 </div>
 
 <script>
-firebase.initializeApp({
-  apiKey:"AIzaSyCowDEvUQpBmq7AwUGiC6IuGOudPhi_0kM",
-  authDomain:"vehicle-maintenance-64890.firebaseapp.com",
-  projectId:"vehicle-maintenance-64890"
-});
+let data = JSON.parse(localStorage.getItem("stock") || "[]");
 
-const db=firebase.firestore();
+function render(){
+  let tbody = document.getElementById("tbody");
+  tbody.innerHTML="";
 
-const vehicleSelect=document.getElementById("vehicleSelect");
-const listEl=document.getElementById("list");
-const search=document.getElementById("search");
+  let totalItems=data.length;
+  let totalQty=0;
+  let totalValue=0;
 
-let all=[];
+  data.forEach((d,i)=>{
+    totalQty+= +d.qty;
+    totalValue+= d.qty*d.price;
 
-/* load vehicles */
-db.collection("vehicles").onSnapshot(s=>{
-  vehicleSelect.innerHTML="";
-  s.forEach(d=>{
-    vehicleSelect.innerHTML+=`<option>${d.id}</option>`;
+    tbody.innerHTML+=`
+    <tr>
+      <td>${d.name}</td>
+      <td>${d.qty}</td>
+      <td>${d.price}</td>
+      <td><button onclick="del(${i})">ลบ</button></td>
+    </tr>`;
   });
-  load(vehicleSelect.value);
-});
 
-vehicleSelect.onchange=()=>load(vehicleSelect.value);
-
-/* load all repairs */
-function load(v){
-  db.collection("vehicles").doc(v).collection("repairs")
-  .onSnapshot(s=>{
-    all=[];
-    s.forEach(doc=>{
-      let r=doc.data();
-      r._id=doc.id;
-      all.push(r);
-    });
-    render(all);
-  });
+  totalItemsEl.textContent=totalItems;
+  totalQtyEl.textContent=totalQty;
+  totalValueEl.textContent=totalValue;
 }
 
-/* render */
-function render(data){
-  listEl.innerHTML="";
-
-  data.sort((a,b)=>new Date(b["วันที่"]) - new Date(a["วันที่"]));
-
-  data.forEach(r=>{
-    let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
-
-    listEl.innerHTML+=`
-    <div class="item">
-      [${r["วันที่"]||"-"}] 
-      ${r["ระบบที่ซ่อม"]||"-"} 
-      | ${r["อาการเสีย"]||"-"} 
-      | ${cost}
-    </div>`;
-  });
-}
-
-/* search */
-search.oninput=()=>{
-  let q=search.value.toLowerCase();
-  render(all.filter(r=>
-    (r["ระบบที่ซ่อม"]||"").toLowerCase().includes(q) ||
-    (r["อาการเสีย"]||"").toLowerCase().includes(q)
-  ));
-};
-
-/* modal */
-function openModal(){modal.style.display="flex";}
-function closeModal(){modal.style.display="none";}
-
-/* confirm */
-function confirmSave(){confirm.style.display="flex";}
-
-/* save */
 function save(){
-  let v=vehicleSelect.value;
+  let name=document.getElementById("name").value;
+  let qty=document.getElementById("qty").value;
+  let price=document.getElementById("price").value;
 
-  db.collection("vehicles").doc(v)
-  .collection("repairs")
-  .add({
-    "วันที่":date.value,
-    "เลขไมล์":mileage.value,
-    "เลขที่ใบงาน":jobNo.value,
-    "ระบบที่ซ่อม":system.value,
-    "อาการเสีย":symptoms.value,
-    "อะไหล่ที่เปลี่ยน":parts.value,
-    "ช่างผู้รับผิดชอบ":technician.value,
-    "ผู้อนุมัติ":approver.value,
-    "หมายเหตุ":note.value,
-    "ค่าอะไหล่":partsCost.value,
-    "ค่าแรง":laborCost.value
-  });
+  if(!name || !qty || !price) return alert("กรอกข้อมูลให้ครบ");
+
+  data.push({name,qty,price});
+  localStorage.setItem("stock",JSON.stringify(data));
 
   closeModal();
-  confirm.style.display="none";
+  render();
 }
+
+function del(i){
+  data.splice(i,1);
+  localStorage.setItem("stock",JSON.stringify(data));
+  render();
+}
+
+function openModal(){modal.style.display="flex"}
+function closeModal(){modal.style.display="none"}
+
+const totalItemsEl=document.getElementById("totalItems");
+const totalQtyEl=document.getElementById("totalQty");
+const totalValueEl=document.getElementById("totalValue");
+
+render();
 </script>
 
 </body>
