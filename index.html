@@ -2,238 +2,213 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>SC THE ADVENTURE - ระบบซ่อมบำรุง</title>
+<title>ระบบซ่อมบำรุง PRO</title>
 
 <style>
-* {
-  box-sizing: border-box;
-  font-family: "Segoe UI", sans-serif;
-}
+body { margin:0; font-family:Segoe UI; background:#f4f6f9; }
 
-body {
-  margin: 0;
-  background: #f4f6f9;
-}
-
-/* Sidebar */
 .sidebar {
-  width: 260px;
-  height: 100vh;
-  position: fixed;
-  background: linear-gradient(180deg, #b31217, #7b0f12);
-  padding: 20px;
-  color: white;
-  box-shadow: 8px 0 25px rgba(0,0,0,0.3);
+  width:260px; height:100vh; position:fixed;
+  background:linear-gradient(180deg,#b31217,#7b0f12);
+  padding:20px; color:#fff;
+  box-shadow:8px 0 25px rgba(0,0,0,0.3);
 }
 
-.sidebar h2 {
-  margin-top: 0;
+.main { margin-left:260px; padding:30px; }
+
+.card {
+  background:#fff; padding:20px; border-radius:16px;
+  margin-bottom:20px;
+  box-shadow:0 10px 25px rgba(0,0,0,0.08);
 }
+
+input, textarea, select {
+  width:100%; padding:10px; border-radius:10px;
+  border:1px solid #ddd; margin-top:5px;
+}
+
+.grid { display:grid; grid-template-columns:1fr 1fr; gap:15px; }
 
 .btn {
-  width: 100%;
-  padding: 12px;
-  border: none;
-  border-radius: 12px;
-  background: #ff3b3b;
-  color: white;
-  font-weight: bold;
-  cursor: pointer;
-  margin-top: 20px;
-  box-shadow: 0 5px 15px rgba(255,0,0,0.4);
+  margin-top:15px;
+  padding:12px; border:none; border-radius:12px;
+  background:#ff3b3b; color:#fff; font-weight:bold;
+  cursor:pointer;
 }
 
-.btn:hover {
-  transform: scale(1.05);
-}
+table { width:100%; border-collapse:collapse; }
+th, td { padding:10px; border-bottom:1px solid #eee; }
 
-/* Main */
-.main {
-  margin-left: 260px;
-  padding: 30px;
-}
-
-/* Card */
-.card {
-  background: white;
-  padding: 20px;
-  border-radius: 16px;
-  margin-bottom: 20px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-}
-
-/* Inputs */
-input, textarea {
-  width: 100%;
-  padding: 10px;
-  border-radius: 10px;
-  border: 1px solid #ddd;
-  margin-top: 5px;
-}
-
-/* Table */
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-th, td {
-  padding: 10px;
-  border-bottom: 1px solid #eee;
-}
-
-/* Popup */
 .popup {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.5);
-  display: none;
-  justify-content: center;
-  align-items: center;
+  position:fixed; width:100%; height:100%;
+  background:rgba(0,0,0,0.5);
+  display:none; justify-content:center; align-items:center;
 }
 
-.popup-content {
-  background: white;
-  padding: 20px;
-  border-radius: 16px;
-  width: 300px;
-  animation: pop 0.3s ease;
+.popup-box {
+  background:#fff; padding:20px; border-radius:16px;
 }
 
-@keyframes pop {
-  from { transform: scale(0.8); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
-
-.car-item {
-  padding: 10px;
-  cursor: pointer;
-  border-radius: 10px;
-}
-
-.car-item:hover {
-  background: #f1f1f1;
-}
+.car-item { padding:10px; cursor:pointer; }
+.car-item:hover { background:#eee; }
 </style>
 </head>
 
 <body>
 
-<!-- Sidebar -->
 <div class="sidebar">
   <h2>ระบบซ่อมบำรุง</h2>
   <button class="btn" onclick="openPopup()">เลือกรถ</button>
-  <p id="selectedCar">ยังไม่ได้เลือกรถ</p>
+  <p id="carText">ยังไม่ได้เลือก</p>
 </div>
 
-<!-- Main -->
 <div class="main">
 
-  <div class="card">
-    <h3>บันทึกการซ่อม</h3>
+<div class="card">
+<h3>บันทึกงานซ่อม</h3>
 
+<div class="grid">
+  <div>
     <label>วันที่</label>
     <input type="date" id="date">
-
-    <label>รายละเอียด</label>
-    <textarea id="detail"></textarea>
-
-    <label>ค่าใช้จ่าย</label>
-    <input type="number" id="price">
-
-    <button class="btn" onclick="saveData()">บันทึก</button>
   </div>
-
-  <div class="card">
-    <h3>ประวัติการซ่อม</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>รถ</th>
-          <th>วันที่</th>
-          <th>รายละเอียด</th>
-          <th>ราคา</th>
-        </tr>
-      </thead>
-      <tbody id="tableData"></tbody>
-    </table>
+  <div>
+    <label>เวลา</label>
+    <input type="time" id="time">
   </div>
+</div>
+
+<label>ประเภทงาน</label>
+<select id="type">
+  <option>ซ่อม</option>
+  <option>เปลี่ยนอะไหล่</option>
+  <option>ตรวจเช็ค</option>
+</select>
+
+<label>อาการเสีย</label>
+<textarea id="problem"></textarea>
+
+<label>รายการซ่อม</label>
+<textarea id="fix"></textarea>
+
+<label>อะไหล่ที่ใช้</label>
+<input id="part">
+
+<div class="grid">
+  <div>
+    <label>ช่าง</label>
+    <input id="tech">
+  </div>
+  <div>
+    <label>ชั่วโมงใช้งาน</label>
+    <input type="number" id="hour">
+  </div>
+</div>
+
+<label>ค่าใช้จ่าย</label>
+<input type="number" id="price">
+
+<label>สถานะ</label>
+<select id="status">
+  <option>เสร็จแล้ว</option>
+  <option>กำลังซ่อม</option>
+  <option>รออะไหล่</option>
+</select>
+
+<label>หมายเหตุ</label>
+<textarea id="note"></textarea>
+
+<button class="btn" onclick="save()">บันทึก</button>
+</div>
+
+<div class="card">
+<h3>ประวัติ</h3>
+<table>
+<thead>
+<tr>
+<th>รถ</th><th>วันที่</th><th>งาน</th><th>ค่าใช้จ่าย</th><th>สถานะ</th>
+</tr>
+</thead>
+<tbody id="data"></tbody>
+</table>
+</div>
 
 </div>
 
-<!-- Popup -->
 <div class="popup" id="popup">
-  <div class="popup-content">
-    <h3>เลือกคันรถ</h3>
-    <div id="carList"></div>
-  </div>
+<div class="popup-box">
+<h3>เลือกคันรถ</h3>
+<div id="cars"></div>
+</div>
 </div>
 
 <script>
-let cars = ["ATV-01","ATV-02","ATV-03","ATV-04","ATV-05","ATV-06","ATV-07","ATV-08"];
-let selectedCar = "";
+let cars=["ATV-01","ATV-02","ATV-03","ATV-04","ATV-05","ATV-06","ATV-07","ATV-08"];
+let currentCar="";
 
 function openPopup(){
-  document.getElementById("popup").style.display = "flex";
+  document.getElementById("popup").style.display="flex";
   renderCars();
 }
 
 function renderCars(){
-  let html = "";
-  cars.forEach(car=>{
-    html += `<div class="car-item" onclick="selectCar('${car}')">${car}</div>`;
+  let html="";
+  cars.forEach(c=>{
+    html+=`<div class="car-item" onclick="selectCar('${c}')">${c}</div>`;
   });
-  document.getElementById("carList").innerHTML = html;
+  document.getElementById("cars").innerHTML=html;
 }
 
-function selectCar(car){
-  selectedCar = car;
-  document.getElementById("selectedCar").innerText = "รถ: " + car;
-  document.getElementById("popup").style.display = "none";
+function selectCar(c){
+  currentCar=c;
+  document.getElementById("carText").innerText="รถ: "+c;
+  document.getElementById("popup").style.display="none";
 }
 
-function saveData(){
-  let data = {
-    car: selectedCar,
-    date: document.getElementById("date").value,
-    detail: document.getElementById("detail").value,
-    price: document.getElementById("price").value
+function save(){
+  if(!currentCar){ alert("เลือกคันรถก่อน"); return; }
+
+  let obj={
+    car:currentCar,
+    date:date.value,
+    time:time.value,
+    type:type.value,
+    problem:problem.value,
+    fix:fix.value,
+    part:part.value,
+    tech:tech.value,
+    hour:hour.value,
+    price:price.value,
+    status:status.value,
+    note:note.value
   };
 
-  if(!data.car){
-    alert("กรุณาเลือกคันรถ");
-    return;
-  }
+  let list=JSON.parse(localStorage.getItem("repair")||"[]");
+  list.push(obj);
+  localStorage.setItem("repair",JSON.stringify(list));
 
-  let list = JSON.parse(localStorage.getItem("data") || "[]");
-  list.push(data);
-  localStorage.setItem("data", JSON.stringify(list));
-
-  loadData();
+  load();
 }
 
-function loadData(){
-  let list = JSON.parse(localStorage.getItem("data") || "[]");
-  let html = "";
+function load(){
+  let list=JSON.parse(localStorage.getItem("repair")||"[]");
+  let html="";
 
   list.forEach(d=>{
-    html += `
-      <tr>
-        <td>${d.car}</td>
-        <td>${d.date}</td>
-        <td>${d.detail}</td>
-        <td>${d.price}</td>
-      </tr>
-    `;
+    html+=`
+    <tr>
+      <td>${d.car}</td>
+      <td>${d.date}</td>
+      <td>${d.type}</td>
+      <td>${d.price}</td>
+      <td>${d.status}</td>
+    </tr>`;
   });
 
-  document.getElementById("tableData").innerHTML = html;
+  document.getElementById("data").innerHTML=html;
 }
 
-loadData();
+load();
 </script>
 
 </body>
