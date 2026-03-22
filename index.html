@@ -6,12 +6,12 @@
 
 <style>
 :root{
-  --black:#111827;
+  --black:#0f172a;
   --gray:#1f2937;
-  --bg:#f3f4f6;
+  --bg:#f1f5f9;
 }
 
-/* RESET */
+/* BASE */
 body{
   margin:0;
   font-family:Segoe UI;
@@ -23,16 +23,16 @@ body{
   width:240px;
   height:100vh;
   position:fixed;
-  background:linear-gradient(180deg,#000,#1f2937);
+  background:linear-gradient(180deg,#000,var(--gray));
   color:#fff;
   padding:20px;
-  box-shadow:5px 0 20px rgba(0,0,0,.2);
+  box-shadow:5px 0 25px rgba(0,0,0,.3);
 }
 
 /* HEADER */
 header{
   margin-left:240px;
-  background:#111827;
+  background:var(--black);
   color:#fff;
   padding:18px;
 }
@@ -49,7 +49,7 @@ header{
   padding:20px;
   border-radius:14px;
   margin-bottom:20px;
-  box-shadow:0 10px 25px rgba(0,0,0,.08);
+  box-shadow:0 10px 30px rgba(0,0,0,.1);
 }
 
 /* GRID */
@@ -59,21 +59,36 @@ header{
   gap:12px;
 }
 
-/* INPUT */
+/* FORM */
+.form-section{margin-bottom:20px}
+.form-title{font-weight:600;margin-bottom:8px}
+
+.form-2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+.form-3{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:12px;
+}
+
 input,textarea{
   padding:10px;
   border-radius:8px;
   border:1px solid #ddd;
   width:100%;
 }
-textarea{min-height:80px}
+
+textarea{min-height:90px}
 
 /* BUTTON */
 button{
   padding:10px 14px;
   border:none;
   border-radius:8px;
-  background:#111827;
+  background:var(--black);
   color:#fff;
   cursor:pointer;
 }
@@ -97,10 +112,11 @@ th,td{
 .modal{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.6);
+  background:rgba(0,0,0,.7);
   display:none;
   align-items:center;
   justify-content:center;
+  z-index:9999;
 }
 
 .modal-box{
@@ -113,16 +129,15 @@ th,td{
   overflow:auto;
 }
 
-/* FORM */
-.form-2{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-}
-.form-3{
-  display:grid;
-  grid-template-columns:1fr 1fr 1fr;
-  gap:12px;
+/* VEHICLE ITEM */
+.vehicle-item{
+  padding:12px;
+  background:#f3f4f6;
+  border-radius:10px;
+  margin-bottom:8px;
+  display:flex;
+  justify-content:space-between;
+  cursor:pointer;
 }
 
 /* DETAIL */
@@ -131,13 +146,11 @@ th,td{
   grid-template-columns:180px 1fr;
   margin-bottom:6px;
 }
-.detail-row b{color:#111827}
 </style>
 </head>
 
 <body>
 
-<!-- SIDEBAR -->
 <div class="sidebar">
   <h3>ระบบซ่อมบำรุง</h3>
   <br>
@@ -200,30 +213,43 @@ th,td{
 
 <h3>เพิ่มประวัติ</h3>
 
+<div class="form-section">
+<div class="form-title">ข้อมูลหลัก</div>
 <div class="form-3">
 <input type="date" id="date">
 <input id="mileage" placeholder="เลขไมล์">
 <input id="jobNo" placeholder="ใบงาน">
 </div>
+</div>
 
+<div class="form-section">
+<div class="form-title">งานซ่อม</div>
 <div class="form-2">
 <input id="system" placeholder="ระบบ">
 <input id="technician" placeholder="ช่าง">
 </div>
+</div>
 
+<div class="form-section">
+<div class="form-title">รายละเอียด</div>
 <div class="form-3">
 <textarea id="symptoms" placeholder="อาการ"></textarea>
 <textarea id="parts" placeholder="อะไหล่"></textarea>
 <textarea id="note" placeholder="หมายเหตุ"></textarea>
 </div>
+</div>
 
+<div class="form-section">
+<div class="form-title">ค่าใช้จ่าย</div>
 <div class="form-2">
 <input id="partsCost" placeholder="ค่าอะไหล่">
 <input id="laborCost" placeholder="ค่าแรง">
 </div>
+</div>
 
 <br>
 <button onclick="save()">บันทึก</button>
+
 </div>
 </div>
 
@@ -251,19 +277,25 @@ let currentVehicle=null;
 /* เลือกรถ */
 function openVehicleModal(){
   vehicleModal.style.display="flex";
+
   db.collection("vehicles").get().then(s=>{
     vehicleList.innerHTML="";
     s.forEach(d=>{
       let div=document.createElement("div");
-      div.innerText=d.id;
-      div.style.padding="10px";
-      div.style.cursor="pointer";
+      div.className="vehicle-item";
+
+      div.innerHTML=`
+        <span>${d.id}</span>
+        <button class="danger" onclick="deleteVehicle('${d.id}',event)">ลบ</button>
+      `;
+
       div.onclick=()=>{
         currentVehicle=d.id;
         currentVehicleEl.innerText=d.id;
         vehicleModal.style.display="none";
         load();
       };
+
       vehicleList.appendChild(div);
     });
   });
@@ -276,14 +308,13 @@ function saveVehicle(){
   vehicleAdd.style.display="none";
 }
 
-/* โหลดข้อมูล */
+/* โหลด */
 function load(){
   db.collection("vehicles").doc(currentVehicle).collection("repairs")
   .onSnapshot(s=>{
-    let all=[];
-    s.forEach(d=>all.push({...d.data(),id:d.id}));
-
-    render(all);
+    let data=[];
+    s.forEach(d=>data.push({...d.data(),id:d.id}));
+    render(data);
   });
 }
 
@@ -298,9 +329,9 @@ function render(data){
   ).forEach(r=>{
     tbody.innerHTML+=`
     <tr>
-      <td>${r["วันที่"]||""}</td>
-      <td>${r["ระบบที่ซ่อม"]||""}</td>
-      <td>${r["ช่างผู้รับผิดชอบ"]||""}</td>
+      <td>${r["วันที่"]}</td>
+      <td>${r["ระบบที่ซ่อม"]}</td>
+      <td>${r["ช่างผู้รับผิดชอบ"]}</td>
       <td><button onclick='show(${JSON.stringify(r)})'>ดู</button></td>
       <td><button class="danger" onclick="del('${r.id}')">ลบ</button></td>
     </tr>`;
@@ -334,6 +365,21 @@ function save(){
 function del(id){
   db.collection("vehicles").doc(currentVehicle)
   .collection("repairs").doc(id).delete();
+}
+
+function deleteVehicle(v,e){
+  e.stopPropagation();
+  if(!confirm("ลบรถนี้ทั้งหมด?")) return;
+
+  db.collection("vehicles").doc(v).collection("repairs")
+  .get().then(s=>{
+    let batch=db.batch();
+    s.forEach(d=>batch.delete(d.ref));
+    batch.commit().then(()=>{
+      db.collection("vehicles").doc(v).delete();
+      openVehicleModal();
+    });
+  });
 }
 
 /* detail */
