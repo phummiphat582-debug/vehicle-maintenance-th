@@ -2,213 +2,341 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>ระบบซ่อมบำรุง PRO</title>
+<title>ระบบซ่อมบำรุง</title>
 
 <style>
-body { margin:0; font-family:Segoe UI; background:#f4f6f9; }
-
-.sidebar {
-  width:260px; height:100vh; position:fixed;
-  background:linear-gradient(180deg,#b31217,#7b0f12);
-  padding:20px; color:#fff;
-  box-shadow:8px 0 25px rgba(0,0,0,0.3);
+:root{
+  --red:#991b1b;
+  --red2:#b91c1c;
+  --bg:#eef2f7;
 }
 
-.main { margin-left:260px; padding:30px; }
+/* RESET */
+body{
+  margin:0;
+  font-family:Segoe UI;
+  background:var(--bg);
+}
 
-.card {
-  background:#fff; padding:20px; border-radius:16px;
+/* SIDEBAR */
+.sidebar{
+  width:240px;
+  height:100vh;
+  position:fixed;
+  background:linear-gradient(180deg,var(--red),#7f1d1d);
+  color:#fff;
+  padding:20px;
+  box-shadow:5px 0 20px rgba(0,0,0,.15); /* 🔥 layer */
+}
+
+/* HEADER */
+header{
+  margin-left:240px;
+  background:linear-gradient(90deg,var(--red),var(--red2));
+  color:#fff;
+  padding:18px;
+  box-shadow:0 5px 20px rgba(0,0,0,.1);
+}
+
+/* MAIN */
+.main{
+  margin-left:240px;
+  padding:25px;
+}
+
+/* CARD (แยกเลเยอร์ชัด) */
+.card{
+  background:#fff;
+  padding:20px;
+  border-radius:16px;
   margin-bottom:20px;
-  box-shadow:0 10px 25px rgba(0,0,0,0.08);
+  box-shadow:0 15px 35px rgba(0,0,0,.08);
+  border:1px solid #e5e7eb;
 }
 
-input, textarea, select {
-  width:100%; padding:10px; border-radius:10px;
-  border:1px solid #ddd; margin-top:5px;
+/* GRID */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:15px;
 }
 
-.grid { display:grid; grid-template-columns:1fr 1fr; gap:15px; }
-
-.btn {
-  margin-top:15px;
-  padding:12px; border:none; border-radius:12px;
-  background:#ff3b3b; color:#fff; font-weight:bold;
+/* BUTTON */
+button{
+  padding:10px 14px;
+  border:none;
+  border-radius:10px;
+  background:var(--red2);
+  color:#fff;
   cursor:pointer;
+  font-weight:500;
+}
+button:hover{opacity:.9}
+.danger{background:#dc2626}
+
+/* TABLE */
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+th{
+  background:#f9fafb;
+}
+th,td{
+  padding:12px;
+  border-bottom:1px solid #eee;
 }
 
-table { width:100%; border-collapse:collapse; }
-th, td { padding:10px; border-bottom:1px solid #eee; }
-
-.popup {
-  position:fixed; width:100%; height:100%;
-  background:rgba(0,0,0,0.5);
-  display:none; justify-content:center; align-items:center;
+/* MODAL */
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.6);
+  display:none;
+  align-items:center;
+  justify-content:center;
 }
 
-.popup-box {
-  background:#fff; padding:20px; border-radius:16px;
+.modal-box{
+  background:#fff;
+  padding:25px;
+  border-radius:16px;
+  width:95%;
+  max-width:1000px;
+  max-height:90vh;
+  overflow:auto;
+  box-shadow:0 25px 60px rgba(0,0,0,.25);
+  animation:pop .2s ease;
 }
 
-.car-item { padding:10px; cursor:pointer; }
-.car-item:hover { background:#eee; }
+@keyframes pop{
+  from{transform:scale(.9);opacity:0}
+  to{transform:scale(1);opacity:1}
+}
+
+/* FORM */
+.form-grid-2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+.form-grid-3{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:12px;
+}
+
+input,textarea{
+  padding:10px;
+  border-radius:8px;
+  border:1px solid #ddd;
+  width:100%;
+}
+
+textarea{min-height:90px}
+
+/* DETAIL */
+.detail-row{
+  display:grid;
+  grid-template-columns:180px 1fr;
+  padding:6px 0;
+  border-bottom:1px dashed #ddd;
+}
+.detail-row b{color:var(--red)}
 </style>
 </head>
 
 <body>
 
+<!-- SIDEBAR -->
 <div class="sidebar">
-  <h2>ระบบซ่อมบำรุง</h2>
-  <button class="btn" onclick="openPopup()">เลือกรถ</button>
-  <p id="carText">ยังไม่ได้เลือก</p>
+  <h3>ระบบซ่อมบำรุง</h3>
+  <br>
+  <button onclick="openVehicleModal()">เลือกรถ</button>
 </div>
+
+<header>ระบบซ่อมบำรุง</header>
 
 <div class="main">
 
 <div class="card">
-<h3>บันทึกงานซ่อม</h3>
-
-<div class="grid">
-  <div>
-    <label>วันที่</label>
-    <input type="date" id="date">
-  </div>
-  <div>
-    <label>เวลา</label>
-    <input type="time" id="time">
-  </div>
+  <b id="currentVehicle">ยังไม่เลือกรถ</b>
 </div>
 
-<label>ประเภทงาน</label>
-<select id="type">
-  <option>ซ่อม</option>
-  <option>เปลี่ยนอะไหล่</option>
-  <option>ตรวจเช็ค</option>
-</select>
-
-<label>อาการเสีย</label>
-<textarea id="problem"></textarea>
-
-<label>รายการซ่อม</label>
-<textarea id="fix"></textarea>
-
-<label>อะไหล่ที่ใช้</label>
-<input id="part">
-
-<div class="grid">
-  <div>
-    <label>ช่าง</label>
-    <input id="tech">
-  </div>
-  <div>
-    <label>ชั่วโมงใช้งาน</label>
-    <input type="number" id="hour">
-  </div>
-</div>
-
-<label>ค่าใช้จ่าย</label>
-<input type="number" id="price">
-
-<label>สถานะ</label>
-<select id="status">
-  <option>เสร็จแล้ว</option>
-  <option>กำลังซ่อม</option>
-  <option>รออะไหล่</option>
-</select>
-
-<label>หมายเหตุ</label>
-<textarea id="note"></textarea>
-
-<button class="btn" onclick="save()">บันทึก</button>
+<div class="card grid">
+  <button onclick="openAddModal()">เพิ่มประวัติการซ่อม</button>
+  <button class="danger" onclick="deleteAll()">ลบทั้งหมด</button>
 </div>
 
 <div class="card">
-<h3>ประวัติ</h3>
 <table>
 <thead>
 <tr>
-<th>รถ</th><th>วันที่</th><th>งาน</th><th>ค่าใช้จ่าย</th><th>สถานะ</th>
+<th>วันที่</th>
+<th>ระบบ</th>
+<th>ช่าง</th>
+<th>ดู</th>
+<th>ลบ</th>
 </tr>
 </thead>
-<tbody id="data"></tbody>
+<tbody id="tbody"></tbody>
 </table>
 </div>
 
 </div>
 
-<div class="popup" id="popup">
-<div class="popup-box">
-<h3>เลือกคันรถ</h3>
-<div id="cars"></div>
+<!-- 🔴 เลือกรถ -->
+<div class="modal" id="vehicleModal">
+<div class="modal-box">
+<h3>เลือกรถ</h3>
+<div id="vehicleList"></div>
+<br>
+<button onclick="vehicleModal.style.display='none'">ปิด</button>
 </div>
 </div>
+
+<!-- 🔴 เพิ่มข้อมูล -->
+<div class="modal" id="addModal">
+<div class="modal-box">
+
+<h3>เพิ่มประวัติการซ่อม</h3>
+
+<div class="form-grid-3">
+<input type="date" id="date">
+<input id="mileage" placeholder="เลขไมล์">
+<input id="jobNo" placeholder="เลขที่ใบงาน">
+</div>
+
+<div class="form-grid-2">
+<input id="system" placeholder="ระบบที่ซ่อม">
+<input id="technician" placeholder="ช่าง">
+</div>
+
+<div class="form-grid-3">
+<textarea id="symptoms" placeholder="อาการเสีย"></textarea>
+<textarea id="parts" placeholder="อะไหล่"></textarea>
+<textarea id="note" placeholder="หมายเหตุ"></textarea>
+</div>
+
+<div class="form-grid-2">
+<input type="number" id="partsCost" placeholder="ค่าอะไหล่">
+<input type="number" id="laborCost" placeholder="ค่าแรง">
+</div>
+
+<br>
+<button onclick="save()">บันทึก</button>
+<button class="danger" onclick="addModal.style.display='none'">ยกเลิก</button>
+
+</div>
+</div>
+
+<!-- 🔴 DETAIL -->
+<div class="modal" id="detailModal">
+<div class="modal-box">
+<h3>รายละเอียด</h3>
+<div id="detail"></div>
+<button onclick="detailModal.style.display='none'">ปิด</button>
+</div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
-let cars=["ATV-01","ATV-02","ATV-03","ATV-04","ATV-05","ATV-06","ATV-07","ATV-08"];
-let currentCar="";
+firebase.initializeApp({
+  apiKey:"AIzaSy...",
+  projectId:"vehicle-maintenance-64890"
+});
+const db=firebase.firestore();
 
-function openPopup(){
-  document.getElementById("popup").style.display="flex";
-  renderCars();
-}
+let currentVehicle=null;
 
-function renderCars(){
-  let html="";
-  cars.forEach(c=>{
-    html+=`<div class="car-item" onclick="selectCar('${c}')">${c}</div>`;
+/* เลือกรถ */
+function openVehicleModal(){
+  vehicleModal.style.display="flex";
+
+  db.collection("vehicles").get().then(s=>{
+    vehicleList.innerHTML="";
+    s.forEach(d=>{
+      let div=document.createElement("div");
+      div.innerText=d.id;
+      div.style.padding="10px";
+      div.style.cursor="pointer";
+
+      div.onclick=()=>{
+        currentVehicle=d.id;
+        currentVehicleEl.innerText=d.id;
+        vehicleModal.style.display="none";
+        loadData();
+      };
+
+      vehicleList.appendChild(div);
+    });
   });
-  document.getElementById("cars").innerHTML=html;
 }
 
-function selectCar(c){
-  currentCar=c;
-  document.getElementById("carText").innerText="รถ: "+c;
-  document.getElementById("popup").style.display="none";
+const currentVehicleEl=document.getElementById("currentVehicle");
+
+/* โหลดข้อมูล */
+function loadData(){
+  db.collection("vehicles").doc(currentVehicle).collection("repairs")
+  .onSnapshot(s=>{
+    tbody.innerHTML="";
+    s.forEach(doc=>{
+      let r=doc.data();
+
+      tbody.innerHTML+=`
+      <tr>
+        <td>${r["วันที่"]||""}</td>
+        <td>${r["ระบบที่ซ่อม"]||""}</td>
+        <td>${r["ช่างผู้รับผิดชอบ"]||""}</td>
+        <td><button onclick='show(${JSON.stringify(r)})'>ดู</button></td>
+        <td><button class="danger" onclick="del('${doc.id}')">ลบ</button></td>
+      </tr>`;
+    });
+  });
 }
 
+/* เปิด modal */
+function openAddModal(){
+  if(!currentVehicle) return alert("กรุณาเลือกรถก่อน");
+  addModal.style.display="flex";
+}
+
+/* บันทึก */
 function save(){
-  if(!currentCar){ alert("เลือกคันรถก่อน"); return; }
-
-  let obj={
-    car:currentCar,
-    date:date.value,
-    time:time.value,
-    type:type.value,
-    problem:problem.value,
-    fix:fix.value,
-    part:part.value,
-    tech:tech.value,
-    hour:hour.value,
-    price:price.value,
-    status:status.value,
-    note:note.value
-  };
-
-  let list=JSON.parse(localStorage.getItem("repair")||"[]");
-  list.push(obj);
-  localStorage.setItem("repair",JSON.stringify(list));
-
-  load();
-}
-
-function load(){
-  let list=JSON.parse(localStorage.getItem("repair")||"[]");
-  let html="";
-
-  list.forEach(d=>{
-    html+=`
-    <tr>
-      <td>${d.car}</td>
-      <td>${d.date}</td>
-      <td>${d.type}</td>
-      <td>${d.price}</td>
-      <td>${d.status}</td>
-    </tr>`;
+  db.collection("vehicles").doc(currentVehicle)
+  .collection("repairs").add({
+    "วันที่":date.value,
+    "เลขไมล์":mileage.value,
+    "เลขที่ใบงาน":jobNo.value,
+    "ระบบที่ซ่อม":system.value,
+    "อาการเสีย":symptoms.value,
+    "อะไหล่ที่เปลี่ยน":parts.value,
+    "ช่างผู้รับผิดชอบ":technician.value,
+    "หมายเหตุ":note.value,
+    "ค่าอะไหล่":partsCost.value,
+    "ค่าแรง":laborCost.value
   });
 
-  document.getElementById("data").innerHTML=html;
+  addModal.style.display="none";
 }
 
-load();
+/* ลบ */
+function del(id){
+  db.collection("vehicles").doc(currentVehicle)
+  .collection("repairs").doc(id).delete();
+}
+
+/* detail */
+function show(d){
+  let html="";
+  for(let k in d){
+    html+=`<div class="detail-row"><b>${k}</b><div>${d[k]}</div></div>`;
+  }
+  detail.innerHTML=html;
+  detailModal.style.display="flex";
+}
 </script>
 
 </body>
