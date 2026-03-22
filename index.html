@@ -18,6 +18,7 @@ body{
   background:var(--bg);
 }
 
+/* HEADER */
 header{
   background:linear-gradient(90deg,var(--dark),var(--red));
   color:#fff;
@@ -26,52 +27,60 @@ header{
   font-weight:600;
 }
 
+/* LAYOUT */
 .container{
   max-width:1600px;
   margin:auto;
-  padding:25px;
+  padding:20px;
 }
 
 .card{
   background:#fff;
-  padding:20px;
+  padding:15px;
   border-radius:12px;
-  margin-bottom:20px;
-  box-shadow:0 10px 25px rgba(0,0,0,.06);
+  margin-bottom:15px;
+  box-shadow:0 6px 20px rgba(0,0,0,.05);
 }
 
-/* Grid */
+/* GRID */
 .grid{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-  gap:15px;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:10px;
 }
 
-/* Inputs */
-input,textarea,select{
+/* INPUT */
+input,select,textarea{
   width:100%;
-  padding:10px;
+  padding:8px;
   border:1px solid #ddd;
-  border-radius:8px;
+  border-radius:6px;
+  font-size:13px;
 }
 
-/* Buttons */
+/* BUTTON */
 button{
-  padding:10px;
+  padding:8px 12px;
   border:none;
-  border-radius:8px;
+  border-radius:6px;
   background:var(--red);
   color:#fff;
   cursor:pointer;
+  font-size:13px;
 }
 button:hover{opacity:.9}
 .danger{background:#dc2626}
 
-/* TABLE PRO */
+/* TABLE FIX */
+.table-wrap{
+  width:100%;
+  overflow-x:auto;
+}
+
 table{
   width:100%;
+  min-width:1200px;
   border-collapse:collapse;
-  table-layout:fixed;
 }
 
 thead th{
@@ -79,32 +88,26 @@ thead th{
   top:0;
   background:#fff;
   z-index:2;
-  cursor:pointer;
 }
 
 th,td{
-  padding:12px;
+  padding:10px 8px;
   border-bottom:1px solid #eee;
   white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
+  text-align:left;
+  font-size:13px;
 }
 
 tbody tr:hover{
   background:#fef2f2;
 }
 
-/* column size */
-th:nth-child(1){width:120px;}
-th:nth-child(2){width:200px;}
-th:nth-child(3){width:180px;}
-th:nth-child(4){width:220px;}
-th:nth-child(5){width:150px;}
-th:nth-child(6){width:120px;}
-th:nth-child(7){width:120px;}
-th:nth-child(8){width:80px;}
+td{
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
 
-/* Modal */
+/* MODAL */
 .modal{
   position:fixed;
   inset:0;
@@ -116,38 +119,32 @@ th:nth-child(8){width:80px;}
 
 .modal-box{
   background:#fff;
-  padding:25px;
-  border-radius:12px;
+  padding:20px;
+  border-radius:10px;
   width:95%;
-  max-width:1200px;
+  max-width:1100px;
   max-height:90vh;
   overflow:auto;
 }
 
-/* Form */
-.form-section{margin-top:15px}
-.form-title{
-  font-weight:600;
-  margin-bottom:10px;
-  color:var(--dark);
-}
+/* FORM */
 .form-grid-2{
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:15px;
+  gap:10px;
 }
 .form-grid-3{
   display:grid;
   grid-template-columns:1fr 1fr 1fr;
-  gap:15px;
+  gap:10px;
 }
-textarea{min-height:100px}
+textarea{min-height:80px}
 
-/* Detail */
+/* DETAIL */
 .detail-row{
   display:grid;
-  grid-template-columns:200px 1fr;
-  padding:8px 0;
+  grid-template-columns:180px 1fr;
+  padding:6px 0;
   border-bottom:1px dashed #ddd;
 }
 .detail-row b{color:var(--red)}
@@ -171,7 +168,7 @@ textarea{min-height:100px}
 <button onclick="resetSearch()">ล้าง</button>
 </div>
 
-<div class="card">
+<div class="card table-wrap">
 <table>
 <thead>
 <tr>
@@ -199,44 +196,32 @@ textarea{min-height:100px}
 
 </div>
 
-<!-- modal เพิ่ม -->
+<!-- MODAL -->
 <div class="modal" id="modal">
 <div class="modal-box">
 
 <h3>เพิ่มประวัติการซ่อม</h3>
 
-<div class="form-section">
-<div class="form-title">ข้อมูลหลัก</div>
 <div class="form-grid-3">
 <input type="date" id="date">
 <input id="mileage" placeholder="เลขไมล์">
 <input id="jobNo" placeholder="เลขที่ใบงาน">
 </div>
-</div>
 
-<div class="form-section">
-<div class="form-title">งานซ่อม</div>
 <div class="form-grid-2">
 <input id="system" placeholder="ระบบ">
 <input id="technician" placeholder="ช่าง">
 </div>
-</div>
 
-<div class="form-section">
-<div class="form-title">รายละเอียด</div>
 <div class="form-grid-3">
 <textarea id="symptoms" placeholder="อาการ"></textarea>
 <textarea id="parts" placeholder="อะไหล่"></textarea>
 <textarea id="note" placeholder="หมายเหตุ"></textarea>
 </div>
-</div>
 
-<div class="form-section">
-<div class="form-title">ค่าใช้จ่าย</div>
 <div class="form-grid-2">
 <input type="number" id="partsCost" placeholder="ค่าอะไหล่">
 <input type="number" id="laborCost" placeholder="ค่าแรง">
-</div>
 </div>
 
 <br>
@@ -246,11 +231,12 @@ textarea{min-height:100px}
 </div>
 </div>
 
-<!-- detail -->
+<!-- DETAIL -->
 <div class="modal" id="detailModal">
 <div class="modal-box">
 <h3>รายละเอียด</h3>
 <div id="detailContent"></div>
+<br>
 <button onclick="detailModal.style.display='none'">ปิด</button>
 </div>
 </div>
@@ -271,7 +257,6 @@ let perPage=10;
 let currentSort=null;
 let sortAsc=true;
 
-/* load */
 function loadVehicles(){
   db.collection("vehicles").onSnapshot(s=>{
     vehicleSelect.innerHTML="";
@@ -302,7 +287,6 @@ function loadRepairs(v){
   });
 }
 
-/* render */
 function render(list=all){
   if(currentSort){
     list=[...list].sort((a,b)=>{
@@ -337,14 +321,12 @@ function render(list=all){
   pageInfo.innerText=`หน้า ${currentPage} / ${Math.ceil(list.length/perPage)}`;
 }
 
-/* sort */
 function setSort(f){
   if(currentSort===f){sortAsc=!sortAsc}
   else{currentSort=f;sortAsc=true}
   render();
 }
 
-/* search realtime */
 searchInput.addEventListener("input",()=>{
   let q=searchInput.value.toLowerCase();
   let res=all.filter(r=>
@@ -360,7 +342,6 @@ function resetSearch(){
   render();
 }
 
-/* CRUD */
 function save(){
   db.collection("vehicles").doc(vehicleSelect.value)
   .collection("repairs").add({
@@ -383,7 +364,6 @@ function del(id){
   .collection("repairs").doc(id).delete();
 }
 
-/* modal */
 function openModal(){modal.style.display="flex"}
 function closeModal(){modal.style.display="none"}
 
@@ -396,7 +376,6 @@ function showDetail(d){
   detailModal.style.display="flex";
 }
 
-/* page */
 function nextPage(){currentPage++;render()}
 function prevPage(){if(currentPage>1)currentPage--;render()}
 
