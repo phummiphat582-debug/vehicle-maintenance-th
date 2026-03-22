@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>ระบบซ่อมบำรุง</title>
+<title>ระบบซ่อมบำรุง ERP</title>
 
 <style>
 :root{
@@ -11,9 +11,10 @@
   --bg:#f1f5f9;
 }
 
-/* BASE */
+/* RESET + LAYOUT FIX */
 body{
   margin:0;
+  display:flex;
   font-family:Segoe UI;
   background:var(--bg);
 }
@@ -23,23 +24,33 @@ body{
   width:240px;
   height:100vh;
   position:fixed;
+  left:0;
+  top:0;
   background:linear-gradient(180deg,#000,var(--gray));
   color:#fff;
   padding:20px;
   box-shadow:5px 0 25px rgba(0,0,0,.3);
+  z-index:1000;
+}
+
+/* CONTENT WRAP */
+.content{
+  margin-left:240px;
+  width:calc(100% - 240px);
 }
 
 /* HEADER */
 header{
-  margin-left:240px;
   background:var(--black);
   color:#fff;
   padding:18px;
+  position:sticky;
+  top:0;
+  z-index:500;
 }
 
 /* MAIN */
 .main{
-  margin-left:240px;
   padding:25px;
 }
 
@@ -59,41 +70,25 @@ header{
   gap:12px;
 }
 
-/* FORM */
-.form-section{margin-bottom:20px}
-.form-title{font-weight:600;margin-bottom:8px}
-
-.form-2{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-}
-.form-3{
-  display:grid;
-  grid-template-columns:1fr 1fr 1fr;
-  gap:12px;
-}
-
-input,textarea{
-  padding:10px;
-  border-radius:8px;
-  border:1px solid #ddd;
-  width:100%;
-}
-
-textarea{min-height:90px}
-
 /* BUTTON */
 button{
-  padding:10px 14px;
+  padding:10px;
   border:none;
   border-radius:8px;
   background:var(--black);
   color:#fff;
   cursor:pointer;
 }
-button:hover{opacity:.9}
 .danger{background:#dc2626}
+
+/* INPUT */
+input,textarea{
+  padding:10px;
+  border-radius:8px;
+  border:1px solid #ddd;
+  width:100%;
+}
+textarea{min-height:80px}
 
 /* TABLE */
 table{
@@ -129,7 +124,19 @@ th,td{
   overflow:auto;
 }
 
-/* VEHICLE ITEM */
+/* FORM */
+.form-2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+.form-3{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:12px;
+}
+
+/* VEHICLE */
 .vehicle-item{
   padding:12px;
   background:#f3f4f6;
@@ -151,12 +158,16 @@ th,td{
 
 <body>
 
+<!-- SIDEBAR -->
 <div class="sidebar">
   <h3>ระบบซ่อมบำรุง</h3>
   <br>
   <button onclick="openVehicleModal()">เลือกรถ</button><br><br>
   <button onclick="openAddVehicle()">เพิ่มรถ</button>
 </div>
+
+<!-- CONTENT -->
+<div class="content">
 
 <header>ระบบซ่อมบำรุง</header>
 
@@ -166,11 +177,19 @@ th,td{
   <b id="currentVehicle">ยังไม่เลือกรถ</b>
 </div>
 
+<!-- DASHBOARD -->
+<div class="grid">
+  <div class="card"><div>จำนวนงาน</div><h2 id="totalJobs">0</h2></div>
+  <div class="card"><div>ค่าใช้จ่ายรวม</div><h2 id="totalCost">0</h2></div>
+</div>
+
+<!-- CONTROL -->
 <div class="card grid">
-  <input id="search" placeholder="ค้นหาประวัติ">
+  <input id="search" placeholder="ค้นหา">
   <button onclick="openAdd()">เพิ่มประวัติ</button>
 </div>
 
+<!-- TABLE -->
 <div class="card">
 <table>
 <thead>
@@ -187,8 +206,9 @@ th,td{
 </div>
 
 </div>
+</div>
 
-<!-- เลือกรถ -->
+<!-- VEHICLE MODAL -->
 <div class="modal" id="vehicleModal">
 <div class="modal-box">
 <h3>เลือกรถ</h3>
@@ -197,54 +217,42 @@ th,td{
 </div>
 </div>
 
-<!-- เพิ่มรถ -->
+<!-- ADD VEHICLE -->
 <div class="modal" id="vehicleAdd">
 <div class="modal-box">
 <h3>เพิ่มรถ</h3>
-<input id="newVehicle" placeholder="ชื่อรถ">
+<input id="newVehicle">
 <br><br>
 <button onclick="saveVehicle()">บันทึก</button>
 </div>
 </div>
 
-<!-- เพิ่มประวัติ -->
+<!-- ADD -->
 <div class="modal" id="addModal">
 <div class="modal-box">
 
 <h3>เพิ่มประวัติ</h3>
 
-<div class="form-section">
-<div class="form-title">ข้อมูลหลัก</div>
 <div class="form-3">
 <input type="date" id="date">
 <input id="mileage" placeholder="เลขไมล์">
 <input id="jobNo" placeholder="ใบงาน">
 </div>
-</div>
 
-<div class="form-section">
-<div class="form-title">งานซ่อม</div>
 <div class="form-2">
 <input id="system" placeholder="ระบบ">
 <input id="technician" placeholder="ช่าง">
 </div>
-</div>
 
-<div class="form-section">
-<div class="form-title">รายละเอียด</div>
 <div class="form-3">
 <textarea id="symptoms" placeholder="อาการ"></textarea>
 <textarea id="parts" placeholder="อะไหล่"></textarea>
 <textarea id="note" placeholder="หมายเหตุ"></textarea>
 </div>
-</div>
 
-<div class="form-section">
-<div class="form-title">ค่าใช้จ่าย</div>
 <div class="form-2">
 <input id="partsCost" placeholder="ค่าอะไหล่">
 <input id="laborCost" placeholder="ค่าแรง">
-</div>
 </div>
 
 <br>
@@ -274,7 +282,7 @@ const db=firebase.firestore();
 
 let currentVehicle=null;
 
-/* เลือกรถ */
+/* VEHICLE */
 function openVehicleModal(){
   vehicleModal.style.display="flex";
 
@@ -301,14 +309,20 @@ function openVehicleModal(){
   });
 }
 
-/* เพิ่มรถ */
-function openAddVehicle(){vehicleAdd.style.display="flex"}
 function saveVehicle(){
   db.collection("vehicles").doc(newVehicle.value).set({});
   vehicleAdd.style.display="none";
 }
 
-/* โหลด */
+function deleteVehicle(v,e){
+  e.stopPropagation();
+  if(!confirm("ลบรถนี้?")) return;
+
+  db.collection("vehicles").doc(v).delete();
+  openVehicleModal();
+}
+
+/* DATA */
 function load(){
   db.collection("vehicles").doc(currentVehicle).collection("repairs")
   .onSnapshot(s=>{
@@ -318,15 +332,14 @@ function load(){
   });
 }
 
-/* render + search */
 function render(data){
   tbody.innerHTML="";
-  let q=search.value?.toLowerCase()||"";
+  let total=0;
 
-  data.filter(r=>
-    (r["ระบบที่ซ่อม"]||"").toLowerCase().includes(q) ||
-    (r["อาการเสีย"]||"").toLowerCase().includes(q)
-  ).forEach(r=>{
+  data.forEach(r=>{
+    let cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
+    total+=cost;
+
     tbody.innerHTML+=`
     <tr>
       <td>${r["วันที่"]}</td>
@@ -336,9 +349,12 @@ function render(data){
       <td><button class="danger" onclick="del('${r.id}')">ลบ</button></td>
     </tr>`;
   });
+
+  totalJobs.innerText=data.length;
+  totalCost.innerText=total;
 }
 
-/* เพิ่ม */
+/* ADD */
 function openAdd(){
   if(!currentVehicle) return alert("เลือกรถก่อน");
   addModal.style.display="flex";
@@ -348,8 +364,6 @@ function save(){
   db.collection("vehicles").doc(currentVehicle)
   .collection("repairs").add({
     "วันที่":date.value,
-    "เลขไมล์":mileage.value,
-    "เลขที่ใบงาน":jobNo.value,
     "ระบบที่ซ่อม":system.value,
     "อาการเสีย":symptoms.value,
     "อะไหล่ที่เปลี่ยน":parts.value,
@@ -361,28 +375,13 @@ function save(){
   addModal.style.display="none";
 }
 
-/* ลบ */
+/* DELETE */
 function del(id){
   db.collection("vehicles").doc(currentVehicle)
   .collection("repairs").doc(id).delete();
 }
 
-function deleteVehicle(v,e){
-  e.stopPropagation();
-  if(!confirm("ลบรถนี้ทั้งหมด?")) return;
-
-  db.collection("vehicles").doc(v).collection("repairs")
-  .get().then(s=>{
-    let batch=db.batch();
-    s.forEach(d=>batch.delete(d.ref));
-    batch.commit().then(()=>{
-      db.collection("vehicles").doc(v).delete();
-      openVehicleModal();
-    });
-  });
-}
-
-/* detail */
+/* DETAIL */
 function show(d){
   let html="";
   for(let k in d){
