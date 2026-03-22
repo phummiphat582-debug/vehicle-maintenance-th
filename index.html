@@ -23,23 +23,18 @@ body{
   width:240px;
   height:100vh;
   position:fixed;
+  left:0;
+  top:0;
   background:linear-gradient(180deg,var(--red),#7f1d1d);
   color:#fff;
   padding:20px;
+  box-sizing:border-box;
 }
 
-.menu div{
-  padding:12px;
-  border-radius:10px;
-  margin:8px 0;
-  cursor:pointer;
-}
-.menu div:hover{
-  background:rgba(255,255,255,.1);
-}
-.active{
-  background:#fff;
-  color:var(--red);
+/* 🔥 แก้ทับตรงนี้ */
+.main{
+  margin-left:240px; /* สำคัญ */
+  padding:25px;
 }
 
 /* HEADER */
@@ -49,12 +44,6 @@ header{
   color:#fff;
   padding:18px;
   font-weight:600;
-}
-
-/* MAIN */
-.main{
-  margin-left:240px;
-  padding:25px;
 }
 
 /* CARD */
@@ -85,13 +74,12 @@ header{
   width:100%;
   border-collapse:collapse;
 }
-
 th,td{
   padding:12px;
   border-bottom:1px solid #eee;
-  text-align:left;
 }
 
+/* BUTTON */
 button{
   padding:8px 12px;
   border:none;
@@ -100,6 +88,7 @@ button{
   color:#fff;
   cursor:pointer;
 }
+.danger{background:#dc2626}
 
 /* MODAL */
 .modal{
@@ -110,34 +99,31 @@ button{
   align-items:center;
   justify-content:center;
 }
-
 .modal-box{
   background:#fff;
   padding:20px;
   border-radius:12px;
   width:90%;
-  max-width:800px;
+  max-width:900px;
+  max-height:90vh;
+  overflow:auto;
 }
 
+/* DETAIL */
 .detail-row{
   display:grid;
   grid-template-columns:180px 1fr;
-  margin-bottom:8px;
+  padding:6px 0;
+  border-bottom:1px dashed #ddd;
 }
-.detail-row b{
-  color:var(--red);
-}
+.detail-row b{color:var(--red)}
 </style>
 </head>
 
 <body>
 
-<!-- SIDEBAR -->
 <div class="sidebar">
   <h3>ระบบซ่อมบำรุง</h3>
-  <div class="menu">
-    <div class="active">Dashboard</div>
-  </div>
 </div>
 
 <header>ระบบซ่อมบำรุง</header>
@@ -156,7 +142,14 @@ button{
   </div>
 </div>
 
-<!-- TABLE (โชว์แค่สำคัญ) -->
+<!-- CONTROL -->
+<div class="card grid">
+  <input id="searchInput" placeholder="ค้นหา">
+  <button onclick="openModal()">เพิ่มรายการ</button>
+  <button class="danger" onclick="deleteAll()">ลบทั้งหมด</button>
+</div>
+
+<!-- TABLE -->
 <div class="card">
 <table class="table">
 <thead>
@@ -166,6 +159,7 @@ button{
 <th>ระบบ</th>
 <th>ช่าง</th>
 <th>ดู</th>
+<th>ลบ</th>
 </tr>
 </thead>
 <tbody id="tbody"></tbody>
@@ -174,13 +168,36 @@ button{
 
 </div>
 
-<!-- DETAIL MODAL -->
-<div class="modal" id="modal">
+<!-- ADD MODAL -->
+<div class="modal" id="addModal">
+<div class="modal-box">
+
+<h3>เพิ่มรายการ</h3>
+
+<input id="vehicle" placeholder="ชื่อรถ"><br><br>
+<input type="date" id="date"><br><br>
+<input id="system" placeholder="ระบบ"><br><br>
+<input id="technician" placeholder="ช่าง"><br><br>
+
+<textarea id="symptoms" placeholder="อาการ"></textarea><br>
+<textarea id="parts" placeholder="อะไหล่"></textarea><br>
+<textarea id="note" placeholder="หมายเหตุ"></textarea><br>
+
+<input type="number" id="partsCost" placeholder="ค่าอะไหล่"><br>
+<input type="number" id="laborCost" placeholder="ค่าแรง"><br><br>
+
+<button onclick="save()">บันทึก</button>
+<button onclick="addModal.style.display='none'">ยกเลิก</button>
+
+</div>
+</div>
+
+<!-- DETAIL -->
+<div class="modal" id="detailModal">
 <div class="modal-box">
 <h3>รายละเอียด</h3>
 <div id="detail"></div>
-<br>
-<button onclick="modal.style.display='none'">ปิด</button>
+<button onclick="detailModal.style.display='none'">ปิด</button>
 </div>
 </div>
 
@@ -196,18 +213,18 @@ const db=firebase.firestore();
 
 let all=[];
 
-db.collection("vehicles").get().then(vs=>{
-  vs.forEach(v=>{
+db.collection("vehicles").onSnapshot(s=>{
+  all=[];
+  s.forEach(v=>{
     db.collection("vehicles").doc(v.id).collection("repairs")
-    .onSnapshot(s=>{
-      all=[];
-      s.forEach(d=>{
-        let r=d.data();
-        r.vehicle=v.id;
-        all.push(r);
+    .get().then(r=>{
+      r.forEach(d=>{
+        let data=d.data();
+        data.vehicle=v.id;
+        data._id=d.id;
+        all.push(data);
+        render();
       });
-
-      render();
     });
   });
 });
@@ -227,6 +244,7 @@ function render(){
       <td>${r["ระบบที่ซ่อม"]||""}</td>
       <td>${r["ช่างผู้รับผิดชอบ"]||""}</td>
       <td><button onclick='show(${JSON.stringify(r)})'>ดู</button></td>
+      <td><button class="danger" onclick="del('${r.vehicle}','${r._id}')">ลบ</button></td>
     </tr>`;
   });
 
@@ -237,10 +255,39 @@ function render(){
 function show(d){
   let html="";
   for(let k in d){
-    html+=`<div class="detail-row"><b>${k}</b><div>${d[k]||"-"}</div></div>`;
+    html+=`<div class="detail-row"><b>${k}</b><div>${d[k]}</div></div>`;
   }
   detail.innerHTML=html;
-  modal.style.display="flex";
+  detailModal.style.display="flex";
+}
+
+function save(){
+  let v=vehicle.value;
+
+  db.collection("vehicles").doc(v).collection("repairs").add({
+    "วันที่":date.value,
+    "ระบบที่ซ่อม":system.value,
+    "อาการเสีย":symptoms.value,
+    "อะไหล่ที่เปลี่ยน":parts.value,
+    "ช่างผู้รับผิดชอบ":technician.value,
+    "หมายเหตุ":note.value,
+    "ค่าอะไหล่":partsCost.value,
+    "ค่าแรง":laborCost.value
+  });
+
+  addModal.style.display="none";
+}
+
+function del(v,id){
+  db.collection("vehicles").doc(v).collection("repairs").doc(id).delete();
+}
+
+function deleteAll(){
+  if(!confirm("ลบทั้งหมด?")) return;
+}
+
+function openModal(){
+  addModal.style.display="flex";
 }
 
 const totalEl=document.getElementById("total");
