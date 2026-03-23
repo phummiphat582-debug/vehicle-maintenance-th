@@ -2,29 +2,15 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>TOYOTA SERVICE SYSTEM</title>
+<title>Maintenance System</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-:root{
-  --primary:#1d4ed8;
-  --danger:#dc2626;
-  --bg:#f3f4f6;
-  --sidebar:#ffffff;
-  --topbar:#ffffff;
-  --card:#ffffff;
-  --border:#e5e7eb;
-  --text:#111827;
-  --sub:#6b7280;
-}
-
 *{box-sizing:border-box}
 
 body{
   margin:0;
   font-family:Segoe UI;
-  background:var(--bg);
-  color:var(--text);
 }
 
 /* LAYOUT */
@@ -35,113 +21,27 @@ body{
   height:100vh;
 }
 
-/* TOPBAR */
+/* TOP BAR */
 .topbar{
   grid-column:1 / span 2;
-  background:var(--topbar);
-  border-bottom:1px solid var(--border);
-  display:flex;
-  align-items:center;
-  padding:0 25px;
-  font-weight:600;
+  background:#2f5b89; /* น้ำเงินเข้ม */
 }
 
 /* SIDEBAR */
 .sidebar{
-  background:var(--sidebar);
-  border-right:1px solid var(--border);
-  padding:20px;
-  display:flex;
-  flex-direction:column;
-  gap:12px;
+  background:#243c5a; /* น้ำเงินเข้มด้าน */
 }
 
-.sidebar h2{
-  font-size:16px;
-  margin-bottom:10px;
-}
-
-/* MAIN */
+/* MAIN (ขวาเทาแบบรูป) */
 .main{
-  padding:25px;
-  overflow:auto;
+  background:#d1d5db; /* เทาอ่อนแบบในรูป */
 }
 
-/* CARD */
-.card{
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:10px;
-  padding:20px;
-  margin-bottom:15px;
-}
-
-/* INPUT */
-input,select,textarea{
-  padding:10px;
-  border-radius:8px;
-  border:1px solid var(--border);
-  background:#fff;
-}
-
-/* BUTTON */
-button{
-  padding:10px;
-  border:none;
-  border-radius:8px;
-  background:var(--primary);
-  color:#fff;
-  cursor:pointer;
-}
-button.danger{
-  background:var(--danger);
-}
-
-/* TABLE */
-.table{
-  width:100%;
-  border-collapse:collapse;
-}
-
-th{
-  text-align:left;
-  padding:12px;
-  background:#f9fafb;
-  color:#6b7280;
-  font-size:13px;
-}
-
-td{
-  padding:12px;
-  border-top:1px solid var(--border);
-}
-
-tr:hover{
-  background:#f9fafb;
-}
-
-/* MODAL */
-.modal{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.4);
-  display:none;
-  justify-content:center;
-  align-items:center;
-}
-
-.modal-box{
-  background:#fff;
-  padding:25px;
-  border-radius:10px;
-  width:95%;
-  max-width:900px;
-}
-
-.form-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-  gap:15px;
+/* ปิดทุก margin padding */
+.sidebar,
+.main{
+  margin:0;
+  padding:0;
 }
 </style>
 </head>
@@ -150,170 +50,16 @@ tr:hover{
 
 <div class="app">
 
-<!-- TOPBAR -->
-<div class="topbar">
-  TOYOTA SERVICE SYSTEM
-</div>
+  <!-- TOP -->
+  <div class="topbar"></div>
 
-<!-- SIDEBAR -->
-<aside class="sidebar">
-  <h2>เมนู</h2>
-  <button onclick="openModal()">+ เพิ่มรายการซ่อม</button>
-  <select id="vehicleSelect"></select>
-  <button onclick="loadRepairs(vehicleSelect.value)">โหลดข้อมูล</button>
-  <button class="danger" onclick="confirmDeleteAll()">ลบทั้งหมด</button>
-</aside>
+  <!-- LEFT -->
+  <div class="sidebar"></div>
 
-<!-- MAIN -->
-<main class="main">
-
-<div class="card">
-  <input id="searchInput" placeholder="ค้นหาข้อมูล...">
-</div>
-
-<div class="card">
-<table class="table">
-<thead>
-<tr>
-<th>วันที่</th>
-<th>รถ</th>
-<th>ระบบ</th>
-<th>อาการ</th>
-<th>ช่าง</th>
-<th>ค่าใช้จ่าย</th>
-<th>ดู</th>
-<th>ลบ</th>
-</tr>
-</thead>
-<tbody id="tbody"></tbody>
-</table>
-</div>
-
-</main>
-</div>
-
-<!-- MODAL -->
-<div class="modal" id="modal">
-<div class="modal-box">
-
-<h3>บันทึกการซ่อม</h3>
-
-<div class="form-grid">
-<input type="date" id="date">
-<input id="mileage" placeholder="เลขไมล์">
-<input id="jobNo" placeholder="เลขที่ใบงาน">
-<input id="system" placeholder="ระบบ">
-<input id="technician" placeholder="ช่าง">
-<textarea id="symptoms" placeholder="อาการ"></textarea>
-<input type="number" id="partsCost" placeholder="ค่าอะไหล่">
-<input type="number" id="laborCost" placeholder="ค่าแรง">
-</div>
-
-<br>
-<button onclick="save()">บันทึก</button>
-<button class="danger" onclick="closeModal()">ยกเลิก</button>
+  <!-- RIGHT -->
+  <div class="main"></div>
 
 </div>
-</div>
-
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-
-<script>
-firebase.initializeApp({
-  apiKey: "AIzaSy...",
-  projectId: "vehicle-maintenance-64890"
-});
-const db=firebase.firestore();
-
-const modal=document.getElementById("modal");
-const vehicleSelect=document.getElementById("vehicleSelect");
-const tbody=document.getElementById("tbody");
-
-let allRepairs=[];
-
-function openModal(){
-  modal.style.display="flex";
-  date.value=new Date().toISOString().split("T")[0];
-}
-function closeModal(){modal.style.display="none"}
-
-function loadVehicles(){
-  db.collection("vehicles").onSnapshot(s=>{
-    vehicleSelect.innerHTML="";
-    s.forEach(d=>{
-      const o=document.createElement("option");
-      o.value=d.id;
-      o.textContent=d.id;
-      vehicleSelect.appendChild(o);
-    });
-    if(vehicleSelect.value) loadRepairs(vehicleSelect.value);
-  });
-}
-vehicleSelect.onchange=()=>loadRepairs(vehicleSelect.value);
-
-function loadRepairs(v){
-  db.collection("vehicles").doc(v).collection("repairs")
-  .onSnapshot(s=>{
-    allRepairs=[];
-    s.forEach(doc=>{
-      let r=doc.data();
-      r._id=doc.id;
-      allRepairs.push(r);
-    });
-
-    allRepairs.sort((a,b)=> new Date(b["วันที่"]) - new Date(a["วันที่"]));
-    renderTable(allRepairs,v);
-  });
-}
-
-function renderTable(list,v){
-  tbody.innerHTML="";
-  list.forEach(r=>{
-    const cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
-    tbody.innerHTML+=`
-<tr>
-<td>${r["วันที่"]||""}</td>
-<td>${v}</td>
-<td>${r["ระบบที่ซ่อม"]||""}</td>
-<td>${r["อาการเสีย"]||""}</td>
-<td>${r["ช่างผู้รับผิดชอบ"]||""}</td>
-<td>${cost}</td>
-<td><button onclick='alert("ดูรายละเอียด")'>ดู</button></td>
-<td><button class="danger" onclick="deleteItem('${v}','${r._id}')">ลบ</button></td>
-</tr>`;
-  });
-}
-
-function save(){
-  const key=vehicleSelect.value;
-  db.collection("vehicles").doc(key).collection("repairs").add({
-    "วันที่":date.value,
-    "เลขไมล์":mileage.value,
-    "เลขที่ใบงาน":jobNo.value,
-    "ระบบที่ซ่อม":system.value,
-    "อาการเสีย":symptoms.value,
-    "ค่าอะไหล่":partsCost.value,
-    "ค่าแรง":laborCost.value
-  }).then(closeModal);
-}
-
-function deleteItem(v,id){
-  db.collection("vehicles").doc(v).collection("repairs").doc(id).delete();
-}
-
-async function confirmDeleteAll(){
-  const v=vehicleSelect.value;
-  const ref=db.collection("vehicles").doc(v);
-  const snap=await ref.collection("repairs").get();
-  const batch=db.batch();
-  snap.forEach(d=>batch.delete(d.ref));
-  await batch.commit();
-  await ref.delete();
-}
-
-loadVehicles();
-</script>
 
 </body>
 </html>
