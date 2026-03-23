@@ -7,11 +7,7 @@
 
 <style>
 *{box-sizing:border-box}
-
-body{
-  margin:0;
-  font-family:Segoe UI;
-}
+body{margin:0;font-family:Segoe UI}
 
 /* LAYOUT */
 .app{
@@ -21,7 +17,7 @@ body{
   height:100vh;
 }
 
-/* TOP BAR */
+/* TOP */
 .topbar{
   grid-column:1 / span 2;
   background:#2f5b89;
@@ -29,10 +25,9 @@ body{
   display:flex;
   align-items:center;
   padding:0 20px;
-  font-weight:600;
 }
 
-/* SIDEBAR */
+/* LEFT */
 .sidebar{
   background:#243c5a;
   padding:15px;
@@ -41,18 +36,11 @@ body{
   gap:10px;
 }
 
-/* MAIN */
+/* RIGHT */
 .main{
   background:#d1d5db;
   padding:20px;
   overflow:auto;
-}
-
-/* INPUT */
-input,select,textarea{
-  padding:10px;
-  border-radius:6px;
-  border:none;
 }
 
 /* BUTTON */
@@ -63,32 +51,27 @@ button{
   background:#1e293b;
   color:#fff;
   cursor:pointer;
+  transition:.2s;
 }
-button.danger{
-  background:#dc2626;
+button:hover{transform:scale(1.05)}
+button.danger{background:#dc2626}
+
+/* INPUT */
+input,select,textarea{
+  padding:10px;
+  border-radius:6px;
+  border:none;
 }
 
 /* TABLE */
 .table{
   width:100%;
-  border-collapse:collapse;
   background:#fff;
+  border-collapse:collapse;
 }
-
-th{
-  text-align:left;
-  padding:10px;
-  background:#f3f4f6;
-}
-
-td{
-  padding:10px;
-  border-top:1px solid #e5e7eb;
-}
-
-tr:hover{
-  background:#f9fafb;
-}
+th,td{padding:10px}
+th{background:#f3f4f6}
+td{border-top:1px solid #e5e7eb}
 
 /* MODAL */
 .modal{
@@ -99,13 +82,17 @@ tr:hover{
   justify-content:center;
   align-items:center;
 }
-
 .modal-box{
   background:#fff;
   padding:20px;
-  border-radius:8px;
+  border-radius:10px;
   width:90%;
   max-width:800px;
+  animation:pop .2s ease;
+}
+@keyframes pop{
+  from{transform:scale(.8);opacity:0}
+  to{transform:scale(1);opacity:1}
 }
 
 .form-grid{
@@ -120,25 +107,15 @@ tr:hover{
 
 <div class="app">
 
-<!-- TOP -->
-<div class="topbar">
-  ระบบซ่อมบำรุงรถยนต์
-</div>
+<div class="topbar">ระบบซ่อมบำรุงรถยนต์</div>
 
-<!-- LEFT -->
 <aside class="sidebar">
-
 <button onclick="openModal()">+ เพิ่มรายการ</button>
-
+<button onclick="addVehicle()">+ เพิ่มรถ</button>
 <select id="vehicleSelect"></select>
-
-<button onclick="loadRepairs(vehicleSelect.value)">โหลดข้อมูล</button>
-
 <button class="danger" onclick="confirmDeleteAll()">ลบรถทั้งหมด</button>
-
 </aside>
 
-<!-- RIGHT -->
 <main class="main">
 
 <input id="searchInput" placeholder="ค้นหา..." style="width:300px;margin-bottom:10px">
@@ -151,7 +128,6 @@ tr:hover{
 <th>ระบบ</th>
 <th>อาการ</th>
 <th>ช่าง</th>
-<th>ค่าใช้จ่าย</th>
 <th>ดู</th>
 <th>ลบ</th>
 </tr>
@@ -163,10 +139,9 @@ tr:hover{
 
 </div>
 
-<!-- MODAL -->
+<!-- ADD REPAIR -->
 <div class="modal" id="modal">
 <div class="modal-box">
-
 <h3>บันทึกการซ่อม</h3>
 
 <div class="form-grid">
@@ -182,9 +157,8 @@ tr:hover{
 </div>
 
 <br>
-<button onclick="save()">บันทึก</button>
+<button onclick="confirmSave()">บันทึก</button>
 <button class="danger" onclick="closeModal()">ยกเลิก</button>
-
 </div>
 </div>
 
@@ -197,37 +171,61 @@ tr:hover{
 </div>
 </div>
 
+<!-- CONFIRM -->
+<div class="modal" id="confirmModal">
+<div class="modal-box">
+<h3 id="confirmTitle"></h3>
+<p id="confirmText"></p>
+<button onclick="confirmYes()">ยืนยัน</button>
+<button class="danger" onclick="closeConfirm()">ยกเลิก</button>
+</div>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
 firebase.initializeApp({
-  apiKey: "AIzaSyCowDEvUQpBmq7AwUGiC6IuGOudPhi_0kM",
-  authDomain: "vehicle-maintenance-64890.firebaseapp.com",
-  projectId: "vehicle-maintenance-64890",
+  apiKey:"AIzaSyCowDEvUQpBmq7AwUGiC6IuGOudPhi_0kM",
+  projectId:"vehicle-maintenance-64890"
 });
-const db = firebase.firestore();
+const db=firebase.firestore();
 
-const modal = document.getElementById("modal");
-const detailModal = document.getElementById("detailModal");
-const vehicleSelect = document.getElementById("vehicleSelect");
-const tbody = document.getElementById("tbody");
-const searchInput = document.getElementById("searchInput");
-
-let allRepairs=[];
+let allRepairs=[],confirmAction=null;
 
 function openModal(){
   modal.style.display="flex";
-  date.value = new Date().toISOString().split("T")[0];
+  date.value=new Date().toISOString().split("T")[0];
 }
 function closeModal(){modal.style.display="none"}
 
-/* โหลดรถ */
+/* confirm */
+function openConfirm(t,txt,fn){
+  confirmTitle.textContent=t;
+  confirmText.textContent=txt;
+  confirmAction=fn;
+  confirmModal.style.display="flex";
+}
+function closeConfirm(){confirmModal.style.display="none"}
+function confirmYes(){if(confirmAction)confirmAction();closeConfirm()}
+
+/* save confirm */
+function confirmSave(){
+  openConfirm("บันทึก","ยืนยันบันทึก?",save);
+}
+
+/* vehicle */
+function addVehicle(){
+  const name=prompt("ชื่อรถ");
+  if(!name) return;
+  db.collection("vehicles").doc(name).set({created:new Date()});
+}
+
 function loadVehicles(){
   db.collection("vehicles").onSnapshot(s=>{
     vehicleSelect.innerHTML="";
     s.forEach(d=>{
-      const o=document.createElement("option");
+      let o=document.createElement("option");
       o.value=d.id;
       o.textContent=d.id;
       vehicleSelect.appendChild(o);
@@ -237,22 +235,16 @@ function loadVehicles(){
 }
 vehicleSelect.onchange=()=>loadRepairs(vehicleSelect.value);
 
-/* โหลดรายการ */
+/* repairs */
 function loadRepairs(v){
   db.collection("vehicles").doc(v).collection("repairs")
   .onSnapshot(s=>{
     allRepairs=[];
     s.forEach(doc=>{
-      let r=doc.data();
-      r._id=doc.id;
+      let r=doc.data();r._id=doc.id;
       allRepairs.push(r);
     });
-
-    // เรียงล่าสุดก่อน
-    allRepairs.sort((a,b)=>{
-      return new Date(b["วันที่"]) - new Date(a["วันที่"]);
-    });
-
+    allRepairs.sort((a,b)=>new Date(b["วันที่"])-new Date(a["วันที่"]));
     renderTable(allRepairs,v);
   });
 }
@@ -261,8 +253,6 @@ function loadRepairs(v){
 function renderTable(list,v){
   tbody.innerHTML="";
   list.forEach(r=>{
-    const cost=(+r["ค่าอะไหล่"]||0)+(+r["ค่าแรง"]||0);
-
     tbody.innerHTML+=`
 <tr>
 <td>${r["วันที่"]||""}</td>
@@ -270,29 +260,29 @@ function renderTable(list,v){
 <td>${r["ระบบที่ซ่อม"]||""}</td>
 <td>${r["อาการเสีย"]||""}</td>
 <td>${r["ช่างผู้รับผิดชอบ"]||""}</td>
-<td>${cost}</td>
 <td><button onclick='openDetail(${JSON.stringify(r).replace(/'/g,"&#39;")})'>ดู</button></td>
-<td><button class="danger" onclick="deleteItem('${v}','${r._id}')">ลบ</button></td>
+<td><button class="danger" onclick="confirmDelete('${v}','${r._id}')">ลบ</button></td>
 </tr>`;
   });
 }
 
-/* ค้นหา */
-searchInput.oninput=()=>{
-  const q=searchInput.value.toLowerCase();
-  const res=allRepairs.filter(r=>
-    (r["ระบบที่ซ่อม"]||"").toLowerCase().includes(q) ||
-    (r["อาการเสีย"]||"").toLowerCase().includes(q)
-  );
-  renderTable(res,vehicleSelect.value);
-};
+/* detail */
+function openDetail(d){
+  let cost=(+d["ค่าอะไหล่"]||0)+(+d["ค่าแรง"]||0);
+  let html="";
+  for(let k in d){
+    if(k==="_id")continue;
+    html+=`<p><b>${k}:</b> ${d[k]||"-"}</p>`;
+  }
+  html+=`<p><b>รวมค่าใช้จ่าย:</b> ${cost}</p>`;
+  detailContent.innerHTML=html;
+  detailModal.style.display="flex";
+}
 
-/* บันทึก */
+/* save */
 function save(){
-  const key=vehicleSelect.value;
-  if(!key){ alert("เลือกรถก่อน"); return; }
-
-  db.collection("vehicles").doc(key).collection("repairs").add({
+  let v=vehicleSelect.value;
+  db.collection("vehicles").doc(v).collection("repairs").add({
     "วันที่":date.value,
     "เลขไมล์":mileage.value,
     "เลขที่ใบงาน":jobNo.value,
@@ -305,31 +295,24 @@ function save(){
   }).then(closeModal);
 }
 
-/* ลบ */
-function deleteItem(v,id){
-  db.collection("vehicles").doc(v).collection("repairs").doc(id).delete();
+/* delete */
+function confirmDelete(v,id){
+  openConfirm("ลบ","ยืนยันลบ?",()=>{
+    db.collection("vehicles").doc(v).collection("repairs").doc(id).delete();
+  });
 }
 
-/* ลบทั้งหมด */
-async function confirmDeleteAll(){
-  const v=vehicleSelect.value;
-  const ref=db.collection("vehicles").doc(v);
-  const snap=await ref.collection("repairs").get();
-  const batch=db.batch();
-  snap.forEach(d=>batch.delete(d.ref));
-  await batch.commit();
-  await ref.delete();
-}
-
-/* detail */
-function openDetail(d){
-  let html="";
-  for(let k in d){
-    if(k==="_id") continue;
-    html+=`<p><b>${k}:</b> ${d[k]||"-"}</p>`;
-  }
-  detailContent.innerHTML=html;
-  detailModal.style.display="flex";
+/* delete all */
+function confirmDeleteAll(){
+  let v=vehicleSelect.value;
+  openConfirm("ลบทั้งหมด","ลบรถนี้ทั้งหมด?",async()=>{
+    let ref=db.collection("vehicles").doc(v);
+    let snap=await ref.collection("repairs").get();
+    let batch=db.batch();
+    snap.forEach(d=>batch.delete(d.ref));
+    await batch.commit();
+    await ref.delete();
+  });
 }
 
 loadVehicles();
