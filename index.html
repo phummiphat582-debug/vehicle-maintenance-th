@@ -8,12 +8,11 @@
 <style>
 :root{
   --bg:#0b0f14;
-  --panel:#121821;
-  --card:#0f1720;
+  --sidebar:#0f141a;
+  --topbar:#111827;
+  --card:#161b22;
   --text:#e6edf3;
   --sub:#8b9bb0;
-  --primary:#3b82f6;
-  --danger:#ef4444;
   --border:#1e293b;
 }
 
@@ -26,47 +25,48 @@ body{
   color:var(--text);
 }
 
+/* LAYOUT */
 .app{
-  display:flex;
+  display:grid;
+  grid-template-columns:260px 1fr;
+  grid-template-rows:70px 1fr;
   height:100vh;
+}
+
+/* TOPBAR */
+.topbar{
+  grid-column:1 / span 2;
+  background:var(--topbar);
+  border-bottom:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  padding:0 25px;
+  font-size:18px;
+  font-weight:600;
 }
 
 /* SIDEBAR */
 .sidebar{
-  width:260px;
-  background:#0f1720;
+  background:var(--sidebar);
   border-right:1px solid var(--border);
   padding:20px;
   display:flex;
   flex-direction:column;
-  gap:15px;
-}
-
-.sidebar h2{
-  margin:0 0 20px;
-  font-size:18px;
-  color:#3b82f6;
+  gap:12px;
 }
 
 /* MAIN */
 .main{
-  flex:1;
   padding:25px;
   overflow:auto;
 }
 
-.topbar{
-  display:flex;
-  gap:10px;
-  margin-bottom:20px;
-}
-
 /* CARD */
 .card{
-  background:var(--panel);
-  padding:20px;
+  background:var(--card);
   border-radius:14px;
   border:1px solid var(--border);
+  padding:20px;
 }
 
 /* INPUT */
@@ -84,12 +84,15 @@ button{
   padding:12px;
   border:none;
   border-radius:10px;
-  cursor:pointer;
-  background:var(--primary);
+  background:#1f2937;
   color:#fff;
+  cursor:pointer;
+}
+button:hover{
+  background:#374151;
 }
 button.danger{
-  background:var(--danger);
+  background:#dc2626;
 }
 
 /* TABLE */
@@ -101,7 +104,7 @@ button.danger{
 th{
   text-align:left;
   padding:14px;
-  background:#0f1720;
+  background:#020617;
   color:#8b9bb0;
 }
 
@@ -111,7 +114,7 @@ td{
 }
 
 tr:hover{
-  background:rgba(59,130,246,.12);
+  background:rgba(255,255,255,.05);
 }
 
 /* MODAL */
@@ -153,27 +156,27 @@ tr:hover{
 
 <div class="app">
 
+<!-- TOPBAR -->
+<div class="topbar">
+  ระบบซ่อมบำรุงรถยนต์
+</div>
+
 <!-- SIDEBAR -->
 <aside class="sidebar">
-  <h2>MAINTENANCE</h2>
-
   <button onclick="openModal()">+ เพิ่มรายการ</button>
-
   <select id="vehicleSelect"></select>
-
   <button onclick="loadRepairs(vehicleSelect.value)">โหลดข้อมูล</button>
-
   <button class="danger" onclick="confirmDeleteAll()">ลบทั้งหมด</button>
 </aside>
 
 <!-- MAIN -->
 <main class="main">
 
-  <div class="topbar">
+  <div class="card">
     <input id="searchInput" placeholder="ค้นหา...">
-    <button onclick="searchRepairs()">ค้นหา</button>
-    <button onclick="resetSearch()">รีเซ็ต</button>
   </div>
+
+  <br>
 
   <div class="card">
     <table class="table">
@@ -281,7 +284,7 @@ function loadRepairs(v){
       allRepairs.push(r);
     });
 
-    // 🔥 เรียงล่าสุดก่อน
+    // เรียงวันที่ล่าสุดก่อน
     allRepairs.sort((a,b)=>{
       return new Date(b["วันที่"]) - new Date(a["วันที่"]);
     });
@@ -308,31 +311,11 @@ function renderTable(list,v){
   });
 }
 
-function searchRepairs(){
-  const q=searchInput.value.toLowerCase();
-  const res=allRepairs.filter(r=>
-    (r["ระบบที่ซ่อม"]||"").toLowerCase().includes(q) ||
-    (r["อาการเสีย"]||"").toLowerCase().includes(q)
-  );
-  renderTable(res,vehicleSelect.value);
-}
-
-function resetSearch(){
-  searchInput.value="";
-  renderTable(allRepairs,vehicleSelect.value);
-}
-
 function save(){
   const key = vehicleSelect.value;
+  if(!key){ alert("เลือกรถก่อน"); return; }
 
-  if(!key){
-    alert("กรุณาเลือกรถก่อน");
-    return;
-  }
-
-  const ref=db.collection("vehicles").doc(key);
-
-  ref.collection("repairs").add({
+  db.collection("vehicles").doc(key).collection("repairs").add({
     "วันที่":date.value,
     "เลขไมล์":mileage.value,
     "เลขที่ใบงาน":jobNo.value,
@@ -344,9 +327,7 @@ function save(){
     "หมายเหตุ":note.value,
     "ค่าอะไหล่":partsCost.value,
     "ค่าแรง":laborCost.value
-  }).then(()=>{
-    closeModal();
-  });
+  }).then(closeModal);
 }
 
 function deleteItem(v,id){
