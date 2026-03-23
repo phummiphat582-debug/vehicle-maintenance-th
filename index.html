@@ -7,14 +7,14 @@
 
 <style>
 :root{
-  --bg:#0a0f1a;
-  --panel:#111827;
-  --card:#020617;
-  --text:#e5e7eb;
-  --sub:#94a3b8;
-  --primary:#2563eb;
-  --danger:#dc2626;
-  --border:#1f2937;
+  --bg:#0b0f14;
+  --panel:#121821;
+  --card:#0f1720;
+  --text:#e6edf3;
+  --sub:#8b9bb0;
+  --primary:#3b82f6;
+  --danger:#ef4444;
+  --border:#1e293b;
 }
 
 *{box-sizing:border-box}
@@ -26,7 +26,6 @@ body{
   color:var(--text);
 }
 
-/* LAYOUT */
 .app{
   display:flex;
   height:100vh;
@@ -35,7 +34,7 @@ body{
 /* SIDEBAR */
 .sidebar{
   width:260px;
-  background:#020617;
+  background:#0f1720;
   border-right:1px solid var(--border);
   padding:20px;
   display:flex;
@@ -46,7 +45,7 @@ body{
 .sidebar h2{
   margin:0 0 20px;
   font-size:18px;
-  color:#60a5fa;
+  color:#3b82f6;
 }
 
 /* MAIN */
@@ -56,7 +55,6 @@ body{
   overflow:auto;
 }
 
-/* TOPBAR */
 .topbar{
   display:flex;
   gap:10px;
@@ -103,8 +101,8 @@ button.danger{
 th{
   text-align:left;
   padding:14px;
-  background:#020617;
-  color:#94a3b8;
+  background:#0f1720;
+  color:#8b9bb0;
 }
 
 td{
@@ -113,7 +111,7 @@ td{
 }
 
 tr:hover{
-  background:rgba(37,99,235,.1);
+  background:rgba(59,130,246,.12);
 }
 
 /* MODAL */
@@ -205,9 +203,6 @@ tr:hover{
 <h2>บันทึกการซ่อม</h2>
 
 <div class="form-grid">
-<input id="plate" placeholder="ทะเบียน">
-<input id="brand" placeholder="ยี่ห้อ">
-<input id="model" placeholder="รุ่น">
 <input type="date" id="date">
 <input id="mileage" placeholder="เลขไมล์">
 <input id="jobNo" placeholder="เลขที่ใบงาน">
@@ -256,7 +251,10 @@ const searchInput = document.getElementById("searchInput");
 
 let allRepairs=[];
 
-function openModal(){modal.style.display="flex"}
+function openModal(){
+  modal.style.display="flex";
+  date.value = new Date().toISOString().split("T")[0];
+}
 function closeModal(){modal.style.display="none"}
 
 function loadVehicles(){
@@ -282,6 +280,12 @@ function loadRepairs(v){
       r._id=doc.id;
       allRepairs.push(r);
     });
+
+    // 🔥 เรียงล่าสุดก่อน
+    allRepairs.sort((a,b)=>{
+      return new Date(b["วันที่"]) - new Date(a["วันที่"]);
+    });
+
     renderTable(allRepairs,v);
   });
 }
@@ -319,9 +323,14 @@ function resetSearch(){
 }
 
 function save(){
-  const key=plate.value+" "+brand.value+" "+model.value;
+  const key = vehicleSelect.value;
+
+  if(!key){
+    alert("กรุณาเลือกรถก่อน");
+    return;
+  }
+
   const ref=db.collection("vehicles").doc(key);
-  ref.set({updated:new Date()},{merge:true});
 
   ref.collection("repairs").add({
     "วันที่":date.value,
