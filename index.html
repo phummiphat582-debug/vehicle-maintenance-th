@@ -73,16 +73,22 @@ th,td{padding:10px}
 th{background:#f3f4f6}
 td{border-top:1px solid #e5e7eb}
 
-/* MODAL */
+/* MODAL (แก้ลอย) */
 .modal{
   position:fixed;
   inset:0;
   background:rgba(0,0,0,.5);
   display:none;
+
+  display:flex;
   justify-content:center;
-  align-items:center;
+  align-items:flex-start; /* 🔥 ไม่ลอย */
+
+  padding:40px 10px;
+  overflow-y:auto;
 }
 
+/* BOX */
 .modal-box{
   background:#fff;
   padding:20px;
@@ -90,10 +96,11 @@ td{border-top:1px solid #e5e7eb}
   width:90%;
   max-width:800px;
 
-  max-height:80vh;
+  max-height:85vh;
   overflow-y:auto;
 
   position:relative;
+  margin:auto;
 }
 
 /* ปุ่มปิด */
@@ -104,7 +111,7 @@ td{border-top:1px solid #e5e7eb}
   background:#dc2626;
 }
 
-/* sticky header */
+/* header sticky */
 .modal-box h3{
   position:sticky;
   top:0;
@@ -112,6 +119,7 @@ td{border-top:1px solid #e5e7eb}
   padding-bottom:10px;
 }
 
+/* form */
 .form-grid{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
