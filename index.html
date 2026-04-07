@@ -104,10 +104,10 @@ td{border-top:1px solid #e5e7eb}
   position:relative;
   margin:auto;
 
-  overflow:visible; /* 🔥 กันปุ่มโดนตัด */
+  overflow:visible;
 }
 
-/* 🔥 ปุ่มปิด (โคตรเนียน) */
+/* ปุ่มปิด */
 .close-btn{
   position:absolute;
   top:-12px;
@@ -129,7 +129,6 @@ td{border-top:1px solid #e5e7eb}
 
   transition:.2s;
 }
-
 .close-btn:hover{
   transform:scale(1.1) rotate(5deg);
 }
@@ -147,6 +146,12 @@ td{border-top:1px solid #e5e7eb}
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
   gap:10px;
+}
+
+/* detail */
+#detailContent p{
+  margin:6px 0;
+  line-height:1.5;
 }
 </style>
 </head>
@@ -331,6 +336,36 @@ function renderTable(list,v){
   });
 }
 
+/* 🔥 FIX DETAIL (เรียง + ครบ) */
+function openDetail(d){
+
+  let cost=(+d["ค่าอะไหล่"]||0)+(+d["ค่าแรง"]||0);
+
+  const fields = [
+    ["วันที่","วันที่"],
+    ["เลขไมล์","เลขไมล์"],
+    ["เลขที่ใบงาน","เลขที่ใบงาน"],
+    ["ระบบที่ซ่อม","ระบบที่ซ่อม"],
+    ["อาการเสีย","อาการเสีย"],
+    ["อะไหล่ที่เปลี่ยน","อะไหล่ที่เปลี่ยน"],
+    ["ช่างผู้รับผิดชอบ","ช่างผู้รับผิดชอบ"],
+    ["ค่าอะไหล่","ค่าอะไหล่"],
+    ["ค่าแรง","ค่าแรง"]
+  ];
+
+  let html="";
+
+  fields.forEach(([key,label])=>{
+    html += `<p><b>${label}:</b> ${d[key] || "-"}</p>`;
+  });
+
+  html += `<hr>`;
+  html += `<p><b>รวมค่าใช้จ่าย:</b> ${cost}</p>`;
+
+  detailContent.innerHTML = html;
+  detailModal.style.display = "flex";
+}
+
 function confirmSave(){ openConfirm("บันทึก","ยืนยัน?",save); }
 
 function save(){
@@ -347,18 +382,6 @@ function save(){
     "ค่าอะไหล่":partsCost.value,
     "ค่าแรง":laborCost.value
   }).then(closeModal);
-}
-
-function openDetail(d){
-  let cost=(+d["ค่าอะไหล่"]||0)+(+d["ค่าแรง"]||0);
-  let html="";
-  for(let k in d){
-    if(k==="_id")continue;
-    html+=`<p><b>${k}:</b> ${d[k]||"-"}</p>`;
-  }
-  html+=`<p><b>รวม:</b> ${cost}</p>`;
-  detailContent.innerHTML=html;
-  detailModal.style.display="flex";
 }
 
 function confirmDelete(v,id){
