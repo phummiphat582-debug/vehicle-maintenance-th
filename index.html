@@ -52,9 +52,7 @@ button{
   background:#1e293b;
   color:#fff;
   cursor:pointer;
-  transition:.2s;
 }
-button:hover{transform:scale(1.05)}
 button.danger{background:#dc2626}
 
 /* INPUT */
@@ -89,7 +87,6 @@ td{border-top:1px solid #e5e7eb}
   overflow-y:auto;
 }
 
-/* BOX */
 .modal-box{
   background:#fff;
   padding:20px;
@@ -110,17 +107,13 @@ td{border-top:1px solid #e5e7eb}
   position:absolute;
   top:-12px;
   right:-12px;
-
   width:42px;
   height:42px;
-
   display:flex;
   align-items:center;
   justify-content:center;
-
   background:#dc2626;
   color:#fff;
-
   border-radius:12px;
   box-shadow:0 8px 20px rgba(0,0,0,.25);
 }
@@ -198,7 +191,7 @@ td{border-top:1px solid #e5e7eb}
 <div class="modal-box">
 <button class="close-btn" onclick="closeModal()">✕</button>
 <h3>เพิ่มรถ</h3>
-<input id="vehicleName">
+<input id="vehicleName" placeholder="ชื่อรถ">
 <br><br>
 <button onclick="confirmAddVehicle()">บันทึก</button>
 </div>
@@ -218,6 +211,7 @@ td{border-top:1px solid #e5e7eb}
 <h3 id="confirmTitle"></h3>
 <p id="confirmText"></p>
 <button onclick="confirmYes()">ยืนยัน</button>
+<button class="danger" onclick="closeModal()">ยกเลิก</button>
 </div>
 </div>
 
@@ -233,12 +227,11 @@ const db=firebase.firestore();
 
 let confirmAction=null;
 
-/* 🔥 ปิดทั้งหมด */
+/* MODAL CONTROL */
 function closeAllModals(){
   document.querySelectorAll(".modal").forEach(m=>m.style.display="none");
 }
 
-/* 🔥 เปิด modal */
 function showModal(m){
   if(m.style.display==="flex") return;
   closeAllModals();
@@ -253,6 +246,66 @@ function closeModal(){
 function openModal(){
   showModal(modal);
   date.value=new Date().toISOString().split("T")[0];
+}
+
+/* LOAD VEHICLES 🔥 */
+function loadVehicles(){
+  db.collection("vehicles").onSnapshot(s=>{
+    vehicleSelect.innerHTML="";
+
+    s.forEach(d=>{
+      let o=document.createElement("option");
+      o.value=d.id;
+      o.textContent=d.id;
+      vehicleSelect.appendChild(o);
+    });
+
+    if(vehicleSelect.value){
+      loadRepairs(vehicleSelect.value);
+    }
+  });
+}
+
+vehicleSelect.onchange=()=>{
+  loadRepairs(vehicleSelect.value);
+};
+
+/* LOAD REPAIRS */
+function loadRepairs(v){
+  db.collection("vehicles").doc(v).collection("repairs")
+  .onSnapshot(s=>{
+    let list=[];
+    s.forEach(doc=>{
+      let r=doc.data();
+      r._id=doc.id;
+      list.push(r);
+    });
+
+    list.sort((a,b)=>(b.timestamp||0)-(a.timestamp||0));
+    renderTable(list,v);
+  });
+}
+
+/* TABLE */
+function formatThaiDate(d){
+  if(!d)return "";
+  return new Date(d).toLocaleDateString("th-TH");
+}
+
+function renderTable(list,v){
+  tbody.innerHTML="";
+  list.forEach(r=>{
+    tbody.innerHTML+=`
+<tr>
+<td>${formatThaiDate(r["วันที่"])}</td>
+<td>${v}</td>
+<td>${r["ระบบที่ซ่อม"]||""}</td>
+<td>${r["อาการเสีย"]||""}</td>
+<td>${r["ช่างผู้รับผิดชอบ"]||""}</td>
+<td><button onclick='openDetail(${JSON.stringify(r).replace(/'/g,"&#39;")})'>ดู</button></td>
+<td><button class="danger" onclick="confirmDelete('${v}','${r._id}')">ลบ</button></td>
+</tr>`;
+  });
 }
 
 /* DETAIL */
@@ -279,7 +332,6 @@ function openDetail(d){
   });
 
   html+=`<hr><p><b>รวม:</b> ${cost}</p>`;
-
   detailContent.innerHTML=html;
 }
 
@@ -290,22 +342,13 @@ function openConfirm(t,txt,fn){
   confirmAction=fn;
   showModal(confirmModal);
 }
+
 function confirmYes(){
   if(confirmAction)confirmAction();
   closeModal();
 }
 
-/* FIREBASE LOGIC (เหมือนเดิมย่อ) */
-function confirmAddVehicle(){
-  let name=vehicleName.value.trim();
-  if(!name) return;
-
-  openConfirm("เพิ่มรถ","ยืนยัน?",()=>{
-    db.collection("vehicles").doc(name).set({});
-    vehicleName.value="";
-  });
-}
-
+/* SAVE */
 function confirmSave(){
   openConfirm("บันทึก","ยืนยัน?",()=>{
     let v=vehicleSelect.value;
@@ -323,6 +366,40 @@ function confirmSave(){
     });
   });
 }
+
+/* ADD VEHICLE */
+function confirmAddVehicle(){
+  let name=vehicleName.value.trim();
+  if(!name) return;
+
+  openConfirm("เพิ่มรถ","ยืนยัน?",()=>{
+    db.collection("vehicles").doc(name).set({});
+    vehicleName.value="";
+  });
+}
+
+/* DELETE */
+function confirmDelete(v,id){
+  openConfirm("ลบ","ยืนยัน?",()=>{
+    db.collection("vehicles").doc(v).collection("repairs").doc(id).delete();
+  });
+}
+
+/* DELETE ALL */
+function confirmDeleteAll(){
+  let v=vehicleSelect.value;
+  openConfirm("ลบทั้งหมด","แน่ใจ?",async()=>{
+    let ref=db.collection("vehicles").doc(v);
+    let snap=await ref.collection("repairs").get();
+    let batch=db.batch();
+    snap.forEach(d=>batch.delete(d.ref));
+    await batch.commit();
+    await ref.delete();
+  });
+}
+
+/* START */
+loadVehicles();
 </script>
 
 </body>
