@@ -1,143 +1,206 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ATV Elite Service</title>
+
+<!-- PWA Meta -->
+<meta name="application-name" content="ATV Elite Service">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ATV Service">
+<meta name="theme-color" content="#C9A84C">
+<meta name="description" content="ระบบบริหารจัดการซ่อมบำรุง ATV CF MOTO">
+<link rel="manifest" href="manifest.json">
+
+<!-- Icons (inline SVG favicon) -->
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
-  --bg:#08090A;--bg2:#0F1012;--bg3:#16181C;--bg4:#1E2026;
+  --bg:#08090A;--bg2:#0F1012;--bg3:#16181C;
   --bd:#2A2D35;--bd2:#383C47;
-  --gold:#C9A84C;--gold2:#E8C870;--gold-dim:rgba(201,168,76,0.15);--gold-glow:rgba(201,168,76,0.06);
+  --gold:#C9A84C;--gold2:#E8C870;--gold-dim:rgba(201,168,76,0.15);
   --wh:#F0EDE8;--gray:#8A8F9A;--gray2:#C2C6D0;
   --red:#E04040;--green:#2EAB6E;--blue:#3B82F6;
 }
-body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--wh);min-height:100vh;overflow-x:hidden;}
-body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(90deg,transparent,transparent 60px,rgba(201,168,76,0.012) 60px,rgba(201,168,76,0.012) 61px),repeating-linear-gradient(0deg,transparent,transparent 60px,rgba(201,168,76,0.012) 60px,rgba(201,168,76,0.012) 61px);pointer-events:none;z-index:0;}
-.app{position:relative;z-index:1;display:grid;grid-template-columns:240px 1fr;grid-template-rows:64px 1fr;min-height:100vh;}
+html,body{height:100%;}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--wh);overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;
+  background:repeating-linear-gradient(90deg,transparent,transparent 60px,rgba(201,168,76,0.012) 60px,rgba(201,168,76,0.012) 61px),
+             repeating-linear-gradient(0deg,transparent,transparent 60px,rgba(201,168,76,0.012) 60px,rgba(201,168,76,0.012) 61px);
+  pointer-events:none;z-index:0;}
 
-.topbar{grid-column:1/span 2;background:var(--bg2);border-bottom:1px solid var(--bd);padding:0 28px;display:flex;align-items:center;justify-content:space-between;}
-.logo{display:flex;align-items:center;gap:14px;}
-.logo-ico{width:40px;height:40px;background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;}
-.logo-txt{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;}
-.logo-sub{font-size:10px;color:var(--gold);letter-spacing:4px;margin-top:-4px;}
-.top-r{display:flex;gap:12px;}
-.topbadge{background:var(--bg3);border:1px solid var(--bd);border-radius:8px;padding:6px 14px;font-size:12px;color:var(--gray2);}
+.app{position:relative;z-index:1;display:grid;grid-template-columns:240px 1fr;grid-template-rows:64px 1fr;height:100vh;}
+
+/* ── TOPBAR ── */
+.topbar{grid-column:1/span 2;background:var(--bg2);border-bottom:1px solid var(--bd);padding:0 24px;display:flex;align-items:center;justify-content:space-between;}
+.logo{display:flex;align-items:center;gap:12px;}
+.logo-ico{width:38px;height:38px;background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:19px;}
+.logo-txt{font-family:'Bebas Neue',sans-serif;font-size:21px;letter-spacing:3px;}
+.logo-sub{font-size:9px;color:var(--gold);letter-spacing:4px;margin-top:-3px;}
+.top-r{display:flex;align-items:center;gap:10px;}
+.topbadge{background:var(--bg3);border:1px solid var(--bd);border-radius:8px;padding:5px 12px;font-size:12px;color:var(--gray2);}
 .topbadge b{color:var(--gold);}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-right:5px;}
+.status-dot.offline{background:var(--red);}
 
-.sidebar{background:var(--bg2);border-right:1px solid var(--bd);padding:20px 14px;display:flex;flex-direction:column;gap:3px;}
-.sb-sec{font-size:10px;color:var(--gray);letter-spacing:3px;text-transform:uppercase;padding:14px 10px 6px;margin-top:6px;}
-.sbtn{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:none;background:transparent;color:var(--gray2);font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;text-align:left;width:100%;}
+/* ── SIDEBAR ── */
+.sidebar{background:var(--bg2);border-right:1px solid var(--bd);padding:18px 12px;display:flex;flex-direction:column;gap:3px;overflow-y:auto;}
+.sb-sec{font-size:10px;color:var(--gray);letter-spacing:3px;text-transform:uppercase;padding:12px 10px 5px;margin-top:4px;}
+.sbtn{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:10px;border:none;background:transparent;color:var(--gray2);font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .18s;text-align:left;width:100%;}
 .sbtn:hover{background:var(--bg3);color:var(--wh);}
 .sbtn.on{background:var(--gold-dim);color:var(--gold);border:1px solid rgba(201,168,76,0.2);}
-.sb-ico{width:30px;height:30px;border-radius:8px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.sb-ico{width:28px;height:28px;border-radius:7px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
 .sbtn.on .sb-ico{background:var(--gold-dim);}
 .sb-badge{margin-left:auto;background:var(--gold);color:var(--bg);font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;}
-.sb-div{height:1px;background:var(--bd);margin:10px 0;}
+.sb-div{height:1px;background:var(--bd);margin:8px 0;}
 
-.main{background:var(--bg);padding:22px;overflow-y:auto;}
+/* ── MAIN ── */
+.main{background:var(--bg);padding:20px 22px;overflow-y:auto;}
 .pg{display:none;}.pg.on{display:block;}
 
-.btn-p{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--bg);border:none;border-radius:9px;padding:10px 18px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:7px;}
+/* ── BUTTONS ── */
+.btn-p{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--bg);border:none;border-radius:9px;padding:9px 16px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:6px;}
 .btn-p:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(201,168,76,0.3);}
-.btn-d{background:rgba(224,64,64,0.12);color:var(--red);border:1px solid rgba(224,64,64,0.25);border-radius:8px;padding:7px 13px;font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;}
+.btn-d{background:rgba(224,64,64,0.12);color:var(--red);border:1px solid rgba(224,64,64,0.25);border-radius:8px;padding:6px 12px;font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .18s;}
 .btn-d:hover{background:var(--red);color:#fff;}
-.btn-g{background:var(--bg3);color:var(--gray2);border:1px solid var(--bd);border-radius:8px;padding:8px 14px;font-family:'Outfit',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;}
+.btn-g{background:var(--bg3);color:var(--gray2);border:1px solid var(--bd);border-radius:8px;padding:7px 13px;font-family:'Outfit',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .18s;}
 .btn-g:hover{border-color:var(--gold);color:var(--gold);}
 
-.hero{background:linear-gradient(135deg,var(--bg3),var(--bg2));border:1px solid var(--bd);border-radius:16px;padding:26px;margin-bottom:18px;position:relative;overflow:hidden;}
-.hero::before{content:'ATV\ASERVICE';white-space:pre;font-family:'Bebas Neue',sans-serif;font-size:90px;line-height:.8;color:rgba(201,168,76,0.04);position:absolute;right:-5px;bottom:-8px;letter-spacing:4px;}
-.hero-title{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:var(--gold);margin-bottom:3px;}
+/* ── HERO ── */
+.hero{background:linear-gradient(135deg,var(--bg3),var(--bg2));border:1px solid var(--bd);border-radius:15px;padding:24px;margin-bottom:16px;position:relative;overflow:hidden;}
+.hero::before{content:'ATV\ASERVICE';white-space:pre;font-family:'Bebas Neue',sans-serif;font-size:80px;line-height:.8;color:rgba(201,168,76,0.04);position:absolute;right:-5px;bottom:-6px;letter-spacing:4px;}
+.hero-title{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px;color:var(--gold);margin-bottom:2px;}
 .hero-sub{font-size:12px;color:var(--gray);}
-.hs4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:18px;}
-.hs{background:var(--bg);border:1px solid var(--bd);border-radius:11px;padding:14px;}
-.hs-v{font-family:'DM Mono',monospace;font-size:22px;color:var(--wh);margin-bottom:3px;}
+.hs4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px;}
+.hs{background:var(--bg);border:1px solid var(--bd);border-radius:11px;padding:13px;}
+.hs-v{font-family:'DM Mono',monospace;font-size:20px;color:var(--wh);margin-bottom:2px;}
 .hs-v.g{color:var(--gold);}.hs-v.gr{color:var(--green);}
 .hs-l{font-size:11px;color:var(--gray);letter-spacing:.5px;text-transform:uppercase;}
 
-/* VEH SCROLL TABS */
-.vtab-wrap{overflow-x:auto;margin-bottom:14px;padding-bottom:4px;}
-.vtab-row{display:flex;align-items:center;gap:6px;min-width:max-content;}
-.vtab{background:var(--bg3);border:1px solid var(--bd);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:500;color:var(--gray2);cursor:pointer;transition:all .2s;white-space:nowrap;font-family:'Outfit',sans-serif;}
+/* ── SECTION HDR ── */
+.shdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.stitle{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:2px;}
+.sline{flex:1;height:1px;background:var(--bd);margin-left:12px;}
+
+/* ── VEH TABS ── */
+.vtab-wrap{overflow-x:auto;margin-bottom:13px;padding-bottom:3px;}
+.vtab-row{display:flex;gap:5px;min-width:max-content;}
+.vtab{background:var(--bg3);border:1px solid var(--bd);border-radius:18px;padding:5px 13px;font-size:12px;font-weight:500;color:var(--gray2);cursor:pointer;transition:all .18s;white-space:nowrap;font-family:'Outfit',sans-serif;}
 .vtab:hover{color:var(--gold);border-color:var(--gold);}
 .vtab.on{background:var(--gold-dim);color:var(--gold);border-color:rgba(201,168,76,0.35);}
 
-.shdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px;}
-.stitle{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;}
-.sline{flex:1;height:1px;background:var(--bd);margin-left:12px;}
-
-.srch-row{display:flex;gap:10px;margin-bottom:14px;}
+/* ── SEARCH ── */
+.srch-row{display:flex;gap:9px;margin-bottom:13px;}
 .srch-wrap{flex:1;position:relative;}
-.srch-wrap input{width:100%;background:var(--bg3);border:1px solid var(--bd);border-radius:9px;padding:9px 13px 9px 38px;font-family:'Outfit',sans-serif;font-size:13px;color:var(--wh);outline:none;transition:border .2s;}
+.srch-wrap input{width:100%;background:var(--bg3);border:1px solid var(--bd);border-radius:9px;padding:8px 12px 8px 36px;font-family:'Outfit',sans-serif;font-size:13px;color:var(--wh);outline:none;transition:border .18s;}
 .srch-wrap input::placeholder{color:var(--gray);}
 .srch-wrap input:focus{border-color:var(--gold);}
-.srch-ico{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--gray);font-size:14px;pointer-events:none;}
-.fsel{background:var(--bg3);border:1px solid var(--bd);border-radius:9px;padding:9px 12px;font-family:'Outfit',sans-serif;font-size:13px;color:var(--gray2);outline:none;cursor:pointer;}
+.srch-ico{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--gray);font-size:13px;pointer-events:none;}
+.fsel{background:var(--bg3);border:1px solid var(--bd);border-radius:9px;padding:8px 11px;font-family:'Outfit',sans-serif;font-size:13px;color:var(--gray2);outline:none;cursor:pointer;}
 .fsel option{background:var(--bg2);}
 
+/* ── TABLE ── */
 .twrap{background:var(--bg2);border:1px solid var(--bd);border-radius:13px;overflow:hidden;}
 .tbl{width:100%;border-collapse:collapse;}
-.tbl thead th{background:var(--bg3);padding:10px 13px;font-size:11px;color:var(--gray);font-weight:500;letter-spacing:1px;text-transform:uppercase;text-align:left;border-bottom:1px solid var(--bd);}
-.tbl tbody td{padding:11px 13px;font-size:13px;border-bottom:1px solid var(--bd);color:var(--gray2);}
+.tbl thead th{background:var(--bg3);padding:9px 12px;font-size:11px;color:var(--gray);font-weight:500;letter-spacing:1px;text-transform:uppercase;text-align:left;border-bottom:1px solid var(--bd);}
+.tbl tbody td{padding:10px 12px;font-size:13px;border-bottom:1px solid var(--bd);color:var(--gray2);}
 .tbl tbody tr:last-child td{border-bottom:none;}
-.tbl tbody tr{transition:background .15s;cursor:pointer;}
+.tbl tbody tr{transition:background .12s;cursor:pointer;}
 .tbl tbody tr:hover td{background:rgba(201,168,76,0.04);color:var(--wh);}
 .td-b{color:var(--wh)!important;font-weight:600;}
 .td-m{font-family:'DM Mono',monospace;font-size:12px;}
-.tag{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;}
+.tag{display:inline-block;padding:2px 8px;border-radius:18px;font-size:11px;font-weight:600;}
 .t-sys{background:rgba(59,130,246,0.15);color:var(--blue);border:1px solid rgba(59,130,246,0.2);}
 .t-ok{background:rgba(46,171,110,0.15);color:var(--green);border:1px solid rgba(46,171,110,0.2);}
 .t-gold{background:var(--gold-dim);color:var(--gold);border:1px solid rgba(201,168,76,0.25);}
-.emr td{text-align:center;color:var(--gray);padding:36px!important;cursor:default!important;}
+.emr td{text-align:center;color:var(--gray);padding:32px!important;cursor:default!important;}
 .emr:hover td{background:transparent!important;color:var(--gray)!important;}
 .cost-c{font-family:'DM Mono',monospace;font-size:12px;color:var(--gold)!important;}
 
-/* VEH CARD GRID */
-.vcard-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;}
-.vcard{background:var(--bg2);border:1px solid var(--bd);border-radius:13px;padding:14px;cursor:pointer;transition:all .2s;}
+/* ── VEH CARDS ── */
+.vcard-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
+.vcard{background:var(--bg2);border:1px solid var(--bd);border-radius:12px;padding:13px;cursor:pointer;transition:all .18s;}
 .vcard:hover{border-color:var(--gold);}
 .vcard.on{border-color:var(--gold);background:var(--gold-dim);}
-.vc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
-.vc-ico{font-size:22px;}
-.vc-name{font-size:13px;font-weight:600;color:var(--wh);margin-bottom:1px;line-height:1.3;}
-.vc-type{font-size:10px;color:var(--gray);margin-bottom:8px;}
-.vc-stats{display:flex;gap:8px;padding-top:8px;border-top:1px solid var(--bd);}
+.vc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;}
+.vc-ico{font-size:20px;}
+.vc-name{font-size:12px;font-weight:600;color:var(--wh);line-height:1.3;margin-bottom:1px;}
+.vc-type{font-size:10px;color:var(--gray);margin-bottom:7px;}
+.vc-stats{display:flex;gap:7px;padding-top:7px;border-top:1px solid var(--bd);}
 .vc-stat{flex:1;text-align:center;}
-.vc-stat-v{font-family:'DM Mono',monospace;font-size:14px;color:var(--gold);}
+.vc-stat-v{font-family:'DM Mono',monospace;font-size:13px;color:var(--gold);}
 .vc-stat-l{font-size:10px;color:var(--gray);}
 
-/* MODAL */
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(6px);display:none;justify-content:center;align-items:center;z-index:200;padding:20px;}
+/* ── MODAL ── */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(6px);display:none;justify-content:center;align-items:center;z-index:200;padding:16px;}
 .modal.show{display:flex;}
-.mbox{background:var(--bg2);border:1px solid var(--bd2);border-radius:16px;width:90%;max-width:620px;max-height:90vh;overflow-y:auto;position:relative;padding:26px;}
+.mbox{background:var(--bg2);border:1px solid var(--bd2);border-radius:15px;width:90%;max-width:600px;max-height:92vh;overflow-y:auto;position:relative;padding:24px;}
 .mbox-sm{max-width:400px;}
-.mcls{position:absolute;top:14px;right:14px;width:32px;height:32px;background:var(--bg3);border:1px solid var(--bd);border-radius:7px;color:var(--gray);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.mcls{position:absolute;top:12px;right:12px;width:30px;height:30px;background:var(--bg3);border:1px solid var(--bd);border-radius:7px;color:var(--gray);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s;}
 .mcls:hover{background:var(--red);color:#fff;border-color:var(--red);}
-.m-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;margin-bottom:3px;}
-.m-sub{font-size:12px;color:var(--gray);margin-bottom:20px;}
-.fg2{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:11px;}
+.m-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;margin-bottom:3px;}
+.m-sub{font-size:12px;color:var(--gray);margin-bottom:18px;}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
 .fg2.full{grid-template-columns:1fr;}
 .fg{display:flex;flex-direction:column;gap:4px;}
 .fg label{font-size:11px;color:var(--gray);letter-spacing:.5px;text-transform:uppercase;font-weight:600;}
-.fg input,.fg select,.fg textarea{background:var(--bg3);border:1px solid var(--bd);border-radius:8px;padding:9px 12px;font-family:'Outfit',sans-serif;font-size:13px;color:var(--wh);outline:none;transition:border .2s;}
+.fg input,.fg select,.fg textarea{background:var(--bg3);border:1px solid var(--bd);border-radius:8px;padding:8px 11px;font-family:'Outfit',sans-serif;font-size:13px;color:var(--wh);outline:none;transition:border .18s;}
 .fg input::placeholder,.fg textarea::placeholder{color:var(--gray);}
 .fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--gold);}
-.fg textarea{resize:vertical;min-height:64px;}
+.fg textarea{resize:vertical;min-height:60px;}
 .fg select option{background:var(--bg2);}
-.cost-box{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;background:var(--bg3);border:1px solid var(--bd);border-radius:11px;padding:14px;margin-bottom:12px;}
+.cost-box{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;background:var(--bg3);border:1px solid var(--bd);border-radius:10px;padding:13px;margin-bottom:10px;}
 .cb{text-align:center;}
-.cb-v{font-family:'DM Mono',monospace;font-size:17px;color:var(--gold);}
-.cb-l{font-size:11px;color:var(--gray);margin-top:3px;}
-.mbtns{display:flex;gap:9px;margin-top:18px;}
+.cb-v{font-family:'DM Mono',monospace;font-size:16px;color:var(--gold);}
+.cb-l{font-size:11px;color:var(--gray);margin-top:2px;}
+.mbtns{display:flex;gap:8px;margin-top:16px;}
 
-.det-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
-.dg{background:var(--bg3);border:1px solid var(--bd);border-radius:9px;padding:13px;}
+/* ── DETAIL ── */
+.det-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.dg{background:var(--bg3);border:1px solid var(--bd);border-radius:9px;padding:12px;}
 .dg.wide{grid-column:1/span 2;}
-.dg-l{font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;}
+.dg-l{font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;}
 .dg-v{font-size:13px;color:var(--wh);font-weight:500;}
 
-.toast{position:fixed;bottom:18px;right:18px;background:var(--bg2);border:1px solid var(--gold);border-radius:11px;padding:12px 18px;font-size:13px;color:var(--gold);font-weight:500;opacity:0;transform:translateY(14px);transition:all .3s;pointer-events:none;z-index:9999;}
-.toast.show{opacity:1;transform:translateY(0);}
-</style>
+/* ── INSTALL BANNER ── */
+.install-banner{background:linear-gradient(135deg,rgba(201,168,76,0.15),rgba(201,168,76,0.08));border:1px solid rgba(201,168,76,0.3);border-radius:11px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.install-txt{font-size:13px;color:var(--gold);}
+.install-txt small{display:block;font-size:11px;color:var(--gray);margin-top:2px;}
 
-<div class="app">
+/* ── LOADING ── */
+.loader{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;gap:16px;}
+.loader-ring{width:50px;height:50px;border:3px solid var(--bd);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;}
+.loader-txt{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;color:var(--gold);}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:16px;right:16px;background:var(--bg2);border:1px solid var(--gold);border-radius:10px;padding:11px 16px;font-size:13px;color:var(--gold);font-weight:500;opacity:0;transform:translateY(12px);transition:all .3s;pointer-events:none;z-index:9999;max-width:300px;}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.err{border-color:var(--red);color:var(--red);}
+
+/* ── CONFIG PAGE ── */
+.cfg-card{background:var(--bg2);border:1px solid var(--bd);border-radius:13px;padding:20px;margin-bottom:14px;}
+.cfg-title{font-size:14px;font-weight:600;color:var(--wh);margin-bottom:14px;}
+.cfg-info{font-size:12px;color:var(--gray);line-height:1.7;background:var(--bg3);border-radius:8px;padding:12px;font-family:'DM Mono',monospace;margin-bottom:12px;}
+</style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div class="loader" id="loader">
+  <div class="loader-ring"></div>
+  <div class="loader-txt">กำลังโหลด...</div>
+</div>
+
+<div class="app" id="appRoot" style="display:none;">
+
+  <!-- TOPBAR -->
   <div class="topbar">
     <div class="logo">
       <div class="logo-ico">🏍</div>
@@ -147,11 +210,13 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
       </div>
     </div>
     <div class="top-r">
-      <div class="topbadge">รายการซ่อม <b id="topR">0</b></div>
-      <div class="topbadge">ATV ในระบบ <b id="topV">0</b> คัน</div>
+      <div class="topbadge"><span class="status-dot" id="netDot"></span><span id="netTxt">กำลังเชื่อมต่อ</span></div>
+      <div class="topbadge">ซ่อม <b id="topR">0</b> รายการ</div>
+      <div class="topbadge">ATV <b id="topV">0</b> คัน</div>
     </div>
   </div>
 
+  <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="sb-sec">เมนูหลัก</div>
     <button class="sbtn on" onclick="nav(this,'dash')"><div class="sb-ico">📊</div>ภาพรวม</button>
@@ -162,9 +227,21 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
     <div class="sb-sec">จัดการ</div>
     <button class="sbtn" onclick="openAddRepair()"><div class="sb-ico">➕</div>บันทึกการซ่อม</button>
     <button class="sbtn" onclick="openAddATV()"><div class="sb-ico">🚜</div>เพิ่ม ATV</button>
+    <div class="sb-div"></div>
+    <button class="sbtn" onclick="nav(this,'cfg')"><div class="sb-ico">⚙️</div>ตั้งค่า Firebase</button>
   </aside>
 
+  <!-- MAIN -->
   <main class="main">
+
+    <!-- INSTALL BANNER -->
+    <div class="install-banner" id="installBanner" style="display:none;">
+      <div class="install-txt">📲 ติดตั้งแอปลงเครื่อง
+        <small>ใช้งานได้แบบออฟไลน์ ไม่ต้องเปิด browser</small>
+      </div>
+      <button class="btn-p" onclick="installPWA()">ติดตั้ง</button>
+    </div>
+
     <!-- DASHBOARD -->
     <div class="pg on" id="pg-dash">
       <div class="hero">
@@ -190,14 +267,14 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
     <div class="pg" id="pg-atv">
       <div class="shdr">
         <div class="stitle">รถ ATV ทั้งหมด</div><div class="sline"></div>
-        <button class="btn-p" onclick="openAddATV()" style="margin-left:14px;">+ เพิ่ม ATV</button>
+        <button class="btn-p" onclick="openAddATV()" style="margin-left:12px;">+ เพิ่ม ATV</button>
       </div>
       <div class="vcard-grid" id="vcardGrid"></div>
       <div id="atvDetailSection" style="display:none;">
         <div class="shdr"><div class="stitle" id="atvDetailTitle">ประวัติซ่อม</div><div class="sline"></div></div>
         <div class="twrap">
           <table class="tbl">
-            <thead><tr><th>วันที่</th><th>ระบบ</th><th>อาการ</th><th>ช่าง</th><th>ชั่วโมง/ไมล์</th><th>ค่าใช้จ่าย</th><th></th></tr></thead>
+            <thead><tr><th>วันที่</th><th>ระบบ</th><th>อาการ</th><th>ช่าง</th><th>ชม./ไมล์</th><th>ค่าใช้จ่าย</th><th></th></tr></thead>
             <tbody id="atvRepairTbl"></tbody>
           </table>
         </div>
@@ -207,7 +284,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
     <!-- REPAIRS -->
     <div class="pg" id="pg-repairs">
       <div class="shdr"><div class="stitle">รายการซ่อมทั้งหมด</div><div class="sline"></div>
-        <button class="btn-p" onclick="openAddRepair()" style="margin-left:14px;">+ บันทึกซ่อม</button>
+        <button class="btn-p" onclick="openAddRepair()" style="margin-left:12px;">+ บันทึกซ่อม</button>
       </div>
       <div class="vtab-wrap"><div class="vtab-row" id="vtabRow"></div></div>
       <div class="srch-row">
@@ -225,12 +302,12 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
     <!-- SEARCH -->
     <div class="pg" id="pg-search">
       <div class="shdr"><div class="stitle">ค้นหาประวัติการซ่อม</div><div class="sline"></div></div>
-      <div style="background:var(--bg2);border:1px solid var(--bd);border-radius:13px;padding:18px;margin-bottom:16px;">
+      <div style="background:var(--bg2);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:14px;">
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:end;margin-bottom:10px;">
           <div class="fg"><label>คำค้นหา</label><input id="sqKw" placeholder="ช่าง, อาการ, อะไหล่..."></div>
           <div class="fg"><label>ATV</label><select id="sqV"><option value="">ทุกคัน</option></select></div>
           <div class="fg"><label>ระบบ</label><select id="sqSys"><option value="">ทุกระบบ</option></select></div>
-          <button class="btn-p" onclick="doSearch()" style="height:40px;">ค้นหา</button>
+          <button class="btn-p" onclick="doSearch()" style="height:38px;">ค้นหา</button>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end;">
           <div class="fg"><label>วันที่เริ่ม</label><input type="date" id="sqFrom"></div>
@@ -246,6 +323,50 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
         </table>
       </div>
     </div>
+
+    <!-- CONFIG PAGE -->
+    <div class="pg" id="pg-cfg">
+      <div class="shdr"><div class="stitle">ตั้งค่า Firebase</div><div class="sline"></div></div>
+      <div class="cfg-card">
+        <div class="cfg-title">🔥 เชื่อมต่อ Firebase Firestore</div>
+        <p style="font-size:13px;color:var(--gray2);margin-bottom:14px;line-height:1.6;">
+          วางค่า Firebase Config จาก <b style="color:var(--gold);">console.firebase.google.com</b><br>
+          → Project Settings → Your apps → Firebase SDK snippet → Config
+        </p>
+        <div class="fg2 full" style="margin-bottom:12px;">
+          <div class="fg"><label>API Key</label><input id="cfgApiKey" placeholder="AIzaSy..."></div>
+          <div class="fg"><label>Project ID</label><input id="cfgProjectId" placeholder="your-project-id"></div>
+          <div class="fg"><label>Auth Domain</label><input id="cfgAuthDomain" placeholder="your-project.firebaseapp.com"></div>
+          <div class="fg"><label>Storage Bucket</label><input id="cfgStorageBucket" placeholder="your-project.appspot.com"></div>
+          <div class="fg"><label>Messaging Sender ID</label><input id="cfgMsgId" placeholder="123456789"></div>
+          <div class="fg"><label>App ID</label><input id="cfgAppId" placeholder="1:123..."></div>
+        </div>
+        <div class="mbtns">
+          <button class="btn-p" onclick="saveFirebaseConfig()">💾 บันทึกและเชื่อมต่อ</button>
+          <button class="btn-g" onclick="loadSavedConfig()">โหลดค่าที่บันทึก</button>
+        </div>
+        <div style="margin-top:14px;padding:12px;background:var(--bg3);border-radius:9px;font-size:12px;color:var(--gray);border:1px solid var(--bd);" id="cfgStatus">
+          ⚪ ยังไม่ได้กำหนดค่า
+        </div>
+      </div>
+      <div class="cfg-card">
+        <div class="cfg-title">📲 วิธีติดตั้งเป็น PWA</div>
+        <div class="cfg-info">Chrome / Edge (Windows/Android):
+  กด ⋮ (เมนู) → "ติดตั้งแอป" หรือ "Install App"
+
+Safari (iPhone/iPad):
+  กด 📤 Share → "Add to Home Screen"
+
+Samsung Internet:
+  กด ☰ → "Add page to" → "Home screen"</div>
+        <div style="font-size:12px;color:var(--gray);line-height:1.6;">
+          ✅ เมื่อติดตั้งแล้ว แอปจะเปิดเหมือนแอปปกติ<br>
+          ✅ ข้อมูลซิงค์ผ่าน Firebase — ใช้ร่วมกันได้หลายเครื่อง<br>
+          ✅ Cache ข้อมูลไว้ใช้แบบออฟไลน์ได้ด้วย
+        </div>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -254,11 +375,9 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
   <div class="mbox">
     <button class="mcls" onclick="cm('mRepair')">✕</button>
     <div class="m-title">บันทึกการซ่อม</div>
-    <div class="m-sub">กรอกข้อมูลให้ครบถ้วน — ช่องที่มี * จำเป็น</div>
+    <div class="m-sub">กรอกข้อมูลให้ครบถ้วน — * จำเป็น</div>
     <div class="fg2">
-      <div class="fg"><label>เลือก ATV *</label>
-        <select id="fVeh"><option value="">-- เลือก ATV --</option></select>
-      </div>
+      <div class="fg"><label>เลือก ATV *</label><select id="fVeh"><option value="">-- เลือก ATV --</option></select></div>
       <div class="fg"><label>วันที่ซ่อม *</label><input type="date" id="fDate"></div>
       <div class="fg"><label>ชั่วโมงใช้งาน / ไมล์</label><input id="fMile" placeholder="เช่น 1,200 ชม."></div>
       <div class="fg"><label>เลขที่ใบงาน</label><input id="fJob" placeholder="JOB-001"></div>
@@ -291,17 +410,14 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
     <button class="mcls" onclick="cm('mATV')">✕</button>
     <div class="m-title">เพิ่ม ATV</div>
     <div class="m-sub">ลงทะเบียน ATV คันใหม่</div>
-    <div class="fg" style="margin-bottom:11px;"><label>ชื่อ / รหัสรถ *</label><input id="fAN" placeholder="เช่น ATV520 (7) CF MOTO 520CC"></div>
-    <div class="fg" style="margin-bottom:11px;"><label>ประเภท</label>
+    <div class="fg" style="margin-bottom:10px;"><label>ชื่อ / รหัสรถ *</label><input id="fAN" placeholder="เช่น ATV520 (7) CF MOTO 520CC"></div>
+    <div class="fg" style="margin-bottom:10px;"><label>ประเภท</label>
       <select id="fAT">
-        <option>CF MOTO 1000CC</option>
-        <option>CF MOTO 520CC</option>
-        <option>รถสองแถว</option>
-        <option>รถแพนโทน</option>
-        <option>อื่นๆ</option>
+        <option>CF MOTO 1000CC</option><option>CF MOTO 520CC</option>
+        <option>รถสองแถว</option><option>รถแพนโทน</option><option>อื่นๆ</option>
       </select>
     </div>
-    <div class="fg" style="margin-bottom:20px;"><label>หมายเหตุ / ปีรถ / สี</label><input id="fAY" placeholder="เช่น 2023 / สีแดง"></div>
+    <div class="fg" style="margin-bottom:18px;"><label>หมายเหตุ / ปีรถ / สี</label><input id="fAY" placeholder="เช่น 2023 / สีแดง"></div>
     <div class="mbtns">
       <button class="btn-p" onclick="saveATV()">บันทึก</button>
       <button class="btn-g" onclick="cm('mATV')">ยกเลิก</button>
@@ -325,7 +441,7 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
   <div class="mbox mbox-sm">
     <button class="mcls" onclick="cm('mConfirm')">✕</button>
     <div class="m-title" id="cfT">ยืนยัน</div>
-    <div style="font-size:13px;color:var(--gray2);margin-bottom:18px;" id="cfTxt"></div>
+    <div style="font-size:13px;color:var(--gray2);margin-bottom:16px;" id="cfTxt"></div>
     <div class="mbtns">
       <button class="btn-d" onclick="cfYes()">ยืนยัน</button>
       <button class="btn-g" onclick="cm('mConfirm')">ยกเลิก</button>
@@ -335,14 +451,134 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 
 <div class="toast" id="toast"></div>
 
-<script>
-const $ = id => document.getElementById(id);
-let vehicles = [], repairs = [], nextVid = 1, nextRid = 1;
-let cfAction = null, curVeh = null, selCard = null;
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
+<script>
+// ══════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════
+const $ = id => document.getElementById(id);
+let db = null;
+let vehicles = [], repairs = [];
+let cfAction = null, curVeh = null, selCard = null;
+let deferredInstall = null;
+let unsubVeh = null, unsubRep = null;
+
+const DEFAULT_VEHICLES = [
+  {name:'ATV1000 (1) CF MOTO 1000CC', type:'CF MOTO 1000CC', note:''},
+  {name:'ATV1000 (2) CF MOTO 1000CC', type:'CF MOTO 1000CC', note:''},
+  {name:'ATV520 (1) CF MOTO 520CC',   type:'CF MOTO 520CC',  note:''},
+  {name:'ATV520 (2) CF MOTO 520CC',   type:'CF MOTO 520CC',  note:''},
+  {name:'ATV520 (3) CF MOTO 520CC',   type:'CF MOTO 520CC',  note:''},
+  {name:'ATV520 (4) CF MOTO 520CC',   type:'CF MOTO 520CC',  note:''},
+  {name:'ATV520 (5) CF MOTO 520CC',   type:'CF MOTO 520CC',  note:''},
+  {name:'ATV520 (6) CF MOTO 520CC',   type:'CF MOTO 520CC',  note:''},
+  {name:'รถสองแถว',                    type:'รถสองแถว',       note:''},
+  {name:'รถแพนโทน',                    type:'รถแพนโทน',       note:''},
+];
+
+// ══════════════════════════════════════════════
+//  FIREBASE INIT
+// ══════════════════════════════════════════════
+function getSavedConfig(){
+  try { return JSON.parse(localStorage.getItem('fb_cfg') || 'null'); } catch(e){ return null; }
+}
+
+function initFirebase(cfg){
+  try {
+    if(firebase.apps.length){ firebase.app().delete().then(()=>startApp(cfg)); }
+    else { startApp(cfg); }
+  } catch(e){ startApp(cfg); }
+}
+
+function startApp(cfg){
+  try {
+    firebase.initializeApp(cfg);
+    db = firebase.firestore();
+    db.enablePersistence({synchronizeTabs:true}).catch(()=>{});
+    setNetStatus(true);
+    listenData();
+    $('cfgStatus').innerHTML = '🟢 เชื่อมต่อ Firebase สำเร็จ — Project: <b>'+cfg.projectId+'</b>';
+    toast('เชื่อมต่อ Firebase สำเร็จ');
+  } catch(e){
+    setNetStatus(false);
+    $('cfgStatus').innerHTML = '🔴 เชื่อมต่อไม่สำเร็จ: '+e.message;
+    toast('Firebase Error: '+e.message, true);
+    fallbackMode();
+  }
+}
+
+// ══════════════════════════════════════════════
+//  FIRESTORE REALTIME LISTENERS
+// ══════════════════════════════════════════════
+function listenData(){
+  // Vehicles
+  if(unsubVeh) unsubVeh();
+  unsubVeh = db.collection('vehicles').orderBy('name').onSnapshot(snap => {
+    vehicles = snap.docs.map(d => ({id:d.id, ...d.data()}));
+    // Seed default vehicles if empty
+    if(vehicles.length === 0) seedDefaultVehicles();
+    else afterDataLoad();
+  }, err => { console.error(err); setNetStatus(false); });
+
+  // Repairs
+  if(unsubRep) unsubRep();
+  unsubRep = db.collection('repairs').orderBy('ts','desc').onSnapshot(snap => {
+    repairs = snap.docs.map(d => ({id:d.id, ...d.data()}));
+    afterDataLoad();
+  }, err => { console.error(err); });
+}
+
+async function seedDefaultVehicles(){
+  const batch = db.batch();
+  DEFAULT_VEHICLES.forEach(v => {
+    const ref = db.collection('vehicles').doc();
+    batch.set(ref, v);
+  });
+  await batch.commit();
+  toast('เพิ่มรถ ATV เริ่มต้น 10 คันแล้ว');
+}
+
+function afterDataLoad(){
+  $('loader').style.display = 'none';
+  $('appRoot').style.display = 'grid';
+  updateBadges(); renderDash();
+  if(document.querySelector('.pg.on').id === 'pg-repairs') { renderVTabs(); renderRepairs(); buildSysFilter(); }
+  if(document.querySelector('.pg.on').id === 'pg-atv') renderVCards();
+}
+
+// ══════════════════════════════════════════════
+//  FALLBACK (no Firebase — local only)
+// ══════════════════════════════════════════════
+function fallbackMode(){
+  vehicles = DEFAULT_VEHICLES.map((v,i) => ({id:'v'+(i+1), ...v}));
+  repairs = [];
+  $('loader').style.display = 'none';
+  $('appRoot').style.display = 'grid';
+  updateBadges(); renderDash();
+}
+
+// ══════════════════════════════════════════════
+//  NET STATUS
+// ══════════════════════════════════════════════
+function setNetStatus(online){
+  $('netDot').className = 'status-dot' + (online?'':' offline');
+  $('netTxt').textContent = online ? 'ออนไลน์' : 'ออฟไลน์';
+}
+window.addEventListener('online',  () => setNetStatus(true));
+window.addEventListener('offline', () => setNetStatus(false));
+
+// ══════════════════════════════════════════════
+//  MODAL HELPERS
+// ══════════════════════════════════════════════
 function om(id){ $(id).classList.add('show'); }
 function cm(id){ $(id).classList.remove('show'); }
 
+// ══════════════════════════════════════════════
+//  NAV
+// ══════════════════════════════════════════════
 function nav(btn, pg){
   document.querySelectorAll('.sbtn').forEach(b=>b.classList.remove('on'));
   btn.classList.add('on');
@@ -352,29 +588,123 @@ function nav(btn, pg){
   if(pg==='atv'){ selCard=null; renderVCards(); $('atvDetailSection').style.display='none'; }
   if(pg==='repairs'){ renderVTabs(); renderRepairs(); buildSysFilter(); }
   if(pg==='search') buildSearchDrops();
+  if(pg==='cfg') loadSavedConfig();
 }
 
-// ── ATV ──
+// ══════════════════════════════════════════════
+//  FIREBASE CONFIG SETTINGS
+// ══════════════════════════════════════════════
+function loadSavedConfig(){
+  const cfg = getSavedConfig();
+  if(!cfg) return;
+  $('cfgApiKey').value       = cfg.apiKey       || '';
+  $('cfgProjectId').value    = cfg.projectId     || '';
+  $('cfgAuthDomain').value   = cfg.authDomain    || '';
+  $('cfgStorageBucket').value= cfg.storageBucket || '';
+  $('cfgMsgId').value        = cfg.messagingSenderId || '';
+  $('cfgAppId').value        = cfg.appId         || '';
+}
+
+function saveFirebaseConfig(){
+  const cfg = {
+    apiKey:            $('cfgApiKey').value.trim(),
+    projectId:         $('cfgProjectId').value.trim(),
+    authDomain:        $('cfgAuthDomain').value.trim(),
+    storageBucket:     $('cfgStorageBucket').value.trim(),
+    messagingSenderId: $('cfgMsgId').value.trim(),
+    appId:             $('cfgAppId').value.trim(),
+  };
+  if(!cfg.apiKey || !cfg.projectId){ toast('กรุณากรอก API Key และ Project ID', true); return; }
+  localStorage.setItem('fb_cfg', JSON.stringify(cfg));
+  initFirebase(cfg);
+}
+
+// ══════════════════════════════════════════════
+//  ATV CRUD
+// ══════════════════════════════════════════════
 function openAddATV(){ $('fAN').value=''; $('fAY').value=''; om('mATV'); }
 
-function saveATV(){
+async function saveATV(){
   const name=$('fAN').value.trim(), type=$('fAT').value, note=$('fAY').value.trim();
-  if(!name){ toast('กรุณากรอกชื่อ ATV'); return; }
-  vehicles.push({id:nextVid++, name, type, note});
-  cm('mATV'); updateBadges(); renderVCards(); buildVehSelects(); buildSearchDrops();
-  toast('เพิ่ม '+name+' เรียบร้อย');
+  if(!name){ toast('กรุณากรอกชื่อ ATV', true); return; }
+  if(db){
+    await db.collection('vehicles').add({name, type, note});
+  } else {
+    vehicles.push({id:'v'+(Date.now()), name, type, note});
+    renderVCards(); buildVehSelects(); buildSearchDrops(); updateBadges();
+  }
+  cm('mATV'); toast('เพิ่ม '+name+' เรียบร้อย');
 }
 
+// ══════════════════════════════════════════════
+//  REPAIR CRUD
+// ══════════════════════════════════════════════
+function buildVehSelects(){
+  $('fVeh').innerHTML='<option value="">-- เลือก ATV --</option>'+vehicles.map(v=>`<option value="${v.id}">${v.name}</option>`).join('');
+}
+
+function openAddRepair(){
+  buildVehSelects();
+  $('fDate').value = new Date().toISOString().split('T')[0];
+  ['fMile','fJob','fSys','fSymp','fPart','fTech','fPCost','fLabor'].forEach(f=>$(f).value='');
+  if(curVeh) $('fVeh').value = curVeh;
+  calcCost(); om('mRepair');
+}
+
+function calcCost(){
+  const p=parseFloat($('fPCost').value)||0, l=parseFloat($('fLabor').value)||0;
+  $('fcP').textContent='฿'+p.toLocaleString();
+  $('fcL').textContent='฿'+l.toLocaleString();
+  $('fcT').textContent='฿'+(p+l).toLocaleString();
+}
+
+async function saveRepair(){
+  const vid=$('fVeh').value;
+  if(!vid){ toast('กรุณาเลือก ATV', true); return; }
+  const date=$('fDate').value, sys=$('fSys').value.trim(), symp=$('fSymp').value.trim();
+  if(!date||!sys||!symp){ toast('กรุณากรอกข้อมูลที่จำเป็น (*)', true); return; }
+  const v = vehicles.find(x=>x.id===vid);
+  const pc=parseFloat($('fPCost').value)||0, lab=parseFloat($('fLabor').value)||0;
+  const data = {
+    vid, vname:v.name, date, ts:new Date(date).getTime(),
+    mile:$('fMile').value, job:$('fJob').value,
+    sys, symp, parts:$('fPart').value, tech:$('fTech').value,
+    partCost:pc, labor:lab, total:pc+lab
+  };
+  if(db){
+    await db.collection('repairs').add(data);
+  } else {
+    repairs.unshift({id:'r'+Date.now(), ...data});
+    renderDash(); renderRepairs(); renderVCards(); buildSysFilter(); updateBadges();
+  }
+  cm('mRepair'); toast('บันทึกการซ่อมเรียบร้อย');
+}
+
+// ══════════════════════════════════════════════
+//  DELETE
+// ══════════════════════════════════════════════
+async function delRepair(id){
+  confirm2('ลบรายการ','ยืนยันการลบรายการซ่อมนี้?', async ()=>{
+    if(db){ await db.collection('repairs').doc(id).delete(); }
+    else { repairs = repairs.filter(r=>r.id!==id); renderDash(); renderRepairs(); renderVCards(); updateBadges(); }
+    if(selCard){ const v=vehicles.find(x=>x.id===selCard); if(v) showAtvRepairs(v); }
+    toast('ลบเรียบร้อย');
+  });
+}
+
+function confirm2(t,txt,fn){ $('cfT').textContent=t; $('cfTxt').textContent=txt; cfAction=fn; om('mConfirm'); }
+function cfYes(){ if(cfAction) cfAction(); cm('mConfirm'); }
+
+// ══════════════════════════════════════════════
+//  RENDER
+// ══════════════════════════════════════════════
 function renderVCards(){
   const g=$('vcardGrid'); g.innerHTML='';
-  if(!vehicles.length){
-    g.innerHTML='<div style="color:var(--gray);font-size:13px;padding:20px;grid-column:1/-1;">ยังไม่มี ATV</div>';
-    return;
-  }
+  if(!vehicles.length){ g.innerHTML='<div style="color:var(--gray);font-size:13px;padding:16px;grid-column:1/-1;">ยังไม่มี ATV — กด "+ เพิ่ม ATV"</div>'; return; }
   vehicles.forEach(v=>{
     const reps=repairs.filter(r=>r.vid===v.id);
     const total=reps.reduce((s,r)=>s+r.total,0);
-    const typeClass = v.type.includes('1000') ? 't-gold' : v.type.includes('520') ? 't-ok' : 't-sys';
+    const typeClass=v.type.includes('1000')?'t-gold':v.type.includes('520')?'t-ok':'t-sys';
     const d=document.createElement('div');
     d.className='vcard'+(selCard===v.id?' on':'');
     d.innerHTML=`
@@ -394,56 +724,9 @@ function showAtvRepairs(v){
   $('atvDetailTitle').textContent='ประวัติซ่อม — '+v.name;
   $('atvDetailSection').style.display='block';
   const reps=repairs.filter(r=>r.vid===v.id).sort((a,b)=>b.ts-a.ts);
-  $('atvRepairTbl').innerHTML=reps.length
-    ? reps.map(r=>trRow(r,false)).join('')
-    : '<tr class="emr"><td colspan="7">ยังไม่มีประวัติซ่อมสำหรับ ATV คันนี้</td></tr>';
+  $('atvRepairTbl').innerHTML=reps.length ? reps.map(r=>trRow(r,false)).join('') : '<tr class="emr"><td colspan="7">ยังไม่มีประวัติ</td></tr>';
 }
 
-// ── REPAIR ──
-function buildVehSelects(){
-  const opts='<option value="">-- เลือก ATV --</option>'+vehicles.map(v=>`<option value="${v.id}">${v.name}</option>`).join('');
-  $('fVeh').innerHTML=opts;
-}
-
-function openAddRepair(){
-  buildVehSelects();
-  $('fDate').value=new Date().toISOString().split('T')[0];
-  ['fMile','fJob','fSys','fSymp','fPart','fTech','fPCost','fLabor'].forEach(f=>$(f).value='');
-  if(curVeh) $('fVeh').value=curVeh;
-  calcCost(); om('mRepair');
-}
-
-function calcCost(){
-  const p=parseFloat($('fPCost').value)||0, l=parseFloat($('fLabor').value)||0;
-  $('fcP').textContent='฿'+p.toLocaleString();
-  $('fcL').textContent='฿'+l.toLocaleString();
-  $('fcT').textContent='฿'+(p+l).toLocaleString();
-}
-
-function saveRepair(){
-  const vid=parseInt($('fVeh').value);
-  if(!vid){ toast('กรุณาเลือก ATV'); return; }
-  const date=$('fDate').value, sys=$('fSys').value.trim(), symp=$('fSymp').value.trim();
-  if(!date||!sys||!symp){ toast('กรุณากรอกข้อมูลที่จำเป็น (*)'); return; }
-  const v=vehicles.find(x=>x.id===vid);
-  const pc=parseFloat($('fPCost').value)||0, lab=parseFloat($('fLabor').value)||0;
-  repairs.push({
-    id:nextRid++, vid, vname:v.name,
-    date, mile:$('fMile').value, job:$('fJob').value,
-    sys, symp, parts:$('fPart').value, tech:$('fTech').value,
-    partCost:pc, labor:lab, total:pc+lab,
-    ts:new Date(date).getTime()
-  });
-  repairs.sort((a,b)=>b.ts-a.ts);
-  cm('mRepair');
-  updateBadges(); buildSysFilter(); buildSearchDrops();
-  renderDash(); renderRepairs();
-  if(selCard===vid){ showAtvRepairs(vehicles.find(x=>x.id===vid)); }
-  renderVCards();
-  toast('บันทึกการซ่อมเรียบร้อย');
-}
-
-// ── VEH TABS ──
 function renderVTabs(){
   const row=$('vtabRow'); row.innerHTML='';
   const all=document.createElement('button');
@@ -477,7 +760,7 @@ function renderRepairs(){
 
 function trRow(r, showVeh){
   const cost=r.total>0?`<span class="cost-c">฿${r.total.toLocaleString()}</span>`:'—';
-  return `<tr onclick="openDetail(${r.id})">
+  return `<tr onclick="openDetail('${r.id}')">
     <td class="td-m">${fmtD(r.date)}</td>
     ${showVeh?`<td class="td-b">${r.vname}</td>`:''}
     <td><span class="tag t-sys">${r.sys||'—'}</span></td>
@@ -485,11 +768,11 @@ function trRow(r, showVeh){
     <td>${r.tech||'—'}</td>
     ${!showVeh?`<td class="td-m">${r.mile||'—'}</td>`:''}
     <td>${cost}</td>
-    <td><button class="btn-d" style="padding:3px 9px;font-size:11px;" onclick="event.stopPropagation();delRepair(${r.id})">ลบ</button></td>
+    <td><button class="btn-d" style="padding:3px 9px;font-size:11px;" onclick="event.stopPropagation();delRepair('${r.id}')">ลบ</button></td>
   </tr>`;
 }
 
-function fmtD(d){ if(!d) return '—'; try{ return new Date(d).toLocaleDateString('th-TH'); }catch(e){ return d; } }
+function fmtD(d){ if(!d) return '—'; try{ return new Date(d+'T00:00:00').toLocaleDateString('th-TH'); }catch(e){ return d; } }
 
 function openDetail(id){
   const r=repairs.find(x=>x.id===id); if(!r) return;
@@ -502,27 +785,14 @@ function openDetail(id){
     <div class="dg wide"><div class="dg-l">อะไหล่ที่เปลี่ยน</div><div class="dg-v">${r.parts||'—'}</div></div>
   </div>
   <div class="cost-box" style="margin-top:12px;">
-    <div class="cb"><div class="cb-v">฿${r.partCost.toLocaleString()}</div><div class="cb-l">ค่าอะไหล่</div></div>
-    <div class="cb"><div class="cb-v">฿${r.labor.toLocaleString()}</div><div class="cb-l">ค่าแรง</div></div>
-    <div class="cb"><div class="cb-v">฿${r.total.toLocaleString()}</div><div class="cb-l">รวมทั้งสิ้น</div></div>
+    <div class="cb"><div class="cb-v">฿${(r.partCost||0).toLocaleString()}</div><div class="cb-l">ค่าอะไหล่</div></div>
+    <div class="cb"><div class="cb-v">฿${(r.labor||0).toLocaleString()}</div><div class="cb-l">ค่าแรง</div></div>
+    <div class="cb"><div class="cb-v">฿${(r.total||0).toLocaleString()}</div><div class="cb-l">รวมทั้งสิ้น</div></div>
   </div>`;
-  $('dtBtns').innerHTML=`<button class="btn-d" onclick="delRepair(${r.id});cm('mDetail')">🗑 ลบรายการ</button><button class="btn-g" onclick="cm('mDetail')">ปิด</button>`;
+  $('dtBtns').innerHTML=`<button class="btn-d" onclick="delRepair('${r.id}');cm('mDetail')">🗑 ลบรายการ</button><button class="btn-g" onclick="cm('mDetail')">ปิด</button>`;
   om('mDetail');
 }
 
-function delRepair(id){
-  confirm2('ลบรายการ','ยืนยันการลบรายการซ่อมนี้?',()=>{
-    repairs=repairs.filter(r=>r.id!==id);
-    updateBadges(); buildSysFilter(); buildSearchDrops(); renderDash(); renderRepairs(); renderVCards();
-    if(selCard){ const v=vehicles.find(x=>x.id===selCard); if(v) showAtvRepairs(v); }
-    toast('ลบเรียบร้อย');
-  });
-}
-
-function confirm2(t,txt,fn){ $('cfT').textContent=t; $('cfTxt').textContent=txt; cfAction=fn; om('mConfirm'); }
-function cfYes(){ if(cfAction) cfAction(); cm('mConfirm'); }
-
-// ── SEARCH ──
 function buildSearchDrops(){
   $('sqV').innerHTML='<option value="">ทุกคัน</option>'+vehicles.map(v=>`<option value="${v.id}">${v.name}</option>`).join('');
   const sys=[...new Set(repairs.map(r=>r.sys).filter(Boolean))];
@@ -534,7 +804,7 @@ function doSearch(){
   const vid=$('sqV').value, sys=$('sqSys').value;
   const from=$('sqFrom').value, to=$('sqTo').value;
   let list=repairs.filter(r=>{
-    if(vid && r.vid!=vid) return false;
+    if(vid && r.vid!==vid) return false;
     if(sys && r.sys!==sys) return false;
     if(from && r.date<from) return false;
     if(to && r.date>to) return false;
@@ -552,20 +822,19 @@ function clearSearch(){
   $('sqTbl').innerHTML='<tr class="emr"><td colspan="7">กรอกคำค้นหาแล้วกด "ค้นหา"</td></tr>';
 }
 
-// ── DASHBOARD ──
 function renderDash(){
   const total=repairs.reduce((s,r)=>s+r.total,0);
   $('dR').textContent=repairs.length;
   $('dV').textContent=vehicles.length;
   $('dC').textContent='฿'+total.toLocaleString();
   $('dA').textContent='฿'+(repairs.length?Math.round(total/repairs.length):0).toLocaleString();
-  $('dashTbl').innerHTML=repairs.slice(0,8).map(r=>`<tr onclick="openDetail(${r.id})">
+  $('dashTbl').innerHTML=repairs.slice(0,8).map(r=>`<tr onclick="openDetail('${r.id}')">
     <td class="td-m">${fmtD(r.date)}</td>
     <td class="td-b">${r.vname}</td>
     <td><span class="tag t-sys">${r.sys||'—'}</span></td>
     <td>${r.symp||'—'}</td>
     <td>${r.tech||'—'}</td>
-    <td><span class="cost-c">฿${r.total.toLocaleString()}</span></td>
+    <td><span class="cost-c">฿${(r.total||0).toLocaleString()}</span></td>
   </tr>`).join('') || '<tr class="emr"><td colspan="6">ยังไม่มีข้อมูล</td></tr>';
 }
 
@@ -576,24 +845,63 @@ function updateBadges(){
   $('sbV').textContent=vehicles.length;
 }
 
-function toast(m){ const t=$('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000); }
+function toast(m, err=false){
+  const t=$('toast');
+  t.textContent=m;
+  t.className='toast'+(err?' err':'')+' show';
+  setTimeout(()=>t.className='toast'+(err?' err':''),3200);
+}
 
-// ── DATA จริงตามรูป ──
-vehicles = [
-  {id:1,  name:'ATV1000 (1) CF MOTO 1000CC', type:'CF MOTO 1000CC', note:''},
-  {id:2,  name:'ATV1000 (2) CF MOTO 1000CC', type:'CF MOTO 1000CC', note:''},
-  {id:3,  name:'ATV520 (1) CF MOTO 520CC',   type:'CF MOTO 520CC',  note:''},
-  {id:4,  name:'ATV520 (2) CF MOTO 520CC',   type:'CF MOTO 520CC',  note:''},
-  {id:5,  name:'ATV520 (3) CF MOTO 520CC',   type:'CF MOTO 520CC',  note:''},
-  {id:6,  name:'ATV520 (4) CF MOTO 520CC',   type:'CF MOTO 520CC',  note:''},
-  {id:7,  name:'ATV520 (5) CF MOTO 520CC',   type:'CF MOTO 520CC',  note:''},
-  {id:8,  name:'ATV520 (6) CF MOTO 520CC',   type:'CF MOTO 520CC',  note:''},
-  {id:9,  name:'รถสองแถว',                    type:'รถสองแถว',       note:''},
-  {id:10, name:'รถแพนโทน',                    type:'รถแพนโทน',       note:''},
-];
-nextVid = 11;
-repairs = [];
-nextRid = 1;
+// ══════════════════════════════════════════════
+//  PWA — INSTALL
+// ══════════════════════════════════════════════
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstall = e;
+  $('installBanner').style.display='flex';
+});
 
-updateBadges(); renderDash(); buildVehSelects(); buildSearchDrops();
+function installPWA(){
+  if(!deferredInstall) return;
+  deferredInstall.prompt();
+  deferredInstall.userChoice.then(r => {
+    if(r.outcome==='accepted') $('installBanner').style.display='none';
+    deferredInstall = null;
+  });
+}
+
+window.addEventListener('appinstalled', () => {
+  $('installBanner').style.display='none';
+  toast('ติดตั้งแอปสำเร็จ!');
+});
+
+// ══════════════════════════════════════════════
+//  SERVICE WORKER REGISTER
+// ══════════════════════════════════════════════
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').then(()=>{
+    console.log('SW registered');
+  }).catch(e => console.log('SW error', e));
+}
+
+// ══════════════════════════════════════════════
+//  BOOT
+// ══════════════════════════════════════════════
+const savedCfg = getSavedConfig();
+if(savedCfg && savedCfg.apiKey){
+  initFirebase(savedCfg);
+} else {
+  // No config yet — show config page
+  setTimeout(()=>{
+    $('loader').style.display='none';
+    $('appRoot').style.display='grid';
+    fallbackMode();
+    // Auto-navigate to config
+    const cfgBtn = document.querySelector('.sbtn:last-child');
+    cfgBtn && cfgBtn.click();
+    toast('กรุณาตั้งค่า Firebase ก่อนใช้งาน');
+  }, 800);
+}
 </script>
+</body>
+</html>
