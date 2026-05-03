@@ -4,19 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ATV Elite Service</title>
-
-<!-- PWA Meta -->
 <meta name="application-name" content="ATV Elite Service">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ATV Service">
 <meta name="theme-color" content="#C9A84C">
 <meta name="description" content="ระบบบริหารจัดการซ่อมบำรุง ATV CF MOTO">
-<link rel="manifest" href="manifest.json">
-
-<!-- Icons (inline SVG favicon) -->
-<link rel="icon" href="icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="icon-192.png">
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
@@ -168,10 +161,10 @@ body::before{content:'';position:fixed;inset:0;
 .dg-l{font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;}
 .dg-v{font-size:13px;color:var(--wh);font-weight:500;}
 
-/* ── INSTALL BANNER ── */
-.install-banner{background:linear-gradient(135deg,rgba(201,168,76,0.15),rgba(201,168,76,0.08));border:1px solid rgba(201,168,76,0.3);border-radius:11px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
-.install-txt{font-size:13px;color:var(--gold);}
-.install-txt small{display:block;font-size:11px;color:var(--gray);margin-top:2px;}
+/* ── CONFIG PAGE ── */
+.cfg-card{background:var(--bg2);border:1px solid var(--bd);border-radius:13px;padding:20px;margin-bottom:14px;}
+.cfg-title{font-size:14px;font-weight:600;color:var(--wh);margin-bottom:14px;}
+.cfg-info{font-size:12px;color:var(--gray);line-height:1.7;background:var(--bg3);border-radius:8px;padding:12px;font-family:'DM Mono',monospace;margin-bottom:12px;}
 
 /* ── LOADING ── */
 .loader{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;gap:16px;}
@@ -184,10 +177,9 @@ body::before{content:'';position:fixed;inset:0;
 .toast.show{opacity:1;transform:translateY(0);}
 .toast.err{border-color:var(--red);color:var(--red);}
 
-/* ── CONFIG PAGE ── */
-.cfg-card{background:var(--bg2);border:1px solid var(--bd);border-radius:13px;padding:20px;margin-bottom:14px;}
-.cfg-title{font-size:14px;font-weight:600;color:var(--wh);margin-bottom:14px;}
-.cfg-info{font-size:12px;color:var(--gray);line-height:1.7;background:var(--bg3);border-radius:8px;padding:12px;font-family:'DM Mono',monospace;margin-bottom:12px;}
+/* ── FB STATUS BANNER ── */
+.fb-banner{background:linear-gradient(135deg,rgba(46,171,110,0.12),rgba(46,171,110,0.06));border:1px solid rgba(46,171,110,0.3);border-radius:11px;padding:10px 16px;display:flex;align-items:center;gap:10px;margin-bottom:16px;font-size:13px;color:#2EAB6E;}
+.fb-banner.err{background:linear-gradient(135deg,rgba(224,64,64,0.12),rgba(224,64,64,0.06));border-color:rgba(224,64,64,0.3);color:var(--red);}
 </style>
 </head>
 <body>
@@ -195,7 +187,7 @@ body::before{content:'';position:fixed;inset:0;
 <!-- LOADER -->
 <div class="loader" id="loader">
   <div class="loader-ring"></div>
-  <div class="loader-txt">กำลังโหลด...</div>
+  <div class="loader-txt">กำลังเชื่อมต่อ Firebase...</div>
 </div>
 
 <div class="app" id="appRoot" style="display:none;">
@@ -228,19 +220,11 @@ body::before{content:'';position:fixed;inset:0;
     <button class="sbtn" onclick="openAddRepair()"><div class="sb-ico">➕</div>บันทึกการซ่อม</button>
     <button class="sbtn" onclick="openAddATV()"><div class="sb-ico">🚜</div>เพิ่ม ATV</button>
     <div class="sb-div"></div>
-    <button class="sbtn" onclick="nav(this,'cfg')"><div class="sb-ico">⚙️</div>ตั้งค่า Firebase</button>
+    <button class="sbtn" onclick="nav(this,'cfg')"><div class="sb-ico">⚙️</div>ตั้งค่า / สถานะ</button>
   </aside>
 
   <!-- MAIN -->
   <main class="main">
-
-    <!-- INSTALL BANNER -->
-    <div class="install-banner" id="installBanner" style="display:none;">
-      <div class="install-txt">📲 ติดตั้งแอปลงเครื่อง
-        <small>ใช้งานได้แบบออฟไลน์ ไม่ต้องเปิด browser</small>
-      </div>
-      <button class="btn-p" onclick="installPWA()">ติดตั้ง</button>
-    </div>
 
     <!-- DASHBOARD -->
     <div class="pg on" id="pg-dash">
@@ -258,7 +242,7 @@ body::before{content:'';position:fixed;inset:0;
       <div class="twrap">
         <table class="tbl">
           <thead><tr><th>วันที่</th><th>ATV</th><th>ระบบ</th><th>อาการ</th><th>ช่าง</th><th>ค่าใช้จ่าย</th></tr></thead>
-          <tbody id="dashTbl"><tr class="emr"><td colspan="6">ยังไม่มีข้อมูล</td></tr></tbody>
+          <tbody id="dashTbl"><tr class="emr"><td colspan="6">กำลังโหลดข้อมูล...</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -324,29 +308,18 @@ body::before{content:'';position:fixed;inset:0;
       </div>
     </div>
 
-    <!-- CONFIG PAGE -->
+    <!-- CONFIG / STATUS PAGE -->
     <div class="pg" id="pg-cfg">
-      <div class="shdr"><div class="stitle">ตั้งค่า Firebase</div><div class="sline"></div></div>
+      <div class="shdr"><div class="stitle">สถานะระบบ</div><div class="sline"></div></div>
       <div class="cfg-card">
-        <div class="cfg-title">🔥 เชื่อมต่อ Firebase Firestore</div>
-        <p style="font-size:13px;color:var(--gray2);margin-bottom:14px;line-height:1.6;">
-          วางค่า Firebase Config จาก <b style="color:var(--gold);">console.firebase.google.com</b><br>
-          → Project Settings → Your apps → Firebase SDK snippet → Config
-        </p>
-        <div class="fg2 full" style="margin-bottom:12px;">
-          <div class="fg"><label>API Key</label><input id="cfgApiKey" placeholder="AIzaSy..."></div>
-          <div class="fg"><label>Project ID</label><input id="cfgProjectId" placeholder="your-project-id"></div>
-          <div class="fg"><label>Auth Domain</label><input id="cfgAuthDomain" placeholder="your-project.firebaseapp.com"></div>
-          <div class="fg"><label>Storage Bucket</label><input id="cfgStorageBucket" placeholder="your-project.appspot.com"></div>
-          <div class="fg"><label>Messaging Sender ID</label><input id="cfgMsgId" placeholder="123456789"></div>
-          <div class="fg"><label>App ID</label><input id="cfgAppId" placeholder="1:123..."></div>
+        <div class="cfg-title">🔥 Firebase Connection Status</div>
+        <div style="padding:14px;background:var(--bg3);border-radius:9px;font-size:13px;border:1px solid var(--bd);margin-bottom:14px;" id="cfgStatus">
+          ⏳ กำลังเชื่อมต่อ...
         </div>
-        <div class="mbtns">
-          <button class="btn-p" onclick="saveFirebaseConfig()">💾 บันทึกและเชื่อมต่อ</button>
-          <button class="btn-g" onclick="loadSavedConfig()">โหลดค่าที่บันทึก</button>
-        </div>
-        <div style="margin-top:14px;padding:12px;background:var(--bg3);border-radius:9px;font-size:12px;color:var(--gray);border:1px solid var(--bd);" id="cfgStatus">
-          ⚪ ยังไม่ได้กำหนดค่า
+        <div style="font-size:12px;color:var(--gray);line-height:1.8;">
+          <div>📌 Project ID: <b style="color:var(--gold);">vehicle-maintenance-64890</b></div>
+          <div>🌐 ข้อมูลซิงค์แบบ Real-time ผ่าน Firestore</div>
+          <div>💾 มี Offline Cache — ใช้งานได้แม้ไม่มีสัญญาณ</div>
         </div>
       </div>
       <div class="cfg-card">
@@ -359,11 +332,6 @@ Safari (iPhone/iPad):
 
 Samsung Internet:
   กด ☰ → "Add page to" → "Home screen"</div>
-        <div style="font-size:12px;color:var(--gray);line-height:1.6;">
-          ✅ เมื่อติดตั้งแล้ว แอปจะเปิดเหมือนแอปปกติ<br>
-          ✅ ข้อมูลซิงค์ผ่าน Firebase — ใช้ร่วมกันได้หลายเครื่อง<br>
-          ✅ Cache ข้อมูลไว้ใช้แบบออฟไลน์ได้ด้วย
-        </div>
       </div>
     </div>
 
@@ -457,13 +425,24 @@ Samsung Internet:
 
 <script>
 // ══════════════════════════════════════════════
+//  FIREBASE CONFIG — HARDCODED
+// ══════════════════════════════════════════════
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCowDEvUQpBmq7AwUGiC6IuGOudPhi_0kM",
+  authDomain: "vehicle-maintenance-64890.firebaseapp.com",
+  projectId: "vehicle-maintenance-64890",
+  storageBucket: "vehicle-maintenance-64890.firebasestorage.app",
+  messagingSenderId: "59942066726",
+  appId: "1:59942066726:web:f53cdeae8fb2da80e4a4e7"
+};
+
+// ══════════════════════════════════════════════
 //  STATE
 // ══════════════════════════════════════════════
 const $ = id => document.getElementById(id);
 let db = null;
 let vehicles = [], repairs = [];
 let cfAction = null, curVeh = null, selCard = null;
-let deferredInstall = null;
 let unsubVeh = null, unsubRep = null;
 
 const DEFAULT_VEHICLES = [
@@ -482,26 +461,14 @@ const DEFAULT_VEHICLES = [
 // ══════════════════════════════════════════════
 //  FIREBASE INIT
 // ══════════════════════════════════════════════
-function getSavedConfig(){
-  try { return JSON.parse(localStorage.getItem('fb_cfg') || 'null'); } catch(e){ return null; }
-}
-
-function initFirebase(cfg){
+function startFirebase(){
   try {
-    if(firebase.apps.length){ firebase.app().delete().then(()=>startApp(cfg)); }
-    else { startApp(cfg); }
-  } catch(e){ startApp(cfg); }
-}
-
-function startApp(cfg){
-  try {
-    firebase.initializeApp(cfg);
+    firebase.initializeApp(FIREBASE_CONFIG);
     db = firebase.firestore();
     db.enablePersistence({synchronizeTabs:true}).catch(()=>{});
     setNetStatus(true);
     listenData();
-    $('cfgStatus').innerHTML = '🟢 เชื่อมต่อ Firebase สำเร็จ — Project: <b>'+cfg.projectId+'</b>';
-    toast('เชื่อมต่อ Firebase สำเร็จ');
+    $('cfgStatus').innerHTML = '🟢 เชื่อมต่อ Firebase สำเร็จ<br><span style="color:var(--gray);font-size:11px;">Project: vehicle-maintenance-64890 · Real-time sync active</span>';
   } catch(e){
     setNetStatus(false);
     $('cfgStatus').innerHTML = '🔴 เชื่อมต่อไม่สำเร็จ: '+e.message;
@@ -514,16 +481,17 @@ function startApp(cfg){
 //  FIRESTORE REALTIME LISTENERS
 // ══════════════════════════════════════════════
 function listenData(){
-  // Vehicles
   if(unsubVeh) unsubVeh();
   unsubVeh = db.collection('vehicles').orderBy('name').onSnapshot(snap => {
     vehicles = snap.docs.map(d => ({id:d.id, ...d.data()}));
-    // Seed default vehicles if empty
     if(vehicles.length === 0) seedDefaultVehicles();
     else afterDataLoad();
-  }, err => { console.error(err); setNetStatus(false); });
+  }, err => {
+    console.error(err);
+    setNetStatus(false);
+    $('cfgStatus').innerHTML = '🔴 Firestore Error: '+err.message;
+  });
 
-  // Repairs
   if(unsubRep) unsubRep();
   unsubRep = db.collection('repairs').orderBy('ts','desc').onSnapshot(snap => {
     repairs = snap.docs.map(d => ({id:d.id, ...d.data()}));
@@ -545,12 +513,15 @@ function afterDataLoad(){
   $('loader').style.display = 'none';
   $('appRoot').style.display = 'grid';
   updateBadges(); renderDash();
-  if(document.querySelector('.pg.on').id === 'pg-repairs') { renderVTabs(); renderRepairs(); buildSysFilter(); }
-  if(document.querySelector('.pg.on').id === 'pg-atv') renderVCards();
+  const activePg = document.querySelector('.pg.on');
+  if(activePg){
+    if(activePg.id === 'pg-repairs') { renderVTabs(); renderRepairs(); buildSysFilter(); }
+    if(activePg.id === 'pg-atv') renderVCards();
+  }
 }
 
 // ══════════════════════════════════════════════
-//  FALLBACK (no Firebase — local only)
+//  FALLBACK
 // ══════════════════════════════════════════════
 function fallbackMode(){
   vehicles = DEFAULT_VEHICLES.map((v,i) => ({id:'v'+(i+1), ...v}));
@@ -588,35 +559,6 @@ function nav(btn, pg){
   if(pg==='atv'){ selCard=null; renderVCards(); $('atvDetailSection').style.display='none'; }
   if(pg==='repairs'){ renderVTabs(); renderRepairs(); buildSysFilter(); }
   if(pg==='search') buildSearchDrops();
-  if(pg==='cfg') loadSavedConfig();
-}
-
-// ══════════════════════════════════════════════
-//  FIREBASE CONFIG SETTINGS
-// ══════════════════════════════════════════════
-function loadSavedConfig(){
-  const cfg = getSavedConfig();
-  if(!cfg) return;
-  $('cfgApiKey').value       = cfg.apiKey       || '';
-  $('cfgProjectId').value    = cfg.projectId     || '';
-  $('cfgAuthDomain').value   = cfg.authDomain    || '';
-  $('cfgStorageBucket').value= cfg.storageBucket || '';
-  $('cfgMsgId').value        = cfg.messagingSenderId || '';
-  $('cfgAppId').value        = cfg.appId         || '';
-}
-
-function saveFirebaseConfig(){
-  const cfg = {
-    apiKey:            $('cfgApiKey').value.trim(),
-    projectId:         $('cfgProjectId').value.trim(),
-    authDomain:        $('cfgAuthDomain').value.trim(),
-    storageBucket:     $('cfgStorageBucket').value.trim(),
-    messagingSenderId: $('cfgMsgId').value.trim(),
-    appId:             $('cfgAppId').value.trim(),
-  };
-  if(!cfg.apiKey || !cfg.projectId){ toast('กรุณากรอก API Key และ Project ID', true); return; }
-  localStorage.setItem('fb_cfg', JSON.stringify(cfg));
-  initFirebase(cfg);
 }
 
 // ══════════════════════════════════════════════
@@ -835,7 +777,7 @@ function renderDash(){
     <td>${r.symp||'—'}</td>
     <td>${r.tech||'—'}</td>
     <td><span class="cost-c">฿${(r.total||0).toLocaleString()}</span></td>
-  </tr>`).join('') || '<tr class="emr"><td colspan="6">ยังไม่มีข้อมูล</td></tr>';
+  </tr>`).join('') || '<tr class="emr"><td colspan="6">ยังไม่มีข้อมูล — เริ่มบันทึกการซ่อมได้เลย</td></tr>';
 }
 
 function updateBadges(){
@@ -853,55 +795,9 @@ function toast(m, err=false){
 }
 
 // ══════════════════════════════════════════════
-//  PWA — INSTALL
+//  BOOT — เชื่อมต่อ Firebase ทันที
 // ══════════════════════════════════════════════
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  deferredInstall = e;
-  $('installBanner').style.display='flex';
-});
-
-function installPWA(){
-  if(!deferredInstall) return;
-  deferredInstall.prompt();
-  deferredInstall.userChoice.then(r => {
-    if(r.outcome==='accepted') $('installBanner').style.display='none';
-    deferredInstall = null;
-  });
-}
-
-window.addEventListener('appinstalled', () => {
-  $('installBanner').style.display='none';
-  toast('ติดตั้งแอปสำเร็จ!');
-});
-
-// ══════════════════════════════════════════════
-//  SERVICE WORKER REGISTER
-// ══════════════════════════════════════════════
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('sw.js').then(()=>{
-    console.log('SW registered');
-  }).catch(e => console.log('SW error', e));
-}
-
-// ══════════════════════════════════════════════
-//  BOOT
-// ══════════════════════════════════════════════
-const savedCfg = getSavedConfig();
-if(savedCfg && savedCfg.apiKey){
-  initFirebase(savedCfg);
-} else {
-  // No config yet — show config page
-  setTimeout(()=>{
-    $('loader').style.display='none';
-    $('appRoot').style.display='grid';
-    fallbackMode();
-    // Auto-navigate to config
-    const cfgBtn = document.querySelector('.sbtn:last-child');
-    cfgBtn && cfgBtn.click();
-    toast('กรุณาตั้งค่า Firebase ก่อนใช้งาน');
-  }, 800);
-}
+startFirebase();
 </script>
 </body>
 </html>
